@@ -1,0 +1,39 @@
+name: Intermud3
+main: uk.org.rockthehalo.intermud3.Intermud3
+version: 0.1
+description: Intermud3 client for Bukkit servers.
+author: Tricky1702
+commands:
+  intermud3:
+    aliases: [ i3 ]
+    description: A bridge connecting Minecraft to Intermud3
+    usage: |
+        /<command> reload - reloads the plugin.
+        /<command> msg <channel> <msg> - relays message as from minecraft.
+        /<command> emote <channel> <msg> - relays emote as from minecraft.
+  i3reload:
+    description: Reloads the plugin
+    usage: /<command>
+    permission: intermud3.reload
+  i3msg:
+    description: Relays message as from minecraft
+    usage: /<command> <channel> <msg>
+    permission: intermud3.msg
+  i3emote:
+    description: Relays emote as from minecraft
+    usage: /<command> <channel> <msg>
+    permission: intermud3.emote
+permissions:
+  intermud3.*:
+    default: op
+    description: Allows the use of all /intermud3 commands.
+    children:
+      intermud3.reload: true
+      intermud3.msg: true
+      intermud3.emote: true
+  intermud3.reload:
+    description: Allows the use of /intermud3 reload.
+  intermud3.msg:
+    description: Allows the use of /intermud3 msg.
+  intermud3.emote:
+    description: Allows the use of /intermud3 emote.
