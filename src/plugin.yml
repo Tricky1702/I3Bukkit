@@ -1,38 +1,35 @@
+# Plugin meta-data.
 name: Intermud3
 main: uk.org.rockthehalo.intermud3.Intermud3
 version: 0.1
 description: Intermud3 client for Bukkit servers.
 author: Tricky1702
+
+# Intermud3 commands.
 commands:
   intermud3:
     aliases: [ i3 ]
     description: A bridge connecting Minecraft to Intermud3
     usage: |
-        /<command> reload - reloads the plugin.
-        /<command> msg <channel> <msg> - relays message as from minecraft.
-        /<command> emote <channel> <msg> - relays emote as from minecraft.
-  i3reload:
-    description: Reloads the plugin
-    usage: /<command>
-    permission: intermud3.reload
-  i3msg:
-    description: Relays message as from minecraft
-    usage: /<command> <channel> <msg>
-    permission: intermud3.msg
-  i3emote:
-    description: Relays emote as from minecraft
-    usage: /<command> <channel> <msg>
-    permission: intermud3.emote
+        /<command> connect - connect to the preferred router.
+        /<command> disconnect - disconnect from the router.
+        /<command> msg <channel> <message> - sends a message to the specified Intermud3 channel.
+        /<command> emote <channel> <emote> - sends an emote to the specified Intermud3 channel.
+
+# Intermud3 permissions.        
 permissions:
   intermud3.*:
     default: op
     description: Allows the use of all /intermud3 commands.
     children:
-      intermud3.reload: true
+      intermud3.connect: true
+      intermud3.disconnect: true
       intermud3.msg: true
       intermud3.emote: true
-  intermud3.reload:
-    description: Allows the use of /intermud3 reload.
+  intermud3.connect:
+    description: Allows the use of /intermud3 connect.
+  intermud3.disconnect:
+    description: Allows the use of /intermud3 disconnect.
   intermud3.msg:
     description: Allows the use of /intermud3 msg.
   intermud3.emote:

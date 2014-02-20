@@ -1,0 +1,8 @@
+server:
+    name: '*i4'
+    ip: '204.209.44.3'
+    port: 8080
+    password: 0
+    mudlistid: 0
+    chanlistid: 0
+adminEmail: 'your@email.address.here'
