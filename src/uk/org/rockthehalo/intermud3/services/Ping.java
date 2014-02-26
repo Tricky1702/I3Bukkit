@@ -1,7 +1,7 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.LPCInt;
 import uk.org.rockthehalo.intermud3.Packet;
 import uk.org.rockthehalo.intermud3.Packet.PacketBase;
 import uk.org.rockthehalo.intermud3.Packet.PacketTypes;
@@ -20,8 +20,11 @@ public class Ping implements Runnable {
 	}
 
 	public void send(String type, String tmud, Packet packet) {
+		Packet payload = new Packet();
+
+		payload.add(packet.get());
 		Intermud3.network.sendToMud(PacketTypes.getType(type), null, tmud,
-				packet);
+				payload);
 	}
 
 	public void replyHandler(Packet packet) {
@@ -32,29 +35,23 @@ public class Ping implements Runnable {
 	}
 
 	public void reqHandler(Packet packet) {
-		try {
-			Packet extra = new Packet();
-			String reply = "ping-reply";
+		Packet extra = new Packet();
+		String reply = "ping-reply";
 
-			if (packet.get(PacketBase.TYPE.getNum()) == "ping")
-				reply = "pong";
+		if (packet.getString(PacketBase.TYPE.getNum()).toString() == "ping")
+			reply = "pong";
 
-			if (packet.size() >= 7) {
-				Object replyPacket = packet.get(6);
+		if (packet.size() >= 7)
+			extra.add(packet.get(6));
 
-				extra = new Packet(replyPacket);
-			}
-
-			if (packet.get(PacketBase.O_MUD.getNum()) != i3Instance.getServer()
-					.getServerName()) {
-				hbeat = Intermud3.rnd(minorDelay) + majorDelay;
-				Intermud3.network.setConnected(true);
-			}
-
-			send(reply, (String) packet.get(PacketBase.O_MUD.getNum()), extra);
-		} catch (I3Exception e) {
-			e.printStackTrace();
+		if (packet.getString(PacketBase.O_MUD.getNum()).toString() != i3Instance
+				.getServer().getServerName()) {
+			hbeat = Intermud3.rnd(minorDelay) + majorDelay;
+			Intermud3.network.setConnected(true);
 		}
+
+		Intermud3.network.sendToMud(PacketTypes.getType(reply), null, packet
+				.getString(PacketBase.O_MUD.getNum()).toString(), extra);
 	}
 
 	/*
@@ -89,13 +86,11 @@ public class Ping implements Runnable {
 		long tm = (int) System.currentTimeMillis() / 1000;
 		long hash = Intermud3.rnd(470831) + ((tm & 0x00ffffff) ^ 0x00a5a5a5);
 		Packet packet = new Packet();
+		Packet payload = new Packet();
 
-		try {
-			packet.add((int) hash);
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
-
-		send("ping-req", i3Instance.getServer().getServerName(), packet);
+		packet.add(new LPCInt((int) hash));
+		payload.add(packet.get());
+		Intermud3.network.sendToMud(PacketTypes.getType("ping-req"), null,
+				i3Instance.getServer().getServerName(), payload);
 	}
 }

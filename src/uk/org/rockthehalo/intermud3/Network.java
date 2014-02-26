@@ -10,7 +10,6 @@ import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 
-import uk.org.rockthehalo.intermud3.LPCData.LPCTypes;
 import uk.org.rockthehalo.intermud3.Packet.PacketTypes;
 import uk.org.rockthehalo.intermud3.services.Services;
 
@@ -21,23 +20,16 @@ public class Network implements Runnable {
 	private DataOutputStream sockOut;
 	private DataInputStream sockIn;
 	private boolean connected;
-	private boolean shutdown;
 
 	public Network() {
-		LPCData routerList = new LPCData(LPCTypes.MIXEDARR);
-		LPCData routerArray = new LPCData(LPCTypes.STRINGARR);
+		LPCArray routerList = new LPCArray();
+		LPCArray routerArray = new LPCArray();
 
 		i3Instance = Intermud3.instance;
-
-		try {
-			routerArray.add(i3Instance.getServerName());
-			routerArray.add(i3Instance.getServerIP() + " "
-					+ Integer.toString(i3Instance.getServerPort()));
-			routerList.add(routerArray.get());
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
-
+		routerArray.add(i3Instance.getServerName());
+		routerArray.add(i3Instance.getServerIP() + " "
+				+ Integer.toString(i3Instance.getServerPort()));
+		routerList.add(routerArray.get());
 		i3Instance.setRouterList(routerList);
 
 		inputThread = null;
@@ -45,7 +37,6 @@ public class Network implements Runnable {
 		sockOut = null;
 		sockIn = null;
 		connected = false;
-		shutdown = true;
 	}
 
 	/**
@@ -64,18 +55,14 @@ public class Network implements Runnable {
 	}
 
 	public void connect() {
-		LPCData preferredRouter = new LPCData(LPCTypes.STRINGARR);
+		LPCArray preferredRouter = new LPCArray();
 		String[] server = { "", "" };
 
 		if (connected)
 			return;
 
-		try {
-			preferredRouter.set(i3Instance.getRouterList().get(0));
-			server = StringUtils.split(preferredRouter.get(1).toString(), " ");
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
+		preferredRouter.set(i3Instance.getRouterList().get(0));
+		server = StringUtils.split(preferredRouter.get(1).toString(), " ");
 
 		try {
 			sock = new Socket(server[0], Integer.parseInt(server[1]));
@@ -93,7 +80,6 @@ public class Network implements Runnable {
 		PacketTypes.STARTUP_REQ.send(null);
 
 		connected = true;
-		shutdown = false;
 		inputThread = new Thread(this);
 		inputThread.setName("Intermud3");
 		inputThread.start();
@@ -105,11 +91,10 @@ public class Network implements Runnable {
 	}
 
 	public void shutdown(int restartDelay) {
-		PacketTypes.SHUTDOWN.send(new Packet(restartDelay));
+		PacketTypes.SHUTDOWN.send(restartDelay);
 
 		Services.stopHeartBeats();
 		connected = false;
-		shutdown = true;
 
 		try {
 			Thread moribund = inputThread;
@@ -161,16 +146,16 @@ public class Network implements Runnable {
 				sockOut.writeInt(size);
 				sockOut.write(packet);
 				sockOut.flush();
-			} catch (UnsupportedEncodingException uee) {
-				String errMsg = uee.getMessage() == null ? uee.toString() : uee
+			} catch (UnsupportedEncodingException ueE) {
+				String errMsg = ueE.getMessage() == null ? ueE.toString() : ueE
 						.getMessage();
 
 				i3Instance.logError("Unsupported encoding: " + str);
 
 				if (errMsg != null)
 					i3Instance.logError(errMsg);
-			} catch (IOException e) {
-				String errMsg = e.getMessage() == null ? e.toString() : e
+			} catch (IOException ioE) {
+				String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE
 						.getMessage();
 
 				i3Instance.logError("Problem sending data: " + str);
@@ -183,36 +168,32 @@ public class Network implements Runnable {
 
 	public void sendPacket(PacketTypes i3Type, String origUser, String targMud,
 			String targUser, Packet payload) {
-		try {
-			Packet packet = new Packet();
+		Packet packet = new Packet();
 
-			packet.add(i3Type.getName());
-			packet.add(5);
-			packet.add(i3Instance.getServer().getServerName());
+		packet.add(i3Type.getName());
+		packet.add(5);
+		packet.add(i3Instance.getServer().getServerName());
 
-			if (origUser == null) {
-				packet.add(0);
-			} else {
-				packet.add(origUser.toLowerCase(Locale.ENGLISH));
-			}
-
-			if (targMud == null) {
-				packet.add(0);
-			} else {
-				packet.add(targMud);
-			}
-
-			if (targUser == null) {
-				packet.add(0);
-			} else {
-				packet.add(targUser.toLowerCase(Locale.ENGLISH));
-			}
-
-			packet.add(payload.get());
-			send(packet);
-		} catch (I3Exception e) {
-			e.printStackTrace();
+		if (origUser == null) {
+			packet.add(0);
+		} else {
+			packet.add(origUser.toLowerCase(Locale.ENGLISH));
 		}
+
+		if (targMud == null) {
+			packet.add(0);
+		} else {
+			packet.add(targMud);
+		}
+
+		if (targUser == null) {
+			packet.add(0);
+		} else {
+			packet.add(targUser.toLowerCase(Locale.ENGLISH));
+		}
+
+		packet.add(payload.get(0));
+		send(packet);
 	}
 
 	public void sendToRouter(PacketTypes i3Type, String origUser, Packet packet) {
@@ -243,19 +224,19 @@ public class Network implements Runnable {
 		try {
 			sock.setSoTimeout(60000);
 			sockIn = new DataInputStream(sock.getInputStream());
-		} catch (IOException ie) {
+		} catch (IOException ioE) {
 			sockIn = null;
 			connected = false;
 		}
 
-		while (connected && !shutdown) {
+		while (connected) {
 			Packet data;
 			String str, type = "";
 
 			try {
 				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				if (shutdown) {
+			} catch (InterruptedException iE) {
+				if (!connected) {
 					i3Instance.logWarn("Shutdown!!!");
 
 					return;
@@ -266,20 +247,20 @@ public class Network implements Runnable {
 				byte[] tmp;
 				int len = 0;
 
-				while (!shutdown) {
+				while (connected) {
 					try {
 						len = sockIn.readInt();
 
 						break;
-					} catch (IOException e) {
-						if ((e.getMessage() == null)
-								|| (e.getMessage().toUpperCase()
+					} catch (IOException ioE) {
+						if ((ioE.getMessage() == null)
+								|| (ioE.getMessage().toUpperCase()
 										.indexOf("TIMED OUT") < 0))
-							throw e;
+							throw ioE;
 
 						try {
 							Thread.sleep(1000);
-						} catch (InterruptedException ie) {
+						} catch (InterruptedException iE) {
 						}
 
 						continue;
@@ -303,7 +284,7 @@ public class Network implements Runnable {
 
 				tmp = new byte[len];
 
-				while (!shutdown) {
+				while (connected) {
 					try {
 						sockIn.readFully(tmp);
 
@@ -332,36 +313,31 @@ public class Network implements Runnable {
 
 				data = null;
 				str = null;
-				connected = false;
 
 				try {
-					Thread.sleep(1200);
+					Thread.sleep(1000);
 				} catch (InterruptedException ie) {
-					if (shutdown) {
+					if (!connected) {
 						i3Instance.logWarn("Shutdown!!!");
 
 						return;
 					}
 				}
 
-				connect();
-
 				errMsg = e.getMessage() == null ? e.toString() : e.getMessage();
 
 				if (errMsg != null)
 					i3Instance.logError(errMsg);
 
+				connected = false;
+				connect();
+
 				return;
 			}
 
 			data = new Packet();
-
-			try {
-				data.fromMudMode(str);
-				type = (String) data.get(0);
-			} catch (I3Exception e) {
-				e.printStackTrace();
-			}
+			data.fromMudMode(str);
+			type = (String) data.get(0);
 
 			if (PacketTypes.getType(type) == null) {
 				i3Instance.logWarn("Unknown packet " + data.toMudMode());

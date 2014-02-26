@@ -2,9 +2,6 @@ package uk.org.rockthehalo.intermud3.services;
 
 import java.util.Locale;
 
-import org.bukkit.entity.Player;
-
-import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Packet;
 import uk.org.rockthehalo.intermud3.Packet.PacketTypes;
@@ -15,50 +12,43 @@ public class I3Error {
 
 	public void send(Packet packet) {
 		Packet payload;
-		Object obj;
 		String oUser, tMud, tUser, errCode, errMsg;
 
-		try {
-			obj = packet.get(0);
+		if (packet.getInt(0) != null)
+			oUser = null;
+		else if (packet.getPlayer(0) != null)
+			oUser = packet.getPlayer(0).getName().toLowerCase(Locale.ENGLISH);
+		else if (packet.getString(0) != null)
+			oUser = packet.getString(0).toString().toLowerCase(Locale.ENGLISH);
+		else
+			oUser = null;
 
-			if (obj instanceof Number)
-				oUser = null;
-			else if (obj instanceof Player)
-				oUser = ((Player) obj).getName().toLowerCase(Locale.ENGLISH);
-			else if (obj instanceof String)
-				oUser = obj.toString().toLowerCase(Locale.ENGLISH);
-			else
-				oUser = null;
+		if (packet.getInt(2) != null)
+			tUser = null;
+		else if (packet.getPlayer(2) != null)
+			tUser = packet.getPlayer(2).getName().toLowerCase(Locale.ENGLISH);
+		else if (packet.getString(2) != null)
+			tUser = packet.getString(2).toString().toLowerCase(Locale.ENGLISH);
+		else
+			tUser = null;
 
-			obj = packet.get(2);
+		tMud = packet.get(1).toString();
+		errCode = packet.get(3).toString();
+		errMsg = packet.get(4).toString();
 
-			if (obj instanceof Number)
-				tUser = null;
-			else if (obj instanceof Player)
-				tUser = ((Player) obj).getName().toLowerCase(Locale.ENGLISH);
-			else if (obj instanceof String)
-				tUser = obj.toString().toLowerCase(Locale.ENGLISH);
-			else
-				tUser = null;
+		payload = new Packet();
+		payload.add(errCode);
+		payload.add(errMsg);
 
-			tMud = packet.get(1).toString();
-			errCode = packet.get(3).toString();
-			errMsg = packet.get(4).toString();
+		if (packet.get(6) == null)
+			payload.add(0);
+		else
+			payload.add(packet.get(6));
 
-			payload = new Packet();
-			payload.add(errCode);
-			payload.add(errMsg);
-
-			if (packet.get(6) == null)
-				payload.add(0);
-			else
-				payload.add(packet.get(6));
-
-			Intermud3.network.sendToUser(PacketTypes.ERROR, oUser, tMud, tUser,
-					payload);
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
+		packet = new Packet();
+		packet.add(payload.get());
+		Intermud3.network.sendToUser(PacketTypes.ERROR, oUser, tMud, tUser,
+				packet);
 	}
 
 	public void replyHandler(Packet packet) {

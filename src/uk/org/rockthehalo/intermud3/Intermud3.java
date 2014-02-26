@@ -15,8 +15,8 @@ public class Intermud3 extends JavaPlugin {
 	private String i3ServerName;
 	private String i3ServerIP;
 	private int i3ServerPort;
-	private LPCData routerList;
-	private LPCData routerPassword;
+	private LPCArray routerList;
+	private LPCInt routerPassword;
 	private int mudlistID;
 	private int chanlistID;
 	private String adminEmail;
@@ -44,8 +44,8 @@ public class Intermud3 extends JavaPlugin {
 		i3ServerName = null;
 		i3ServerIP = null;
 		i3ServerPort = 0;
-		routerList = null;
-		routerPassword = new LPCData(0);
+		routerList = new LPCArray();
+		routerPassword = new LPCInt();
 		pluginVersion = null;
 	}
 
@@ -72,15 +72,23 @@ public class Intermud3 extends JavaPlugin {
 	 * @param routerList
 	 *            the routerList to set
 	 */
-	public void setRouterList(LPCData routerList) {
-		this.routerList = new LPCData(routerList);
+	public void setRouterList(LPCArray routerList) {
+		this.routerList = routerList;
 	}
 
 	/**
 	 * @return the routerList
 	 */
-	public LPCData getRouterList() {
-		return (LPCData) routerList.get();
+	public LPCArray getRouterList() {
+		return routerList;
+	}
+
+	/**
+	 * @param routerPassword
+	 *            the routerPassword to set
+	 */
+	public void setRouterPassword(LPCInt routerPassword) {
+		this.routerPassword = routerPassword;
 	}
 
 	/**
@@ -88,14 +96,14 @@ public class Intermud3 extends JavaPlugin {
 	 *            the routerPassword to set
 	 */
 	public void setRouterPassword(int routerPassword) {
-		this.routerPassword = new LPCData(routerPassword);
+		this.routerPassword = new LPCInt(routerPassword);
 	}
 
 	/**
 	 * @return the routerPassword
 	 */
-	public int getRouterPassword() {
-		return routerPassword.getInt();
+	public LPCInt getRouterPassword() {
+		return routerPassword;
 	}
 
 	/**
@@ -229,7 +237,7 @@ public class Intermud3 extends JavaPlugin {
 	}
 
 	public static int rnd(int range) {
-		return (int) (Math.random() * (double) range);
+		return (int) (Math.random() * range);
 	}
 
 	/**

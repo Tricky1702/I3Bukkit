@@ -105,15 +105,9 @@ public class I3Command implements CommandExecutor {
 			msg = input.substring(input.indexOf(" ") + 1);
 
 			payload = new Packet();
-
-			try {
-				payload.add(chan);
-				payload.add(player.getName());
-				payload.add(msg);
-			} catch (I3Exception e) {
-				e.printStackTrace();
-			}
-
+			payload.add(chan);
+			payload.add(player.getName());
+			payload.add(msg);
 			Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE,
 					player.getName(), payload);
 
@@ -141,15 +135,9 @@ public class I3Command implements CommandExecutor {
 			msg = input.substring(input.indexOf(" ") + 1);
 
 			payload = new Packet();
-
-			try {
-				payload.add(chan);
-				payload.add(player.getName());
-				payload.add(msg);
-			} catch (I3Exception e) {
-				e.printStackTrace();
-			}
-
+			payload.add(chan);
+			payload.add(player.getName());
+			payload.add(msg);
 			Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE,
 					player.getName(), payload);
 
