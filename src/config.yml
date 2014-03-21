@@ -1,8 +1,9 @@
-server:
-    name: '*i4'
-    ip: '204.209.44.3'
-    port: 8080
-    password: 0
-    mudlistid: 0
-    chanlistid: 0
+router:
+  preferred: '*dalet, 97.107.133.86 8787'
+  list:
+    - '*dalet, 97.107.133.86 8787'
+  password: 0
+  mudlistID: 0
+  chanlistID: 0
 adminEmail: 'your@email.address.here'
+debug: false

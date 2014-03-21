@@ -1,142 +1,203 @@
 package uk.org.rockthehalo.intermud3.services;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.LPCArray;
-import uk.org.rockthehalo.intermud3.LPCInt;
-import uk.org.rockthehalo.intermud3.LPCMapping;
-import uk.org.rockthehalo.intermud3.Packet;
-import uk.org.rockthehalo.intermud3.Packet.PacketBase;
-import uk.org.rockthehalo.intermud3.Packet.PacketTypes;
+import uk.org.rockthehalo.intermud3.Network;
+import uk.org.rockthehalo.intermud3.LPC.CallOut;
+import uk.org.rockthehalo.intermud3.LPC.LPCArray;
+import uk.org.rockthehalo.intermud3.LPC.LPCInt;
+import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
+import uk.org.rockthehalo.intermud3.LPC.LPCString;
+import uk.org.rockthehalo.intermud3.LPC.LPCVar;
+import uk.org.rockthehalo.intermud3.LPC.Packet;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
 
-public class Startup {
-	private static Intermud3 i3Instance;
+public class Startup extends ServiceTemplate {
+	private final Intermud3 i3;
+	private final CallOut callout;
+	private final Network network;
 
 	public Startup() {
-		i3Instance = Intermud3.instance;
+		this.i3 = Intermud3.instance;
+		this.callout = CallOut.instance;
+		this.network = Network.instance;
+
+		super.setServiceName("startup");
+		Services.addService(this);
 	}
 
-	public void replyHandler(Packet packet) {
-		LPCArray routerArray = new LPCArray();
-		LPCArray currentRouter = new LPCArray();
-		LPCArray preferredRouter = new LPCArray();
-		LPCArray newRouterList = new LPCArray();
-		PacketBase oMud = PacketBase.O_MUD;
-		Packet preferredRouterPacket = new Packet();
-		Packet currentRouterPacket = new Packet();
-		String[] server;
-		String oMudName = packet.get(oMud.getNum()).toString();
-		String preferredName, preferredAddr;
-		String currentName, currentAddr;
-		String preferredRouterStr, currentRouterStr;
-
-		routerArray.set(i3Instance.getRouterList().getArray(0).get());
-		currentRouter.set(routerArray.clone());
-
-		if (!oMudName.equals(routerArray.getString(0).toString())) {
-			i3Instance.logError("Illegal access. Not from the router.");
-			i3Instance.logError(packet.toMudMode());
-
-			return;
-		}
-
-		if (packet.size() != 8) {
-			i3Instance
-					.logError("We don't like startup-reply packet size. Should be 8 but is "
-							+ packet.size());
-			i3Instance.logError(packet.toMudMode());
-
-			return;
-		}
-
-		newRouterList.set(packet.getArray(6).get());
-
-		if (newRouterList.size() < 1) {
-			i3Instance
-					.logError("We don't like the absence of packet element 6.");
-			i3Instance.logError(packet.toMudMode());
-
-			return;
-		}
-
-		i3Instance.setRouterList(newRouterList);
-		preferredRouter.set(newRouterList.getArray(0).get());
-		preferredRouterPacket.set(preferredRouter.get());
-		preferredRouterStr = preferredRouterPacket.toMudMode();
-
-		preferredName = preferredRouter.getString(0).toString();
-		preferredAddr = preferredRouter.getString(1).toString();
-		currentName = currentRouter.getString(0).toString();
-		currentAddr = currentRouter.getString(1).toString();
-
-		if (preferredName.equals(currentName)
-				&& preferredAddr.equals(currentAddr)) {
-			LPCInt i = packet.getInt(7);
-
-			if (i != null)
-				i3Instance.setRouterPassword(i);
-		} else {
-			currentRouterPacket.set(currentRouter.get());
-			currentRouterStr = currentRouterPacket.toMudMode();
-			i3Instance
-					.logInfo("Current router details are " + currentRouterStr);
-			i3Instance.logInfo("Changing router details to "
-					+ preferredRouterStr);
-			Intermud3.network.shutdown(0);
-			Intermud3.network.connect();
-
-			return;
-		}
-
-		i3Instance.getConfig().set("server.name", preferredName);
-		server = StringUtils.split(preferredAddr, " ");
-		i3Instance.getConfig().set("server.ip", server[0]);
-		i3Instance.getConfig().set("server.port", Integer.parseInt(server[1]));
-		i3Instance.getConfig().set("server.password",
-				Integer.parseInt(i3Instance.getRouterPassword().toString()));
-		i3Instance.saveConfig();
-
-		i3Instance.logInfo("Connection established to I3 router "
-				+ preferredRouterStr);
-
-		PacketTypes.CHANLIST_REQ.send(new Packet());
-	}
-
-	/**
-	 * @param packet
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#create()
 	 */
-	public void send(Packet packet) {
-		LPCMapping otherInfo = new LPCMapping();
-		Date bootTime;
+	@Override
+	public void create() {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#remove()
+	 */
+	@Override
+	public void remove() {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * uk.org.rockthehalo.intermud3.services.ServiceTemplate#replyHandler(uk.org
+	 * .rockthehalo.intermud3.LPC.Packet)
+	 */
+	@Override
+	public void replyHandler(Packet packet) {
+		if (packet.size() != 8) {
+			this.i3.logError("We don't like startup-reply packet size. Should be 8 but is "
+					+ packet.size());
+			this.i3.logError(packet.toMudMode());
+
+			return;
+		}
+
+		int oMud = PacketBase.O_MUD.getIndex();
+		String oMudName = packet.getLPCString(oMud).toString();
+
+		if (!oMudName.equals(this.network.getRouterName().toString())) {
+			this.i3.logError("Illegal access. Not from the router.");
+			this.i3.logError(packet.toMudMode());
+
+			return;
+		}
+
+		LPCArray routerList = new LPCArray();
+
+		if (packet.getLPCArray(6) != null)
+			routerList.setLPCData(packet.getLPCArray(6));
+
+		if (routerList.size() < 1) {
+			this.i3.logError("We don't like the absence of packet element 6.");
+			this.i3.logError(packet.toMudMode());
+
+			return;
+		}
+
+		this.network.setRouterList(routerList);
+
+		List<String> configRouterList = new ArrayList<String>();
+
+		for (Object obj : routerList)
+			configRouterList.add(((LPCArray) obj).getLPCString(0) + ", "
+					+ ((LPCArray) obj).getLPCString(1));
+
+		this.i3.getConfig().set("router.list", configRouterList);
+
+		LPCArray preferredRouter = new LPCArray(routerList.getLPCArray(0));
+		LPCString preferredName = preferredRouter.getLPCString(0);
+		LPCString preferredAddr = preferredRouter.getLPCString(1);
+		String[] router = StringUtils.split(preferredAddr.toString(), " ");
+		LPCString preferredIP = new LPCString(router[0].trim());
+		LPCInt preferredPort = new LPCInt(Integer.parseInt(router[1].trim()));
+
+		this.i3.getConfig().set("router.preferred",
+				preferredName + ", " + preferredAddr);
+		this.network.setRouterName(preferredName);
+		this.network.setRouterIP(preferredIP);
+		this.network.setRouterPort(preferredPort);
+
+		LPCArray currentRouter = new LPCArray(this.network.getPreferredRouter());
+		LPCString currentName = currentRouter.getLPCString(0);
+		LPCString currentAddr = currentRouter.getLPCString(1);
+
+		if (preferredName.toString().equals(currentName.toString())
+				&& preferredAddr.toString().equals(currentAddr.toString())) {
+			LPCInt i = packet.getLPCInt(7);
+
+			if (i != null) {
+				this.i3.getConfig().set("router.password", i.toInt());
+				this.network.setRouterPassword(i);
+			}
+		} else {
+			this.i3.logInfo("Current router details are "
+					+ LPCVar.toMudMode(currentRouter));
+			this.i3.logInfo("Changing router details to "
+					+ LPCVar.toMudMode(preferredRouter));
+
+			this.i3.getConfig().set("router.password", 0);
+			this.i3.getConfig().set("router.chanlistID", 0);
+			this.i3.getConfig().set("router.mudlistID", 0);
+			this.i3.saveConfig();
+			this.network.setPreferredRouter(preferredRouter);
+			this.network.shutdown(0);
+			this.callout.callOut(network, "connect", 1);
+
+			return;
+		}
+
+		this.i3.saveConfig();
+
+		this.i3.logInfo("Connection established to I3 router " + preferredName
+				+ " at " + preferredAddr);
+
+		Object service = Services.getService("channel");
+
+		if (service != null)
+			this.callout.callOut(service, "requestChanList", 5);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * uk.org.rockthehalo.intermud3.services.ServiceTemplate#reqHandler(uk.org
+	 * .rockthehalo.intermud3.LPC.Packet)
+	 */
+	@Override
+	public void reqHandler(Packet packet) {
+	}
+
+	public void send() {
+		if (this.network.isRouterConnected())
+			return;
+
 		Packet payload = new Packet();
-		Calendar cal;
-		SimpleDateFormat fmt;
-		String tmStr, ord;
 
-		payload.add(i3Instance.getRouterPassword());
-		payload.add(i3Instance.getMudlistID());
-		payload.add(i3Instance.getChanlistID());
-		payload.add(0);
-		payload.add(0);
-		payload.add(0);
-		payload.add(i3Instance.getServer().getName() + " "
-				+ i3Instance.getServer().getBukkitVersion());
-		payload.add(i3Instance.getServer().getName() + " "
-				+ i3Instance.getServer().getBukkitVersion());
-		payload.add("RtH CraftBukkit Client v" + i3Instance.getPluginVersion());
-		payload.add("Other.Bukkit");
-		payload.add("beta testing");
-		payload.add(i3Instance.getAdminEmail());
-		payload.add(Intermud3.services.getServices());
+		payload.add(this.network.getRouterPassword());
+		payload.add(this.network.getMudlistID());
+		payload.add(this.network.getChanlistID());
+		payload.add(new LPCInt(this.i3.getServer().getPort()));
+		payload.add(new LPCInt(0));
+		payload.add(new LPCInt(0));
 
-		bootTime = new Date(i3Instance.getBootTime());
-		fmt = new SimpleDateFormat("E, d'$ord$' MMMM yyyy - HH:mm:ss zzz");
-		cal = Calendar.getInstance();
+		LPCString mudlibVersion = new LPCString(this.i3.getServer().getName()
+				+ " " + this.i3.getServer().getBukkitVersion());
+		LPCString baseMudlibVersion = new LPCString(this.i3.getServer()
+				.getName() + " " + this.i3.getServer().getBukkitVersion());
+		LPCString driverVersion = new LPCString("RtH "
+				+ this.i3.getServer().getName() + " Client v"
+				+ this.i3.getDescription().getVersion());
+		LPCString mudType = new LPCString("Other."
+				+ this.i3.getServer().getName());
+		LPCString openStatus = new LPCString("beta testing");
+
+		payload.add(mudlibVersion);
+		payload.add(baseMudlibVersion);
+		payload.add(driverVersion);
+		payload.add(mudType);
+		payload.add(openStatus);
+		payload.add(this.network.getAdminEmail());
+		payload.add(Services.getRouterServices());
+
+		Calendar cal = Calendar.getInstance();
+		String ord = "th";
 
 		switch (cal.get(Calendar.DAY_OF_MONTH)) {
 		case 1:
@@ -159,15 +220,20 @@ public class Startup {
 			ord = "th";
 		}
 
-		tmStr = fmt.format(bootTime);
-		tmStr = tmStr.replace("$ord$", ord);
-		otherInfo.set("upsince", tmStr);
-		otherInfo.set("architecture", "Java");
+		Date bootTime = new Date(this.i3.getBootTime());
+		SimpleDateFormat fmt = new SimpleDateFormat(
+				"E, d'$ord$' MMMM yyyy - HH:mm:ss zzz");
+		String tmStr = fmt.format(bootTime);
 
-		payload.add(otherInfo.get());
-		i3Instance.logInfo("Startup payload: " + payload.toMudMode());
-		packet = new Packet();
-		packet.add(payload.get());
-		Intermud3.network.sendToRouter(PacketTypes.STARTUP_REQ, null, packet);
+		tmStr = tmStr.replace("$ord$", ord);
+
+		LPCMapping otherInfo = new LPCMapping();
+
+		otherInfo.set(new LPCString("upsince"), new LPCString(tmStr));
+		otherInfo.set(new LPCString("architecture"), new LPCString("Java"));
+
+		payload.add(otherInfo);
+		this.i3.debug("Startup packet: " + payload.toMudMode());
+		this.network.sendToRouter("startup-req-3", null, payload);
 	}
 }

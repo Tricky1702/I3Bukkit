@@ -7,13 +7,20 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import uk.org.rockthehalo.intermud3.Packet.PacketTypes;
+import uk.org.rockthehalo.intermud3.LPC.CallOut;
+import uk.org.rockthehalo.intermud3.services.I3Channel;
+import uk.org.rockthehalo.intermud3.services.Services;
 
 public class I3Command implements CommandExecutor {
+	private final CallOut callout;
+	private final Network network;
+
 	/**
 	 * Constructor.
 	 */
 	I3Command() {
+		this.callout = CallOut.instance;
+		this.network = Network.instance;
 	}
 
 	/**
@@ -32,13 +39,10 @@ public class I3Command implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args) {
-		String subcmd;
-
-		if (args.length < 1) {
+		if (args.length < 1)
 			return !checkPerm(sender, "help") || usage(sender, command);
-		}
 
-		subcmd = StringUtils.lowerCase(args[0]);
+		String subcmd = StringUtils.lowerCase(args[0]);
 
 		if (args.length > 1) {
 			String tmp;
@@ -60,6 +64,7 @@ public class I3Command implements CommandExecutor {
 	 */
 	private boolean processI3SubCommand(CommandSender sender, Command command,
 			String subcmd, String[] args) {
+		Player player;
 		String input = null;
 		String chan = null;
 		String msg = null;
@@ -71,7 +76,8 @@ public class I3Command implements CommandExecutor {
 				return false;
 			}
 
-			Intermud3.network.connect();
+			Services.create();
+			this.network.connect();
 
 			return true;
 		} else if (subcmd.equals("disconnect")) {
@@ -79,67 +85,65 @@ public class I3Command implements CommandExecutor {
 				return false;
 			}
 
-			Intermud3.network.shutdown(0);
+			this.network.shutdown(0);
+			Services.remove();
 
 			return true;
 		} else if (subcmd.equals("emote")) {
-			Packet payload;
-			Player player;
-
-			if (!(sender instanceof Player)) {
+			if (!(Player.class.isInstance(sender))) {
 				sender.sendMessage("Can only send emotes as player.");
 
 				return true;
 			}
 
-			if (!checkPerm(sender, "emote")) {
+			if (!checkPerm(sender, "emote"))
 				return false;
-			}
 
-			if (args.length < 2) {
+			if (args.length < 2)
 				return usage(sender, command, subcmd);
-			}
 
 			player = (Player) sender;
 			chan = args[0];
 			msg = input.substring(input.indexOf(" ") + 1);
 
-			payload = new Packet();
-			payload.add(chan);
-			payload.add(player.getName());
-			payload.add(msg);
-			Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE,
-					player.getName(), payload);
+			I3Channel service = (I3Channel) Services.getService("channel");
+
+			if (service != null)
+				service.sendEmote(chan, player, msg);
 
 			return true;
 		} else if (subcmd.equals("msg")) {
-			Packet payload;
-			Player player;
-
-			if (!(sender instanceof Player)) {
+			if (!(Player.class.isInstance(sender))) {
 				sender.sendMessage("Can only send messages as player.");
 
 				return true;
 			}
 
-			if (!checkPerm(sender, "msg")) {
+			if (!checkPerm(sender, "msg"))
 				return false;
-			}
 
-			if (args.length < 2) {
+			if (args.length < 2)
 				return usage(sender, command, subcmd);
-			}
 
 			player = (Player) sender;
 			chan = args[0];
 			msg = input.substring(input.indexOf(" ") + 1);
 
-			payload = new Packet();
-			payload.add(chan);
-			payload.add(player.getName());
-			payload.add(msg);
-			Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE,
-					player.getName(), payload);
+			I3Channel service = (I3Channel) Services.getService("channel");
+
+			if (service != null)
+				service.sendMessage(chan, player, msg);
+
+			return true;
+		} else if (subcmd.equals("debug")) {
+			if (Player.class.isInstance(sender)) {
+				sender.sendMessage("Can only get debug info from the console.");
+
+				return true;
+			}
+
+			this.callout.debugInfo();
+			Services.debugInfo();
 
 			return true;
 		} else {

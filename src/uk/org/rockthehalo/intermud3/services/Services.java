@@ -1,74 +1,160 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import java.util.Hashtable;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Vector;
 
-public class Services {
-	private static Vector<Runnable> threadList;
-	private static Hashtable<Object, String> threadTable;
-	private static Hashtable<String, Integer> services;
+import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.LPC.LPCInt;
+import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
+import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
-	public static Startup startup;
-	public static I3Error i3Error;
-	public static Ping ping;
+public class Services {
+	private static Vector<Object> services;
+	private static Vector<String> routerServices;
 
 	public Services() {
-		threadList = new Vector<Runnable>();
-		threadTable = new Hashtable<Object, String>();
-		services = new Hashtable<String, Integer>();
-		startup = new Startup();
-		i3Error = new I3Error();
-		ping = new Ping();
+		services = new Vector<Object>();
+		routerServices = new Vector<String>();
+
+		new I3Error();
+		new Startup();
+		new Mudlist();
+		new I3Channel();
+		new Ping();
 	}
 
 	/**
-	 * @param services
-	 *            the services to set
+	 * @param service
+	 *            add service to the services table
 	 */
-	public void setServices(Hashtable<String, Integer> services) {
-		Services.services = services;
+	public static void addService(Object service) {
+		if (!services.contains(service))
+			services.add(service);
+	}
+
+	/**
+	 * @param serviceName
+	 *            add serviceName to the routerServices table
+	 */
+	public static void addServiceName(String serviceName) {
+		if (!routerServices.contains(serviceName))
+			routerServices.add(serviceName);
+	}
+
+	/**
+	 * Execute the method create for all I3 services.
+	 */
+	public static void create() {
+		for (Object obj : services) {
+			Method method = null;
+
+			try {
+				method = obj.getClass().getMethod("create");
+			} catch (NoSuchMethodException e) {
+			} catch (SecurityException e) {
+			}
+
+			if (method != null) {
+				try {
+					method.invoke(obj);
+				} catch (IllegalAccessException e) {
+					Intermud3.instance.logError("", e);
+				} catch (IllegalArgumentException e) {
+					Intermud3.instance.logError("", e);
+				} catch (InvocationTargetException e) {
+					Intermud3.instance.logError("", e);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Show debug info for all I3 services.
+	 */
+	public static void debugInfo() {
+		Intermud3.instance.logInfo("services:       " + services.toString());
+		Intermud3.instance.logInfo("routerServices: "
+				+ routerServices.toString());
+
+		for (Object obj : services) {
+			Method method = null;
+
+			try {
+				method = obj.getClass().getMethod("debugInfo");
+			} catch (NoSuchMethodException e) {
+				method = null;
+			} catch (SecurityException e) {
+				method = null;
+			}
+
+			if (method != null) {
+				try {
+					method.invoke(obj);
+				} catch (IllegalAccessException e) {
+				} catch (IllegalArgumentException e) {
+				} catch (InvocationTargetException e) {
+				}
+			}
+		}
 	}
 
 	/**
 	 * @return the services registered for I3
 	 */
-	public Hashtable<String, Integer> getServices() {
-		return services;
+	public static LPCMapping getRouterServices() {
+		LPCMapping mapping = new LPCMapping();
+
+		for (String name : routerServices)
+			mapping.put(new LPCString(name), new LPCInt(1));
+
+		return mapping;
 	}
 
 	/**
-	 * 
 	 * @param name
-	 *            add a service name to the table
+	 *            the service name to search for
+	 * @return the service object or null if not found
 	 */
-	public static void addService(Runnable threadObject, String serviceName) {
-		services.put(serviceName, 1);
-		threadTable.put(threadObject, "I3-" + serviceName);
+	public static Object getService(String name) {
+		for (Object obj : services)
+			if (obj.toString().equals(name))
+				return obj;
+
+		return null;
 	}
 
 	/**
-	 * 
+	 * Remove all I3 services.
 	 */
-	public static void startHeartBeats() {
-		Set<?> keys = threadTable.keySet();
+	public static void remove() {
+		for (Object obj : services) {
+			Method method = null;
 
-		for (Object key : keys) {
-			String threadName = threadTable.get(key);
-			Thread thread = new Thread(null, (Runnable) key, threadName);
+			try {
+				method = obj.getClass().getMethod("remove");
+			} catch (NoSuchMethodException e) {
+				method = null;
+			} catch (SecurityException e) {
+				method = null;
+			}
 
-			threadList.add(thread);
-			thread.start();
+			if (method != null) {
+				try {
+					method.invoke(obj);
+				} catch (IllegalAccessException e) {
+				} catch (IllegalArgumentException e) {
+				} catch (InvocationTargetException e) {
+				}
+			}
 		}
 	}
 
 	/**
-	 * 
+	 * @param serviceName
+	 *            remove serviceName from the routerServices table
 	 */
-	public static void stopHeartBeats() {
-		for (Object thread : threadList)
-			((Thread) thread).interrupt();
-
-		threadList.clear();
+	public static void removeServiceName(String serviceName) {
+		routerServices.remove(serviceName);
 	}
 }

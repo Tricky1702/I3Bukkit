@@ -5,239 +5,45 @@ import java.util.logging.Logger;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.services.Services;
-import uk.org.rockthehalo.intermud3.testsuite.MudModeTest;
 
 public class Intermud3 extends JavaPlugin {
-	private MudModeTest mudmodeTest;
+	private final static Logger logger = Logger.getLogger("Minecraft");
 
-	private I3Command cmdExec;
-	private String i3ServerName;
-	private String i3ServerIP;
-	private int i3ServerPort;
-	private LPCArray routerList;
-	private LPCInt routerPassword;
-	private int mudlistID;
-	private int chanlistID;
-	private String adminEmail;
-	private String pluginVersion;
-	private long bootTime;
+	private final long bootTime = System.currentTimeMillis();
+	private final int hBeatDelay = 15 * 60;
 
-	public final static Logger logger = Logger.getLogger("Minecraft");
+	private Network network = null;
+	private CallOut callout = null;
+	private boolean debugFlag = false;
+
 	public static Intermud3 instance;
-	public static Network network;
-	public static Services services;
 
 	/**
 	 * Constructor
 	 */
 	public Intermud3() {
-		bootTime = System.currentTimeMillis();
-
-		mudmodeTest = new MudModeTest();
-
-		cmdExec = new I3Command();
 		instance = this;
-		network = null;
-		services = null;
-
-		i3ServerName = null;
-		i3ServerIP = null;
-		i3ServerPort = 0;
-		routerList = new LPCArray();
-		routerPassword = new LPCInt();
-		pluginVersion = null;
 	}
 
+	/**
+	 * @param msg
+	 */
+	public void debug(String msg) {
+		if (this.debugFlag)
+			log("[Intermud3] " + msg, Level.INFO);
+	}
+
+	/**
+	 * @return the bootTime
+	 */
 	public long getBootTime() {
-		return bootTime;
+		return this.bootTime;
 	}
 
-	/**
-	 * @return the plugin version
-	 */
-	public String getPluginVersion() {
-		return pluginVersion;
-	}
-
-	/**
-	 * @param version
-	 *            the version to set
-	 */
-	private void setPluginVersion(String pluginVersion) {
-		this.pluginVersion = pluginVersion;
-	}
-
-	/**
-	 * @param routerList
-	 *            the routerList to set
-	 */
-	public void setRouterList(LPCArray routerList) {
-		this.routerList = routerList;
-	}
-
-	/**
-	 * @return the routerList
-	 */
-	public LPCArray getRouterList() {
-		return routerList;
-	}
-
-	/**
-	 * @param routerPassword
-	 *            the routerPassword to set
-	 */
-	public void setRouterPassword(LPCInt routerPassword) {
-		this.routerPassword = routerPassword;
-	}
-
-	/**
-	 * @param routerPassword
-	 *            the routerPassword to set
-	 */
-	public void setRouterPassword(int routerPassword) {
-		this.routerPassword = new LPCInt(routerPassword);
-	}
-
-	/**
-	 * @return the routerPassword
-	 */
-	public LPCInt getRouterPassword() {
-		return routerPassword;
-	}
-
-	/**
-	 * @return the i3ServerName
-	 */
-	public String getServerName() {
-		return i3ServerName;
-	}
-
-	/**
-	 * @param i3ServerName
-	 *            the i3ServerName to set
-	 */
-	public void setServerName(String i3ServerName) {
-		this.i3ServerName = i3ServerName;
-	}
-
-	/**
-	 * @return the i3ServerIP
-	 */
-	public String getServerIP() {
-		return i3ServerIP;
-	}
-
-	/**
-	 * @param i3ServerIP
-	 *            the i3ServerIP to set
-	 */
-	public void setServerIP(String i3ServerIP) {
-		this.i3ServerIP = i3ServerIP;
-	}
-
-	/**
-	 * @return the i3ServerPort
-	 */
-	public int getServerPort() {
-		return i3ServerPort;
-	}
-
-	/**
-	 * @param i3ServerPort
-	 *            the i3ServerPort to set
-	 */
-	public void setServerPort(int i3ServerPort) {
-		this.i3ServerPort = i3ServerPort;
-	}
-
-	/**
-	 * @return the mudlistID
-	 */
-	public int getMudlistID() {
-		return mudlistID;
-	}
-
-	/**
-	 * @param mudlistID
-	 *            the mudlistID to set
-	 */
-	public void setMudlistID(int mudlistID) {
-		this.mudlistID = mudlistID;
-	}
-
-	/**
-	 * @return the chanlistID
-	 */
-	public int getChanlistID() {
-		return chanlistID;
-	}
-
-	/**
-	 * @param chanlistID
-	 *            the chanlistID to set
-	 */
-	public void setChanlistID(int chanlistID) {
-		this.chanlistID = chanlistID;
-	}
-
-	/**
-	 * @return the adminEmail
-	 */
-	public String getAdminEmail() {
-		return adminEmail;
-	}
-
-	/**
-	 * @param adminEmail
-	 *            the adminEmail to set
-	 */
-	public void setAdminEmail(String adminEmail) {
-		this.adminEmail = adminEmail;
-	}
-
-	@Override
-	public void onEnable() {
-		String version;
-
-		mudmodeTest.test();
-
-		getCommand("intermud3").setExecutor(cmdExec);
-
-		setPluginVersion(getDescription().getVersion());
-		version = getPluginVersion();
-
-		if (version == null || version.length() < 1) {
-			version = "0.1a";
-			setPluginVersion(version);
-		}
-
-		saveDefaultConfig();
-		setServerName(getConfig().getString("server.name"));
-		setServerIP(getConfig().getString("server.ip"));
-		setServerPort(getConfig().getInt("server.port"));
-		setRouterPassword(getConfig().getInt("server.password"));
-		setMudlistID(getConfig().getInt("server.mudlistid"));
-		setChanlistID(getConfig().getInt("server.chanlistid"));
-		setAdminEmail(getConfig().getString("adminEmail"));
-
-		services = new Services();
-		network = new Network();
-
-		logInfo("Intermud3 v" + version + " has been enabled");
-	}
-
-	@Override
-	public void onDisable() {
-		if (network != null && network.isConnected()) {
-			Intermud3.network.shutdown(0);
-		}
-
-		logInfo("Intermud3 v" + getPluginVersion() + " has been disabled!");
-	}
-
-	public static int rnd(int range) {
-		return (int) (Math.random() * range);
+	public void heartBeat() {
+		saveConfig();
 	}
 
 	/**
@@ -250,9 +56,41 @@ public class Intermud3 extends JavaPlugin {
 
 	/**
 	 * @param msg
+	 * @param level
+	 * @param thrown
+	 */
+	private void log(String msg, Level level, Throwable thrown) {
+		Intermud3.logger.log(level, msg, thrown);
+	}
+
+	/**
+	 * @param msg
+	 */
+	public void logError(String msg) {
+		log("[Intermud3] Error: " + msg, Level.SEVERE);
+	}
+
+	/**
+	 * @param msg
+	 * @param thrown
+	 */
+	public void logError(String msg, Throwable thrown) {
+		log("[Intermud3] Error: " + msg, Level.SEVERE, thrown);
+	}
+
+	/**
+	 * @param msg
 	 */
 	public void logInfo(String msg) {
 		log("[Intermud3] " + msg, Level.INFO);
+	}
+
+	/**
+	 * @param msg
+	 * @param thrown
+	 */
+	public void logInfo(String msg, Throwable thrown) {
+		log("[Intermud3] " + msg, Level.INFO, thrown);
 	}
 
 	/**
@@ -264,8 +102,39 @@ public class Intermud3 extends JavaPlugin {
 
 	/**
 	 * @param msg
+	 * @param thrown
 	 */
-	public void logError(String msg) {
-		log("[Intermud3] Error: " + msg, Level.SEVERE);
+	public void logWarn(String msg, Throwable thrown) {
+		log("[Intermud3] Warning: " + msg, Level.WARNING, thrown);
+	}
+
+	@Override
+	public void onDisable() {
+		if (this.network != null && this.network.isConnected())
+			this.network.shutdown(0);
+
+		this.callout.removeHeartBeat(this);
+		logInfo(this.toString() + " has been disabled!");
+	}
+
+	@Override
+	public void onEnable() {
+		saveDefaultConfig();
+		this.debugFlag = getConfig().getBoolean("debug", false);
+
+		new CallOut();
+		new Network();
+		new Services();
+
+		this.callout = CallOut.instance;
+		this.network = Network.instance;
+		getCommand("intermud3").setExecutor(new I3Command());
+
+		this.callout.setHeartBeat(this, this.hBeatDelay);
+		logInfo(this.toString() + " has been enabled");
+	}
+
+	public int rnd(int range) {
+		return (int) (Math.random() * range);
 	}
 }
