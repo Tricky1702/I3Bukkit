@@ -6,8 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.bukkit.entity.Player;
-
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCMapping extends LPCVar implements Cloneable,
@@ -101,7 +99,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCArray getLPCArray(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isArray(obj))
+		if (LPCVar.isLPCArray(obj))
 			return (LPCArray) obj;
 
 		return null;
@@ -116,7 +114,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCInt getLPCInt(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isInt(obj))
+		if (LPCVar.isLPCInt(obj))
 			return (LPCInt) obj;
 
 		return null;
@@ -126,7 +124,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCMapping getLPCMapping(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isMapping(obj))
+		if (LPCVar.isLPCMapping(obj))
 			return (LPCMapping) obj;
 
 		return null;
@@ -136,18 +134,8 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCString getLPCString(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isString(obj))
+		if (LPCVar.isLPCString(obj))
 			return (LPCString) obj;
-
-		return null;
-	}
-
-	@Override
-	public Player getPlayer(Object index) {
-		Object obj = this.get(index);
-
-		if (LPCVar.isPlayer(obj))
-			return (Player) obj;
 
 		return null;
 	}
@@ -241,13 +229,13 @@ public class LPCMapping extends LPCVar implements Cloneable,
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isArray(obj))
+		if (LPCVar.isLPCArray(obj))
 			setLPCData((LPCArray) obj);
-		else if (LPCVar.isInt(obj))
+		else if (LPCVar.isLPCInt(obj))
 			setLPCData((LPCInt) obj);
-		else if (LPCVar.isMapping(obj))
+		else if (LPCVar.isLPCMapping(obj))
 			setLPCData((LPCMapping) obj);
-		else if (LPCVar.isString(obj))
+		else if (LPCVar.isLPCString(obj))
 			setLPCData((LPCString) obj);
 		else
 			throw new I3Exception(

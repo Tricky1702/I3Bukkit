@@ -12,7 +12,6 @@ import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 
-import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
@@ -25,9 +24,7 @@ import uk.org.rockthehalo.intermud3.services.Services;
 public class Network implements Runnable {
 	private volatile Thread inputThread = null;
 
-	private final Intermud3 i3;
-	private final CallOut callout;
-
+	private final Intermud3 i3 = Intermud3.instance;
 	private final long maxRetryTime = 600;
 	private final long minRetryTime = 30;
 	private final long retryTimeStep = 20;
@@ -35,7 +32,6 @@ public class Network implements Runnable {
 	private Socket sock = null;
 	private DataOutputStream sockOut = null;
 	private DataInputStream sockIn = null;
-
 	private LPCString adminEmail = new LPCString();
 	private LPCInt chanlistID = new LPCInt();
 	private List<String> configRouterList = new ArrayList<String>();
@@ -53,13 +49,7 @@ public class Network implements Runnable {
 	private LPCInt routerPassword = new LPCInt();
 	private LPCInt routerPort = new LPCInt();
 
-	public static Network instance;
-
 	public Network() {
-		instance = this;
-		this.i3 = Intermud3.instance;
-		this.callout = CallOut.instance;
-
 		create();
 	}
 
@@ -123,9 +113,9 @@ public class Network implements Runnable {
 		Object service = Services.getService("startup");
 
 		if (service == null)
-			this.i3.logError("Startup service not found!");
+			this.i3.logError("I3Startup service not found!");
 		else
-			this.callout.callOut(service, "send", 2);
+			Intermud3.callout.callOut(service, "send", 2);
 	}
 
 	public void create() {
@@ -291,12 +281,12 @@ public class Network implements Runnable {
 			return;
 		} else {
 			create();
-			this.callout.callOut(this, "connect", 2);
+			Intermud3.callout.callOut(this, "connect", 2);
 		}
 	}
 
 	public void reconnect(long reconnectWait) {
-		this.callout.callOut(this, "reconnect", reconnectWait);
+		Intermud3.callout.callOut(this, "reconnect", reconnectWait);
 	}
 
 	public void remove() {
@@ -431,7 +421,7 @@ public class Network implements Runnable {
 
 			if (packet.size() == 0)
 				continue;
-			else if (!LPCVar.isArray(packet))
+			else if (!LPCVar.isLPCArray(packet))
 				err = "packet not array";
 			else if (packet.size() <= 6)
 				err = "packet size too small";

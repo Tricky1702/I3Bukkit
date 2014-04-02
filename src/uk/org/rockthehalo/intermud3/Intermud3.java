@@ -1,24 +1,23 @@
 package uk.org.rockthehalo.intermud3;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
 import uk.org.rockthehalo.intermud3.LPC.CallOut;
+import uk.org.rockthehalo.intermud3.LPC.HeartBeat;
 import uk.org.rockthehalo.intermud3.services.Services;
 
 public class Intermud3 extends JavaPlugin {
-	private final static Logger logger = Logger.getLogger("Minecraft");
-
 	private final long bootTime = System.currentTimeMillis();
 	private final int hBeatDelay = 15 * 60;
 
-	private Network network = null;
-	private CallOut callout = null;
 	private boolean debugFlag = false;
 
-	public static Intermud3 instance;
+	public static Intermud3 instance = null;
+	public static Network network = null;
+	public static CallOut callout = null;
+	public static HeartBeat heartbeat = null;
 
 	/**
 	 * Constructor
@@ -51,7 +50,7 @@ public class Intermud3 extends JavaPlugin {
 	 * @param level
 	 */
 	private void log(String msg, Level level) {
-		Intermud3.logger.log(level, msg);
+		getLogger().log(level, msg);
 	}
 
 	/**
@@ -60,7 +59,7 @@ public class Intermud3 extends JavaPlugin {
 	 * @param thrown
 	 */
 	private void log(String msg, Level level, Throwable thrown) {
-		Intermud3.logger.log(level, msg, thrown);
+		getLogger().log(level, msg, thrown);
 	}
 
 	/**
@@ -110,10 +109,10 @@ public class Intermud3 extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		if (this.network != null && this.network.isConnected())
-			this.network.shutdown(0);
+		if (network != null && network.isConnected())
+			network.shutdown(0);
 
-		this.callout.removeHeartBeat(this);
+		heartbeat.removeHeartBeat(this);
 		logInfo(this.toString() + " has been disabled!");
 	}
 
@@ -122,19 +121,14 @@ public class Intermud3 extends JavaPlugin {
 		saveDefaultConfig();
 		this.debugFlag = getConfig().getBoolean("debug", false);
 
-		new CallOut();
-		new Network();
-		new Services();
+		callout = new CallOut();
+		heartbeat = new HeartBeat();
+		network = new Network();
 
-		this.callout = CallOut.instance;
-		this.network = Network.instance;
+		heartbeat.setHeartBeat(this, this.hBeatDelay);
+		Services.addServices();
 		getCommand("intermud3").setExecutor(new I3Command());
 
-		this.callout.setHeartBeat(this, this.hBeatDelay);
 		logInfo(this.toString() + " has been enabled");
-	}
-
-	public int rnd(int range) {
-		return (int) (Math.random() * range);
 	}
 }

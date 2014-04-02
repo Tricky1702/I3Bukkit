@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Vector;
 
-import org.bukkit.entity.Player;
-
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCMixed extends LPCVar implements Cloneable {
@@ -28,7 +26,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public boolean add(Object lpcData) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).add(lpcData);
 		case INT:
@@ -36,27 +34,11 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).add(lpcData);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).add(lpcData);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).add(lpcData);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).add(lpcData);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) add(lpcData)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).add(lpcData);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) add(lpcData)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) add(lpcData)");
 		case STRING:
 			return ((LPCString) this.lpcData).add(lpcData);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) add(lpcData)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) add(lpcData)");
 		}
@@ -64,34 +46,25 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public Object clone() {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).clone();
 		case INT:
 			return ((LPCInt) this.lpcData).clone();
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).clone();
-		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).clone();
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).clone();
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).clone();
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).clone();
-			else
-				return new LPCMixed(this.lpcData);
 		case STRING:
 			return ((LPCString) this.lpcData).clone();
 		default:
-			return new LPCMixed(this.lpcData);
+			break;
 		}
+
+		return new LPCMixed(this.lpcData);
 	}
 
 	@Override
 	public Object get(Object index) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).get(index);
 		case INT:
@@ -99,27 +72,11 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).get(index);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).get(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).get(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).get(index);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) get(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).add(index);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) get(index)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) get(index)");
 		case STRING:
-			return ((LPCString) this.lpcData).add(index);
+			return ((LPCString) this.lpcData).get(index);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) get(index)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) get(index)");
 		}
@@ -127,7 +84,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public LPCArray getLPCArray(Object index) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).getLPCArray(index);
 		case INT:
@@ -135,27 +92,11 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCArray(index);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).getLPCArray(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).getLPCArray(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).getLPCArray(index);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCArray(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).getLPCArray(index);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) getLPCArray(index)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) getLPCArray(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCArray(index);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCArray(index)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) getLPCArray(index)");
 		}
@@ -168,7 +109,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public LPCInt getLPCInt(Object index) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).getLPCInt(index);
 		case INT:
@@ -176,47 +117,30 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCInt(index);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).getLPCInt(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).getLPCInt(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).getLPCInt(index);
-			else if (LPCVar.isPlayer(this.lpcData))
+			if (index == null)
+				return null;
+
+			String str = this.toString();
+			int ind = Integer.class.cast(index);
+
+			if (ind < 0 || ind >= str.length())
+				return null;
+
+			char ch = str.charAt(ind);
+			int i = 0;
+
+			try {
+				i = Integer.valueOf(ch);
+			} catch (NumberFormatException nfE) {
 				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCInt(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).getLPCInt(index);
-			else {
-				if (index == null)
-					return null;
-
-				String str = this.toString();
-				int ind = Integer.class.cast(index);
-
-				if (ind < 0 || ind >= str.length())
-					return null;
-
-				char ch = str.charAt(ind);
-				int i = 0;
-
-				try {
-					i = Integer.valueOf(ch);
-				} catch (NumberFormatException nfE) {
-					throw new I3Exception(
-							"Invalid operation for LPCMixed: (LPCMixed) getLPCInt(index)",
-							nfE);
-				}
-
-				return new LPCInt(i);
+						"Invalid operation for LPCMixed: (LPCMixed) getLPCInt(index)",
+						nfE);
 			}
+
+			return new LPCInt(i);
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCInt(index);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCInt(index)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) getLPCInt(index)");
 		}
@@ -224,7 +148,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public LPCMapping getLPCMapping(Object index) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).getLPCMapping(index);
 		case INT:
@@ -232,27 +156,11 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCMapping(index);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).getLPCMapping(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).getLPCMapping(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).getLPCMapping(index);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCMapping(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).getLPCMapping(index);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) getLPCMapping(index)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) getLPCMapping(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCMapping(index);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCMapping(index)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) getLPCMapping(index)");
 		}
@@ -260,7 +168,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public LPCString getLPCString(Object index) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).getLPCString(index);
 		case INT:
@@ -268,96 +176,28 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCString(index);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).getLPCString(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).getLPCString(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).getLPCString(index);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCString(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).getLPCString(index);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) getLPCString(index)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) getLPCString(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCString(index);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getLPCString(index)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) getLPCString(index)");
 		}
 	}
 
 	@Override
-	public Player getPlayer(Object index) throws I3Exception {
-		switch (this.getType()) {
-		case ARRAY:
-			return ((LPCArray) this.lpcData).getPlayer(index);
-		case INT:
-			return ((LPCInt) this.lpcData).getPlayer(index);
-		case MAPPING:
-			return ((LPCMapping) this.lpcData).getPlayer(index);
-		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).getPlayer(index);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).getPlayer(index);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).getPlayer(index);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getPlayer(index)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).getPlayer(index);
-			else
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) getPlayer(index)");
-		case STRING:
-			return ((LPCString) this.lpcData).getPlayer(index);
-		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) getPlayer(index)");
-
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) getPlayer(index)");
-		}
-	}
-
-	@Override
 	public boolean isEmpty() {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).isEmpty();
 		case INT:
 			return ((LPCInt) this.lpcData).isEmpty();
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).isEmpty();
-		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).isEmpty();
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).isEmpty();
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).isEmpty();
-			else if (LPCVar.isPlayer(this.lpcData))
-				return ((Player) this.lpcData).getName().isEmpty();
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).isEmpty();
-			else
-				return this.lpcData != null;
 		case STRING:
 			return ((LPCString) this.lpcData).isEmpty();
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				return ((Player) this.lpcData).getName().isEmpty();
-
 			break;
 		}
 
@@ -366,7 +206,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public Object set(Object index, Object lpcData) throws I3Exception {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).set(index, lpcData);
 		case INT:
@@ -374,27 +214,11 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).set(index, lpcData);
 		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).set(index, lpcData);
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).set(index, lpcData);
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).set(index, lpcData);
-			else if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) set(index, lpcData)");
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).set(index, lpcData);
-			else if (LPCVar.isMixed(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (LPCMixed) set(index, lpcData)");
+			throw new I3Exception(
+					"Invalid operation for LPCMixed: (LPCMixed) set(index, lpcData)");
 		case STRING:
 			return ((LPCString) this.lpcData).set(index, lpcData);
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				throw new I3Exception(
-						"Invalid operation for LPCMixed: (Player) set(index, lpcData)");
-
 			throw new I3Exception(
 					"Invalid operation for LPCMixed: (Unknown) set(index, lpcData)");
 		}
@@ -426,58 +250,64 @@ public class LPCMixed extends LPCVar implements Cloneable {
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isArray(obj))
+		switch (LPCVar.getType(obj)) {
+		case ARRAY:
 			setLPCData((LPCArray) obj);
-		else if (LPCVar.isInt(obj))
+
+			break;
+		case INT:
 			setLPCData((LPCInt) obj);
-		else if (LPCVar.isMapping(obj))
+
+			break;
+		case MAPPING:
 			setLPCData((LPCMapping) obj);
-		else if (LPCVar.isString(obj))
-			setLPCData((LPCString) obj);
-		else if (LPCVar.isMixed(obj))
+
+			break;
+		case MIXED:
 			this.lpcData = obj;
-		else
+
+			break;
+		case STRING:
+			setLPCData((LPCString) obj);
+
+			break;
+		default:
 			throw new I3Exception(
 					"Invalid data for LPCMixed: setLPCData(Object) '"
 							+ obj.toString() + "'");
+		}
 	}
 
 	@Override
 	public int size() {
-		switch (this.getType()) {
+		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).size();
 		case INT:
 			return ((LPCInt) this.lpcData).size();
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).size();
-		case MIXED:
-			if (LPCVar.isArray(this.lpcData))
-				return ((LPCArray) this.lpcData).size();
-			else if (LPCVar.isInt(this.lpcData))
-				return ((LPCInt) this.lpcData).size();
-			else if (LPCVar.isMapping(this.lpcData))
-				return ((LPCMapping) this.lpcData).size();
-			else if (LPCVar.isPlayer(this.lpcData))
-				return ((Player) this.lpcData).getName().length();
-			else if (LPCVar.isString(this.lpcData))
-				return ((LPCString) this.lpcData).size();
-			else if (LPCVar.isMixed(this.lpcData))
-				return this.lpcData != null ? this.toString().length() : 0;
 		case STRING:
 			return ((LPCString) this.lpcData).size();
 		default:
-			if (LPCVar.isPlayer(this.lpcData))
-				return ((Player) this.lpcData).getName().length();
-
 			break;
 		}
 
-		return this.lpcData != null ? this.toString().length() : 0;
+		return this.lpcData != null ? this.lpcData.toString().length() : 0;
 	}
 
 	@Override
 	public String toString() {
+		switch (LPCVar.getType(this.lpcData)) {
+		case ARRAY:
+		case INT:
+		case MAPPING:
+		case STRING:
+			return LPCVar.toMudMode(this.lpcData);
+		default:
+			break;
+		}
+
 		return this.lpcData.toString();
 	}
 }

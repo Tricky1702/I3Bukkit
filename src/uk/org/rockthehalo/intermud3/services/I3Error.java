@@ -5,31 +5,14 @@ import java.util.Locale;
 import java.util.Map;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.Network;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketErrorBase;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
 public class I3Error extends ServiceTemplate {
-	private final Intermud3 i3;
-	private final Network network;
-
-	public enum PacketErrorBase {
-		ERROR_CODE(6), ERROR_MESSAGE(7), ERROR_PACKET(8);
-
-		private int index;
-
-		private PacketErrorBase(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-	}
-
-	public enum I3RouterErrorCodes {
+	public enum I3ErrorCodes {
 		BAD_MOJO("bad-mojo") {
 			@Override
 			public void handler(Packet packet) {
@@ -37,15 +20,15 @@ public class I3Error extends ServiceTemplate {
 						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
 
 				if (errorMsg != null)
-					this.i3.logError("Router: Bad Mojo/" + errorMsg);
+					Intermud3.instance.logError("Bad Mojo/" + errorMsg);
 				else
-					this.i3.logError("Router: Bad Mojo");
+					Intermud3.instance.logError("Bad Mojo");
 
-				this.i3.logError("Reconnecting in 2 minutes.");
-				this.network
-						.setReconnectWait(this.network.getReconnectWait() - 10);
-				this.network.reconnect((2 * 60) + 5);
-				this.network.shutdown(2 * 60);
+				Intermud3.instance.logError("Reconnecting in 2 minutes.");
+				Intermud3.network.setReconnectWait(Intermud3.network
+						.getReconnectWait() - 10);
+				Intermud3.network.reconnect((2 * 60) + 5);
+				Intermud3.network.shutdown(2 * 60);
 			}
 		},
 		BAD_PKT("bad-pkt") {
@@ -55,9 +38,9 @@ public class I3Error extends ServiceTemplate {
 						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
 
 				if (errorMsg != null)
-					this.i3.logError("Router: Bad Packet/" + errorMsg);
+					Intermud3.instance.logError("Bad Packet/" + errorMsg);
 				else
-					this.i3.logError("Router: Bad Packet");
+					Intermud3.instance.logError("Bad Packet");
 			}
 		},
 		BAD_PROTO("bad-proto") {
@@ -69,12 +52,12 @@ public class I3Error extends ServiceTemplate {
 				if (errorMsg != null
 						&& errorMsg.toString()
 								.contains("MUD already connected")) {
-					this.i3.logError("Router: Bad Proto/" + errorMsg);
-					this.i3.logError("Reconnecting in 5 minutes.");
-					this.network.setReconnectWait(this.network
+					Intermud3.instance.logError("Bad Proto/" + errorMsg);
+					Intermud3.instance.logError("Reconnecting in 5 minutes.");
+					Intermud3.network.setReconnectWait(Intermud3.network
 							.getReconnectWait() - 10);
-					this.network.reconnect((5 * 60) + 5);
-					this.network.shutdown(5 * 60);
+					Intermud3.network.reconnect((5 * 60) + 5);
+					Intermud3.network.shutdown(5 * 60);
 				}
 			}
 		},
@@ -97,10 +80,10 @@ public class I3Error extends ServiceTemplate {
 											.getIndex());
 
 							if (errorMsg != null)
-								this.i3.logError("Router: Not Allowed/"
+								Intermud3.instance.logError("Not Allowed/"
 										+ errorMsg);
 							else
-								this.i3.logError("Router: Not Allowed");
+								Intermud3.instance.logError("Not Allowed");
 
 							I3Channel service = (I3Channel) Services
 									.getService("channel");
@@ -119,93 +102,9 @@ public class I3Error extends ServiceTemplate {
 						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
 
 				if (errorMsg != null)
-					this.i3.logError("Router: Not Implemented/" + errorMsg);
+					Intermud3.instance.logError("Not Implemented/" + errorMsg);
 				else
-					this.i3.logError("Router: Not Implemented");
-			}
-		},
-		UNK_DST("unk-dst") {
-			@Override
-			public void handler(Packet packet) {
-				LPCString errorMsg = (LPCString) packet
-						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
-
-				if (errorMsg != null)
-					this.i3.logError("Router: Unknown Destination/" + errorMsg);
-				else
-					this.i3.logError("Router: Unknown Destination");
-			}
-		},
-		UNK_SRC("unk-src") {
-			@Override
-			public void handler(Packet packet) {
-				LPCString errorMsg = (LPCString) packet
-						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
-
-				if (errorMsg != null)
-					this.i3.logError("Router: Unknown Source/" + errorMsg);
-				else
-					this.i3.logError("Router: Unknown Source");
-			}
-		},
-		UNK_TYPE("unk-type") {
-			@Override
-			public void handler(Packet packet) {
-				LPCString errorMsg = (LPCString) packet
-						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
-
-				if (errorMsg != null)
-					this.i3.logError("Router: Unknown Packet Type/" + errorMsg);
-				else
-					this.i3.logError("Router: Unknown Packet Type");
-			}
-		};
-
-		protected final Intermud3 i3;
-		protected final Network network;
-		private static Map<String, I3RouterErrorCodes> nameToErrCode;
-		private String errCodeName;
-
-		private I3RouterErrorCodes(String errCodeName) {
-			this.i3 = Intermud3.instance;
-			this.network = Network.instance;
-
-			this.errCodeName = errCodeName;
-		}
-
-		public String getErrCodeName() {
-			return this.errCodeName;
-		}
-
-		public static I3RouterErrorCodes getNamedErrCode(String errCodeName) {
-			if (nameToErrCode == null) {
-				initMapping();
-			}
-
-			return nameToErrCode.get(errCodeName);
-		}
-
-		private static void initMapping() {
-			nameToErrCode = new HashMap<String, I3RouterErrorCodes>();
-
-			for (I3RouterErrorCodes type : values())
-				nameToErrCode.put(type.errCodeName, type);
-		}
-
-		public abstract void handler(Packet packet);
-	}
-
-	public enum I3MudErrorCodes {
-		BAD_PKT("bad-pkt") {
-			@Override
-			public void handler(Packet packet) {
-				LPCString errorMsg = (LPCString) packet
-						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
-
-				if (errorMsg != null)
-					this.i3.logError("Mud: Bad Packet/" + errorMsg);
-				else
-					this.i3.logError("Mud: Bad Packet");
+					Intermud3.instance.logError("Not Implemented");
 			}
 		},
 		UNK_CHANNEL("unk-channel") {
@@ -227,10 +126,10 @@ public class I3Error extends ServiceTemplate {
 											.getIndex());
 
 							if (errorMsg != null)
-								this.i3.logError("Mud: Unknown Channel/"
+								Intermud3.instance.logError("Unknown Channel/"
 										+ errorMsg);
 							else
-								this.i3.logError("Mud: Unknown Channel");
+								Intermud3.instance.logError("Unknown Channel");
 
 							I3Channel service = (I3Channel) Services
 									.getService("channel");
@@ -242,6 +141,31 @@ public class I3Error extends ServiceTemplate {
 				}
 			}
 		},
+		UNK_DST("unk-dst") {
+			@Override
+			public void handler(Packet packet) {
+				LPCString errorMsg = (LPCString) packet
+						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
+
+				if (errorMsg != null)
+					Intermud3.instance.logError("Unknown Destination/"
+							+ errorMsg);
+				else
+					Intermud3.instance.logError("Unknown Destination");
+			}
+		},
+		UNK_SRC("unk-src") {
+			@Override
+			public void handler(Packet packet) {
+				LPCString errorMsg = (LPCString) packet
+						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
+
+				if (errorMsg != null)
+					Intermud3.instance.logError("Unknown Source/" + errorMsg);
+				else
+					Intermud3.instance.logError("Unknown Source");
+			}
+		},
 		UNK_TYPE("unk-type") {
 			@Override
 			public void handler(Packet packet) {
@@ -249,9 +173,10 @@ public class I3Error extends ServiceTemplate {
 						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
 
 				if (errorMsg != null)
-					this.i3.logError("Mud: Unknown Packet Type/" + errorMsg);
+					Intermud3.instance.logError("Unknown Packet Type/"
+							+ errorMsg);
 				else
-					this.i3.logError("Mud: Unknown Packet Type");
+					Intermud3.instance.logError("Unknown Packet Type");
 			}
 		},
 		UNK_USER("unk-user") {
@@ -261,68 +186,46 @@ public class I3Error extends ServiceTemplate {
 						.get(PacketErrorBase.ERROR_MESSAGE.getIndex());
 
 				if (errorMsg != null)
-					this.i3.logError("Mud: Unknown Target User/" + errorMsg);
+					Intermud3.instance.logError("Unknown Target User/"
+							+ errorMsg);
 				else
-					this.i3.logError("Mud: Unknown Target User");
+					Intermud3.instance.logError("Unknown Target User");
 			}
 		};
 
-		protected final Intermud3 i3;
-		private static Map<String, I3MudErrorCodes> nameToErrCode;
-		private String errCodeName;
+		private static Map<String, I3ErrorCodes> nameToErrorCode = null;
+		private String errorCodeName = null;
 
-		private I3MudErrorCodes(String errCodeName) {
-			this.i3 = Intermud3.instance;
-
-			this.errCodeName = errCodeName;
+		private I3ErrorCodes(String errorCodeName) {
+			this.errorCodeName = errorCodeName;
 		}
 
-		public String getErrCodeName() {
-			return this.errCodeName;
+		public String getErrorCodeName() {
+			return this.errorCodeName;
 		}
 
-		public static I3MudErrorCodes getNamedErrCode(String errCodeName) {
-			if (nameToErrCode == null) {
-				initMapping();
+		public static I3ErrorCodes getNamedErrorCode(String errorCodeName) {
+			if (I3ErrorCodes.nameToErrorCode == null) {
+				I3ErrorCodes.initMapping();
 			}
 
-			return nameToErrCode.get(errCodeName);
+			return I3ErrorCodes.nameToErrorCode.get(errorCodeName);
 		}
 
 		private static void initMapping() {
-			nameToErrCode = new HashMap<String, I3MudErrorCodes>();
+			I3ErrorCodes.nameToErrorCode = new HashMap<String, I3ErrorCodes>();
 
-			for (I3MudErrorCodes type : values())
-				nameToErrCode.put(type.errCodeName, type);
+			for (I3ErrorCodes type : I3ErrorCodes.values())
+				I3ErrorCodes.nameToErrorCode.put(type.errorCodeName, type);
 		}
 
 		public abstract void handler(Packet packet);
 	}
 
+	private final Intermud3 i3 = Intermud3.instance;
+
 	public I3Error() {
-		this.i3 = Intermud3.instance;
-		this.network = Network.instance;
-
-		super.setServiceName("error");
-		Services.addService(this);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#create()
-	 */
-	@Override
-	public void create() {
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#remove()
-	 */
-	@Override
-	public void remove() {
+		setServiceName("error");
 	}
 
 	/*
@@ -334,33 +237,19 @@ public class I3Error extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		LPCString originator = packet.getLPCString(PacketBase.O_MUD.getIndex());
-		LPCString errorCode = packet.getLPCString(PacketErrorBase.ERROR_CODE
-				.getIndex());
+		String errorCode = packet.getLPCString(
+				PacketErrorBase.ERROR_CODE.getIndex()).toString();
+		I3ErrorCodes i3ErrorCode = I3ErrorCodes.getNamedErrorCode(errorCode);
 
-		if (originator.toString().equals(
-				this.network.getRouterName().toString())) {
-			I3RouterErrorCodes routerErrCode = I3RouterErrorCodes
-					.getNamedErrCode(errorCode.toString());
+		if (i3ErrorCode != null) {
+			i3ErrorCode.handler(packet);
 
-			if (routerErrCode != null) {
-				routerErrCode.handler(packet);
-
-				return;
-			}
-		} else {
-			I3MudErrorCodes mudErrCode = I3MudErrorCodes
-					.getNamedErrCode(errorCode.toString());
-
-			if (mudErrCode != null) {
-				mudErrCode.handler(packet);
-
-				return;
-			}
+			return;
 		}
 
 		LPCString errorMsg = packet.getLPCString(PacketErrorBase.ERROR_MESSAGE
 				.getIndex());
+		LPCString originator = packet.getLPCString(PacketBase.O_MUD.getIndex());
 
 		this.i3.logError("Unhandled Error: " + originator + "/" + errorCode
 				+ "/" + errorMsg);
@@ -383,8 +272,6 @@ public class I3Error extends ServiceTemplate {
 
 		if (packet.getLPCInt(0) != null)
 			oUser = null;
-		else if (packet.getPlayer(0) != null)
-			oUser = packet.getPlayer(0).getName().toLowerCase(Locale.ENGLISH);
 		else if (packet.getLPCString(0) != null)
 			oUser = packet.getLPCString(0).toString()
 					.toLowerCase(Locale.ENGLISH);
@@ -393,8 +280,6 @@ public class I3Error extends ServiceTemplate {
 
 		if (packet.getLPCInt(2) != null)
 			tUser = null;
-		else if (packet.getPlayer(2) != null)
-			tUser = packet.getPlayer(2).getName().toLowerCase(Locale.ENGLISH);
 		else if (packet.getLPCString(2) != null)
 			tUser = packet.getLPCString(2).toString()
 					.toLowerCase(Locale.ENGLISH);
@@ -415,6 +300,7 @@ public class I3Error extends ServiceTemplate {
 			for (Object obj : packet.subList(5, packet.size()))
 				payload.add(obj);
 
-		this.network.sendToUser(PacketTypes.ERROR, oUser, tMud, tUser, payload);
+		Intermud3.network.sendToUser(PacketTypes.ERROR, oUser, tMud, tUser,
+				payload);
 	}
 }

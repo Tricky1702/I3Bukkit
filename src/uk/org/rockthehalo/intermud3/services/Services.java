@@ -10,60 +10,61 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
 public class Services {
-	private static Vector<Object> services;
-	private static Vector<String> routerServices;
+	private static Intermud3 i3 = Intermud3.instance;
+	private static Vector<Object> i3Services = new Vector<Object>();
+	private static Vector<String> i3RouterServiceNames = new Vector<String>();
 
-	public Services() {
-		services = new Vector<Object>();
-		routerServices = new Vector<String>();
+	private Services() {
+	}
 
-		new I3Error();
-		new Startup();
-		new Mudlist();
-		new I3Channel();
-		new Ping();
+	public static void addServices() {
+		addService(new I3Error());
+		addService(new I3Startup());
+		addService(new I3Mudlist());
+		addService(new I3Channel());
+		addService(new I3Ping());
 	}
 
 	/**
 	 * @param service
-	 *            add service to the services table
+	 *            add service to the i3Services table
 	 */
 	public static void addService(Object service) {
-		if (!services.contains(service))
-			services.add(service);
+		if (!i3Services.contains(service))
+			i3Services.add(service);
 	}
 
 	/**
-	 * @param serviceName
-	 *            add serviceName to the routerServices table
+	 * @param name
+	 *            add name to the i3RouterServiceNames table
 	 */
-	public static void addServiceName(String serviceName) {
-		if (!routerServices.contains(serviceName))
-			routerServices.add(serviceName);
+	public static void addServiceName(String name) {
+		if (!i3RouterServiceNames.contains(name))
+			i3RouterServiceNames.add(name);
 	}
 
 	/**
 	 * Execute the method create for all I3 services.
 	 */
 	public static void create() {
-		for (Object obj : services) {
+		for (Object service : i3Services) {
 			Method method = null;
 
 			try {
-				method = obj.getClass().getMethod("create");
+				method = service.getClass().getMethod("create");
 			} catch (NoSuchMethodException e) {
 			} catch (SecurityException e) {
 			}
 
 			if (method != null) {
 				try {
-					method.invoke(obj);
+					method.invoke(service);
 				} catch (IllegalAccessException e) {
-					Intermud3.instance.logError("", e);
+					i3.logError("", e);
 				} catch (IllegalArgumentException e) {
-					Intermud3.instance.logError("", e);
+					i3.logError("", e);
 				} catch (InvocationTargetException e) {
-					Intermud3.instance.logError("", e);
+					i3.logError("", e);
 				}
 			}
 		}
@@ -73,24 +74,21 @@ public class Services {
 	 * Show debug info for all I3 services.
 	 */
 	public static void debugInfo() {
-		Intermud3.instance.logInfo("services:       " + services.toString());
-		Intermud3.instance.logInfo("routerServices: "
-				+ routerServices.toString());
+		i3.logInfo("i3Services:           " + i3Services.toString());
+		i3.logInfo("i3RouterServiceNames: " + i3RouterServiceNames.toString());
 
-		for (Object obj : services) {
+		for (Object service : i3Services) {
 			Method method = null;
 
 			try {
-				method = obj.getClass().getMethod("debugInfo");
+				method = service.getClass().getMethod("debugInfo");
 			} catch (NoSuchMethodException e) {
-				method = null;
 			} catch (SecurityException e) {
-				method = null;
 			}
 
 			if (method != null) {
 				try {
-					method.invoke(obj);
+					method.invoke(service);
 				} catch (IllegalAccessException e) {
 				} catch (IllegalArgumentException e) {
 				} catch (InvocationTargetException e) {
@@ -105,21 +103,21 @@ public class Services {
 	public static LPCMapping getRouterServices() {
 		LPCMapping mapping = new LPCMapping();
 
-		for (String name : routerServices)
+		for (String name : i3RouterServiceNames)
 			mapping.put(new LPCString(name), new LPCInt(1));
 
 		return mapping;
 	}
 
 	/**
-	 * @param name
+	 * @param serviceName
 	 *            the service name to search for
 	 * @return the service object or null if not found
 	 */
-	public static Object getService(String name) {
-		for (Object obj : services)
-			if (obj.toString().equals(name))
-				return obj;
+	public static Object getService(String serviceName) {
+		for (Object service : i3Services)
+			if (service.toString().equals(serviceName))
+				return service;
 
 		return null;
 	}
@@ -128,11 +126,11 @@ public class Services {
 	 * Remove all I3 services.
 	 */
 	public static void remove() {
-		for (Object obj : services) {
+		for (Object service : i3Services) {
 			Method method = null;
 
 			try {
-				method = obj.getClass().getMethod("remove");
+				method = service.getClass().getMethod("remove");
 			} catch (NoSuchMethodException e) {
 				method = null;
 			} catch (SecurityException e) {
@@ -141,7 +139,7 @@ public class Services {
 
 			if (method != null) {
 				try {
-					method.invoke(obj);
+					method.invoke(service);
 				} catch (IllegalAccessException e) {
 				} catch (IllegalArgumentException e) {
 				} catch (InvocationTargetException e) {
@@ -151,10 +149,10 @@ public class Services {
 	}
 
 	/**
-	 * @param serviceName
-	 *            remove serviceName from the routerServices table
+	 * @param name
+	 *            remove name from the i3RouterServiceNames table
 	 */
-	public static void removeServiceName(String serviceName) {
-		routerServices.remove(serviceName);
+	public static void removeServiceName(String name) {
+		i3RouterServiceNames.remove(name);
 	}
 }

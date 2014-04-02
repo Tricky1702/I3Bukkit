@@ -6,10 +6,10 @@ import java.util.Map;
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.I3Error;
-import uk.org.rockthehalo.intermud3.services.Mudlist;
-import uk.org.rockthehalo.intermud3.services.Ping;
+import uk.org.rockthehalo.intermud3.services.I3Mudlist;
+import uk.org.rockthehalo.intermud3.services.I3Ping;
+import uk.org.rockthehalo.intermud3.services.I3Startup;
 import uk.org.rockthehalo.intermud3.services.Services;
-import uk.org.rockthehalo.intermud3.services.Startup;
 
 public class Packet extends LPCArray {
 	public enum PacketBase {
@@ -26,17 +26,33 @@ public class Packet extends LPCArray {
 		}
 	}
 
+	public enum PacketErrorBase {
+		ERROR_CODE(6), ERROR_MESSAGE(7), ERROR_PACKET(8);
+
+		private int index;
+
+		private PacketErrorBase(int index) {
+			this.index = index;
+		}
+
+		public int getIndex() {
+			return this.index;
+		}
+	}
+
 	public enum PacketTypes {
 		AUTH_MUD_REPLY("auth-mud-reply") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		AUTH_MUD_REQ("auth-mud-req") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		CHAN_FILTER_REPLY("chan-filter-reply") {
@@ -132,7 +148,8 @@ public class Packet extends LPCArray {
 		EMOTE("emoteto") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		ERROR("error") {
@@ -147,31 +164,35 @@ public class Packet extends LPCArray {
 		FINGER_REPLY("finger-reply") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		FINGER_REQ("finger-req") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		LOCATE_REPLY("locate-reply") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		LOCATE_REQ("locate-req") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		MUDLIST("mudlist") {
 			@Override
 			public void handler(Packet data) {
-				Mudlist service = (Mudlist) Services.getService("mudlist");
+				I3Mudlist service = (I3Mudlist) Services.getService("mudlist");
 
 				if (service != null)
 					service.replyHandler(data);
@@ -180,7 +201,7 @@ public class Packet extends LPCArray {
 		PING("ping") {
 			@Override
 			public void handler(Packet data) {
-				Ping service = (Ping) Services.getService("ping");
+				I3Ping service = (I3Ping) Services.getService("ping");
 
 				if (service != null)
 					service.reqHandler(data);
@@ -189,7 +210,7 @@ public class Packet extends LPCArray {
 		PING_REPLY("ping-reply") {
 			@Override
 			public void handler(Packet data) {
-				Ping service = (Ping) Services.getService("ping");
+				I3Ping service = (I3Ping) Services.getService("ping");
 
 				if (service != null)
 					service.replyHandler(data);
@@ -198,7 +219,7 @@ public class Packet extends LPCArray {
 		PING_REQ("ping-req") {
 			@Override
 			public void handler(Packet data) {
-				Ping service = (Ping) Services.getService("ping");
+				I3Ping service = (I3Ping) Services.getService("ping");
 
 				if (service != null)
 					service.reqHandler(data);
@@ -207,7 +228,7 @@ public class Packet extends LPCArray {
 		PONG("pong") {
 			@Override
 			public void handler(Packet data) {
-				Ping service = (Ping) Services.getService("ping");
+				I3Ping service = (I3Ping) Services.getService("ping");
 
 				if (service != null)
 					service.replyHandler(data);
@@ -216,7 +237,7 @@ public class Packet extends LPCArray {
 		STARTUP_REPLY("startup-reply") {
 			@Override
 			public void handler(Packet data) {
-				Startup service = (Startup) Services.getService("startup");
+				I3Startup service = (I3Startup) Services.getService("startup");
 
 				if (service != null)
 					service.replyHandler(data);
@@ -225,59 +246,63 @@ public class Packet extends LPCArray {
 		TELL("tell") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		UCACHE_UPDATE("ucache-update") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		WHO_REQ("who-req") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		},
 		WHO_REPLY("who-reply") {
 			@Override
 			public void handler(Packet data) {
-				this.i3.logWarn(this.toString() + ": " + data.toMudMode());
+				Intermud3.instance.logWarn(this.toString() + ": "
+						+ data.toMudMode());
 			}
 		};
 
-		protected final Intermud3 i3;
-		private static Map<String, PacketTypes> nameToType;
-		private String name;
+		private static Map<String, PacketTypes> nameToType = null;
+		private String name = null;
 
 		private PacketTypes(String name) {
-			this.i3 = Intermud3.instance;
-
 			this.name = name;
-		}
-
-		public static PacketTypes getNamedType(String name) {
-			if (nameToType == null) {
-				initMapping();
-			}
-
-			return nameToType.get(name);
-		}
-
-		private static void initMapping() {
-			nameToType = new HashMap<String, PacketTypes>();
-
-			for (PacketTypes type : values()) {
-				nameToType.put(type.name, type);
-			}
 		}
 
 		public String getName() {
 			return this.name;
 		}
 
+		public static PacketTypes getNamedType(String name) {
+			if (PacketTypes.nameToType == null) {
+				PacketTypes.initMapping();
+			}
+
+			return PacketTypes.nameToType.get(name);
+		}
+
+		private static void initMapping() {
+			PacketTypes.nameToType = new HashMap<String, PacketTypes>();
+
+			for (PacketTypes type : PacketTypes.values()) {
+				PacketTypes.nameToType.put(type.name, type);
+			}
+		}
+
 		public abstract void handler(Packet data);
+	}
+
+	public Packet() {
 	}
 
 	/**
@@ -298,7 +323,7 @@ public class Packet extends LPCArray {
 	public void fromMudMode(String mudModeString) {
 		Object obj = LPCVar.toObject(mudModeString);
 
-		if (obj == null || !LPCVar.isArray(obj)) {
+		if (obj == null || !LPCVar.isLPCArray(obj)) {
 			this.setLPCData(new LPCArray());
 		} else {
 			this.setLPCData((LPCArray) obj);

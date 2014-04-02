@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import org.bukkit.entity.Player;
-
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCArray extends LPCVar implements Cloneable, List<Object> {
@@ -96,7 +94,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCArray getLPCArray(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isArray(obj))
+		if (LPCVar.isLPCArray(obj))
 			return (LPCArray) obj;
 
 		return null;
@@ -111,7 +109,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCInt getLPCInt(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isInt(obj))
+		if (LPCVar.isLPCInt(obj))
 			return (LPCInt) obj;
 
 		return null;
@@ -121,7 +119,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCMapping getLPCMapping(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isMapping(obj))
+		if (LPCVar.isLPCMapping(obj))
 			return (LPCMapping) obj;
 
 		return null;
@@ -131,18 +129,8 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCString getLPCString(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isString(obj))
+		if (LPCVar.isLPCString(obj))
 			return (LPCString) obj;
-
-		return null;
-	}
-
-	@Override
-	public Player getPlayer(Object index) {
-		Object obj = this.get(index);
-
-		if (LPCVar.isPlayer(obj))
-			return (Player) obj;
 
 		return null;
 	}
@@ -340,7 +328,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isArray(obj)) {
+		if (LPCVar.isLPCArray(obj)) {
 			this.lpcData.clear();
 			this.lpcData.addAll(((LPCArray) obj).getLPCData());
 		} else if (LPCVar.isLPCVar(obj)) {

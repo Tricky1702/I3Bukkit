@@ -11,8 +11,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.Network;
-import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
@@ -21,29 +19,19 @@ import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
 
-public class Mudlist extends ServiceTemplate {
-	private final Intermud3 i3;
-	private final CallOut callout;
-	private final Network network;
+public class I3Mudlist extends ServiceTemplate {
+	private final Intermud3 i3 = Intermud3.instance;
 	private final int hBeatDelay = 5 * 60;
 
 	private FileConfiguration mudlistConfig = null;
 	private File mudlistConfigFile = null;
-	private LPCMapping mudList, mudUpdate;
+	private LPCMapping mudList = new LPCMapping();
+	private LPCMapping mudUpdate = new LPCMapping();
 
-	public Mudlist() {
-		this.i3 = Intermud3.instance;
-		this.callout = CallOut.instance;
-		this.network = Network.instance;
-
-		super.setServiceName("mudlist");
-		Services.addService(this);
-
-		this.mudList = new LPCMapping();
-		this.mudUpdate = new LPCMapping();
+	public I3Mudlist() {
+		setServiceName("mudlist");
 	}
 
-	@Override
 	public void create() {
 		saveDefaultConfig();
 
@@ -56,13 +44,13 @@ public class Mudlist extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		this.callout.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("Mudlist: mudList:   "
+		this.i3.logInfo("I3Mudlist: mudList:   "
 				+ this.mudList.keySet().toString());
-		this.i3.logInfo("Mudlist: mudUpdate: " + this.mudUpdate.toString());
+		this.i3.logInfo("I3Mudlist: mudUpdate: " + this.mudUpdate.toString());
 	}
 
 	public FileConfiguration getMudlistConfig() {
@@ -126,9 +114,8 @@ public class Mudlist extends ServiceTemplate {
 		}
 	}
 
-	@Override
 	public void remove() {
-		this.callout.removeHeartBeat(this);
+		Intermud3.heartbeat.removeHeartBeat(this);
 		saveMudlistConfig();
 		this.mudList.clear();
 		this.mudUpdate.clear();
@@ -162,7 +149,7 @@ public class Mudlist extends ServiceTemplate {
 		int oMud = PacketBase.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
-		if (!oMudName.equals(this.network.getRouterName().toString())) {
+		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
 			this.i3.logError("Illegal access. Not from the router.");
 			this.i3.logError(packet.toMudMode());
 
@@ -171,12 +158,12 @@ public class Mudlist extends ServiceTemplate {
 
 		LPCInt mudlistID = packet.getLPCInt(6);
 
-		if (mudlistID.toInt() <= this.network.getMudlistID().toInt())
+		if (mudlistID.toInt() <= Intermud3.network.getMudlistID().toInt())
 			this.i3.debug("We don't like packet element 6 ("
 					+ mudlistID
 					+ "). It should be larger than the current one. Continuing anyway.");
 
-		this.network.setMudlistID(mudlistID);
+		Intermud3.network.setMudlistID(mudlistID);
 		this.i3.saveConfig();
 
 		LPCMapping info = packet.getLPCMapping(7);

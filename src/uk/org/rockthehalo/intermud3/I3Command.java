@@ -7,20 +7,14 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.Services;
 
 public class I3Command implements CommandExecutor {
-	private final CallOut callout;
-	private final Network network;
-
 	/**
 	 * Constructor.
 	 */
 	I3Command() {
-		this.callout = CallOut.instance;
-		this.network = Network.instance;
 	}
 
 	/**
@@ -77,7 +71,7 @@ public class I3Command implements CommandExecutor {
 			}
 
 			Services.create();
-			this.network.connect();
+			Intermud3.network.connect();
 
 			return true;
 		} else if (subcmd.equals("disconnect")) {
@@ -85,7 +79,7 @@ public class I3Command implements CommandExecutor {
 				return false;
 			}
 
-			this.network.shutdown(0);
+			Intermud3.network.shutdown(0);
 			Services.remove();
 
 			return true;
@@ -142,7 +136,8 @@ public class I3Command implements CommandExecutor {
 				return true;
 			}
 
-			this.callout.debugInfo();
+			Intermud3.callout.debugInfo();
+			Intermud3.heartbeat.debugInfo();
 			Services.debugInfo();
 
 			return true;
@@ -178,9 +173,9 @@ public class I3Command implements CommandExecutor {
 	private boolean usage(CommandSender sender, Command command) {
 		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN
 				+ " /intermud3 " + ChatColor.RED + "====]");
-		for (String line : command.getUsage().split("\\n")) {
+
+		for (String line : command.getUsage().split("\\n"))
 			sender.sendMessage(formatLine(line));
-		}
 
 		return true;
 	}
@@ -194,11 +189,10 @@ public class I3Command implements CommandExecutor {
 	private boolean usage(CommandSender sender, Command command, String subcmd) {
 		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN
 				+ " /intermud3 " + subcmd + " " + ChatColor.RED + "====]");
-		for (String line : command.getUsage().split("\\n")) {
-			if (line.startsWith("/<command> " + subcmd)) {
+
+		for (String line : command.getUsage().split("\\n"))
+			if (line.startsWith("/<command> " + subcmd))
 				sender.sendMessage(formatLine(line));
-			}
-		}
 
 		return true;
 	}

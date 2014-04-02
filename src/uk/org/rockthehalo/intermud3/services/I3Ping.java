@@ -1,49 +1,34 @@
 package uk.org.rockthehalo.intermud3.services;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.Network;
-import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
-public class Ping extends ServiceTemplate {
-	private final Intermud3 i3;
-	private final CallOut callout;
-	private final Network network;
+public class I3Ping extends ServiceTemplate {
+	private final Intermud3 i3 = Intermud3.instance;
 	private final int hBeatDelay = 60;
 	private final int baseDelay = 5;
 	private final int delay = 5;
 
-	private int hBeat = Intermud3.instance.rnd(delay) + baseDelay;
+	private int hBeat = this.rnd(this.delay) + this.baseDelay;
 
-	public Ping() {
-		this.i3 = Intermud3.instance;
-		this.callout = CallOut.instance;
-		this.network = Network.instance;
-
-		super.setServiceName("ping");
-		Services.addService(this);
+	public I3Ping() {
+		setServiceName("ping");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#create()
-	 */
-	@Override
 	public void create() {
 		Services.addServiceName(this.toString());
-		this.callout.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("Ping: " + (this.hBeat - 1) + " minutes to go.");
+		this.i3.logInfo("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
 	}
 
 	public void heartBeat() {
-		if (!this.network.isRouterConnected())
+		if (!Intermud3.network.isRouterConnected())
 			return;
 
 		this.hBeat--;
@@ -55,21 +40,15 @@ public class Ping extends ServiceTemplate {
 		}
 
 		if (this.hBeat <= 0) {
-			this.i3.logWarn("Ping: Not connected to the router. Re-connecting.");
+			this.i3.logWarn("I3Ping: Not connected to the router. Re-connecting.");
 			this.hBeat = 3;
-			this.network.setRouterConnected(false);
-			this.network.reconnect(5);
+			Intermud3.network.setRouterConnected(false);
+			Intermud3.network.reconnect(5);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see uk.org.rockthehalo.intermud3.services.ServiceTemplate#remove()
-	 */
-	@Override
 	public void remove() {
-		this.callout.removeHeartBeat(this);
+		Intermud3.heartbeat.removeHeartBeat(this);
 		Services.removeServiceName(this.toString());
 	}
 
@@ -82,8 +61,8 @@ public class Ping extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		this.hBeat = this.i3.rnd(this.delay) + this.baseDelay;
-		this.network.setRouterConnected(true);
+		this.hBeat = this.rnd(this.delay) + this.baseDelay;
+		Intermud3.network.setRouterConnected(true);
 
 		/* Nothing more for now. */
 	}
@@ -115,25 +94,34 @@ public class Ping extends ServiceTemplate {
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(this.i3.getServer().getServerName())) {
-			this.hBeat = this.i3.rnd(this.delay) + this.baseDelay;
-			this.network.setRouterConnected(true);
+			this.hBeat = this.rnd(this.delay) + this.baseDelay;
+			Intermud3.network.setRouterConnected(true);
 		}
 
-		this.network.sendToMud(replyType, null, oMudName.toString(), extra);
+		Intermud3.network
+				.sendToMud(replyType, null, oMudName.toString(), extra);
+	}
+
+	public int rnd(int range) {
+		return (int) (Math.random() * range);
+	}
+
+	public long rnd(long range) {
+		return (long) (Math.random() * range);
 	}
 
 	public void send(String type, String tmud, Packet packet) {
-		this.network.sendToMud(PacketTypes.getNamedType(type), null, tmud,
+		Intermud3.network.sendToMud(PacketTypes.getNamedType(type), null, tmud,
 				packet);
 	}
 
 	private void testConnection() {
-		int tm = (int) (System.currentTimeMillis() / 1000);
-		int hash = this.i3.rnd(470831) + ((tm & 0x00ffffff) ^ 0x00a5a5a5);
+		long tm = (long) System.currentTimeMillis();
+		long hash = this.rnd(19720231) + ((tm & 0xffffffff) ^ 0xa5a5a5a5);
 		Packet packet = new Packet();
 
-		packet.add(new LPCInt(hash));
-		this.network.sendToMud(PacketTypes.getNamedType("ping-req"), null,
+		packet.add(new LPCInt((int) (hash & 0xffffffff)));
+		Intermud3.network.sendToMud(PacketTypes.getNamedType("ping-req"), null,
 				this.i3.getServer().getServerName(), packet);
 	}
 }

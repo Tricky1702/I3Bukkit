@@ -6,13 +6,6 @@ public abstract class ServiceTemplate {
 	private String serviceName = null;
 
 	/**
-	 * @return the serviceName
-	 */
-	public String getServiceName() {
-		return this.serviceName;
-	}
-
-	/**
 	 * @param serviceName
 	 *            the serviceName to set
 	 */
@@ -30,10 +23,6 @@ public abstract class ServiceTemplate {
 
 		return super.toString();
 	}
-
-	public abstract void create();
-
-	public abstract void remove();
 
 	/**
 	 * Service reply handler.

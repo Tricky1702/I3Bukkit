@@ -13,8 +13,6 @@ import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.Network;
-import uk.org.rockthehalo.intermud3.LPC.CallOut;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
@@ -25,50 +23,37 @@ import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
 public class I3Channel extends ServiceTemplate {
-	private final Intermud3 i3;
-	private final CallOut callout;
-	private final Network network;
+	private final Intermud3 i3 = Intermud3.instance;
 	private final int hBeatDelay = 60;
-	private final Vector<String> defChannels;
+	private final Vector<String> defChannels = new Vector<String>();
 
-	private Map<String, String> aliasToChannel;
-	private Map<String, String> channelToAlias;
+	private Map<String, String> aliasToChannel = new Hashtable<String, String>();
+	private Map<String, String> channelToAlias = new Hashtable<String, String>();
 	private FileConfiguration chanlistConfig = null;
 	private File chanlistConfigFile = null;
-	private LPCMapping chanList;
-	private LPCArray listening;
+	private LPCMapping chanList = new LPCMapping();
+	private LPCArray listening = new LPCArray();
 
 	public I3Channel() {
-		this.i3 = Intermud3.instance;
-		this.callout = CallOut.instance;
-		this.network = Network.instance;
+		setServiceName("channel");
 
-		super.setServiceName("channel");
-		Services.addService(this);
-
-		this.defChannels = new Vector<String>();
 		this.defChannels.add("dchat");
 		this.defChannels.add("dead_souls");
 		this.defChannels.add("dead_test4");
 		this.defChannels.add("imud_code");
 		this.defChannels.add("minecraft");
 
-		this.aliasToChannel = new Hashtable<String, String>();
 		this.aliasToChannel.put("dc", "dchat");
 		this.aliasToChannel.put("ds", "dead_souls");
 		this.aliasToChannel.put("dt", "dead_test4");
 		this.aliasToChannel.put("ic", "imud_code");
 		this.aliasToChannel.put("mc", "minecraft");
 
-		this.channelToAlias = new Hashtable<String, String>();
 		this.channelToAlias.put("dchat", "dc");
 		this.channelToAlias.put("dead_souls", "ds");
 		this.channelToAlias.put("dead_test4", "dt");
 		this.channelToAlias.put("imud_code", "ic");
 		this.channelToAlias.put("minecraft", "mc");
-
-		this.chanList = new LPCMapping();
-		this.listening = new LPCArray();
 	}
 
 	/**
@@ -121,7 +106,7 @@ public class I3Channel extends ServiceTemplate {
 		int oMud = PacketBase.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
-		if (!oMudName.equals(this.network.getRouterName().toString())) {
+		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
 			this.i3.logError("Illegal access. Not from the router.");
 			this.i3.logError(packet.toMudMode());
 
@@ -140,10 +125,10 @@ public class I3Channel extends ServiceTemplate {
 
 		LPCInt chanlistID = packet.getLPCInt(6);
 
-		if (chanlistID.toInt() == this.network.getChanlistID().toInt())
+		if (chanlistID.toInt() == Intermud3.network.getChanlistID().toInt())
 			return;
 
-		this.network.setChanlistID(chanlistID);
+		Intermud3.network.setChanlistID(chanlistID);
 		this.i3.saveConfig();
 
 		if (info != null) {
@@ -255,7 +240,6 @@ public class I3Channel extends ServiceTemplate {
 	private void chanWhoReq(Packet packet) {
 	}
 
-	@Override
 	public void create() {
 		saveDefaultConfig();
 
@@ -267,7 +251,7 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		Services.addServiceName(this.toString());
-		this.callout.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -310,9 +294,8 @@ public class I3Channel extends ServiceTemplate {
 		}
 	}
 
-	@Override
 	public void remove() {
-		this.callout.removeHeartBeat(this);
+		Intermud3.heartbeat.removeHeartBeat(this);
 		Services.removeServiceName(this.toString());
 		saveChanlistConfig();
 
@@ -411,9 +394,9 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void requestChanList() {
-		if (this.network.isRouterConnected()) {
-			this.network.setChanlistID(0);
-			this.network.sendToRouter("chanlist-req", null, null);
+		if (Intermud3.network.isRouterConnected()) {
+			Intermud3.network.setChanlistID(0);
+			Intermud3.network.sendToRouter("chanlist-req", null, null);
 		}
 	}
 
@@ -457,20 +440,20 @@ public class I3Channel extends ServiceTemplate {
 		Packet payload = new Packet();
 
 		payload.add(new LPCString(chan));
-		payload.add(new LPCString(player.getName()));
+		payload.add(new LPCString(player.getDisplayName()));
 		payload.add(new LPCString("$N " + msg));
-		this.network.sendToAll(PacketTypes.CHAN_EMOTE, player.getName(),
-				payload);
+		Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE,
+				player.getDisplayName(), payload);
 	}
 
 	public void sendMessage(String chan, Player player, String msg) {
 		Packet payload = new Packet();
 
 		payload.add(new LPCString(chan));
-		payload.add(new LPCString(player.getName()));
+		payload.add(new LPCString(player.getDisplayName()));
 		payload.add(new LPCString(msg));
-		this.network.sendToAll(PacketTypes.CHAN_MESSAGE, player.getName(),
-				payload);
+		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE,
+				player.getDisplayName(), payload);
 	}
 
 	private void tuneChannel(LPCString channel, boolean flag) {
@@ -478,7 +461,7 @@ public class I3Channel extends ServiceTemplate {
 
 		packet.add(channel);
 		packet.add(flag ? new LPCInt(1) : new LPCInt(0));
-		this.network.sendToRouter("channel-listen", null, packet);
+		Intermud3.network.sendToRouter("channel-listen", null, packet);
 	}
 
 	public void tuneIn(String channel) {

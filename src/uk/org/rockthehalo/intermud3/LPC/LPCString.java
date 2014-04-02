@@ -1,7 +1,5 @@
 package uk.org.rockthehalo.intermud3.LPC;
 
-import org.bukkit.entity.Player;
-
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCString extends LPCVar implements Cloneable {
@@ -94,20 +92,12 @@ public class LPCString extends LPCVar implements Cloneable {
 	}
 
 	@Override
-	public Player getPlayer(Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCString: getPlayer(index)");
-	}
-
-	@Override
 	public boolean isEmpty() {
 		return this.lpcData.isEmpty();
 	}
 
 	@Override
 	public Object set(Object index, Object lpcData) throws I3Exception {
-		char[] chars;
-		char oldChar;
 		int i = (Integer) index;
 
 		if (i < 0 || i >= this.size())
@@ -115,8 +105,9 @@ public class LPCString extends LPCVar implements Cloneable {
 					"Index out of range for set(index, lpcdata) in LPCString: "
 							+ index);
 
-		chars = this.lpcData.toCharArray();
-		oldChar = chars[i];
+		char[] chars = this.lpcData.toCharArray();
+		char oldChar = chars[i];
+
 		chars[i] = lpcData.toString().charAt(0);
 		this.lpcData = String.copyValueOf(chars);
 
@@ -160,6 +151,6 @@ public class LPCString extends LPCVar implements Cloneable {
 
 	@Override
 	public String toString() {
-		return this.lpcData.toString();
+		return this.lpcData;
 	}
 }

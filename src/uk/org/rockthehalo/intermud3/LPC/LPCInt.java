@@ -1,7 +1,5 @@
 package uk.org.rockthehalo.intermud3.LPC;
 
-import org.bukkit.entity.Player;
-
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCInt extends LPCVar implements Cloneable {
@@ -92,11 +90,6 @@ public class LPCInt extends LPCVar implements Cloneable {
 	}
 
 	@Override
-	public Player getPlayer(Object index) throws I3Exception {
-		throw new I3Exception("Invalid operation for LPCInt: getPlayer(index)");
-	}
-
-	@Override
 	public boolean isEmpty() {
 		return false;
 	}
@@ -136,13 +129,13 @@ public class LPCInt extends LPCVar implements Cloneable {
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isArray(obj))
+		if (LPCVar.isLPCArray(obj))
 			setLPCData((LPCArray) obj);
-		else if (LPCVar.isInt(obj))
+		else if (LPCVar.isLPCInt(obj))
 			setLPCData((LPCInt) obj);
-		else if (LPCVar.isMapping(obj))
+		else if (LPCVar.isLPCMapping(obj))
 			setLPCData((LPCMapping) obj);
-		else if (LPCVar.isString(obj))
+		else if (LPCVar.isLPCString(obj))
 			setLPCData((LPCString) obj);
 		else
 			throw new I3Exception(

@@ -7,41 +7,40 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 
 public class CallOut extends BukkitRunnable {
-	private Vector<Map<String, Object>> callOuts;
-	private Vector<Map<String, Object>> heartBeats;
+	private final Intermud3 i3 = Intermud3.instance;
 
-	public static CallOut instance;
+	private Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>();
+	private BukkitTask bukkitTask = null;
+	private long id = 0;
 
 	public CallOut() {
-		instance = this;
-
-		this.callOuts = new Vector<Map<String, Object>>();
-		this.heartBeats = new Vector<Map<String, Object>>();
-		this.runTaskTimer(Intermud3.instance, 20, 20);
 	}
 
 	public void debugInfo() {
-		Intermud3.instance.logInfo("callOuts:   " + this.callOuts.toString());
-		Intermud3.instance.logInfo("heartBeats: " + this.heartBeats.toString());
+		this.i3.logInfo("callOuts: " + this.callOuts.toString());
 	}
 
-	public int callOut(Object owner, String func, long delay) {
+	public long callOut(Object owner, String func, long delay) {
 		return callOut(owner, func, delay, null);
 	}
 
-	public int callOut(Object owner, String func, long delay, Object[] args) {
+	public long callOut(Object owner, String func, long delay, Object[] args) {
 		if (owner == null || func == null || func.isEmpty() || delay <= 0)
 			return -1;
 
 		Map<String, Object> data = new Hashtable<String, Object>();
 
+		long id = this.id++;
+
+		data.put("id", id);
 		data.put("owner", owner);
-		data.put("currentDelay", 0L);
-		data.put("delay", delay);
+		data.put("currentDelay", 0);
+		data.put("delay", delay * 20);
 		data.put("func", func);
 
 		if (args != null)
@@ -49,77 +48,77 @@ public class CallOut extends BukkitRunnable {
 
 		this.callOuts.add(data);
 
-		return this.callOuts.size() - 1;
+		if (this.callOuts.size() == 1)
+			this.bukkitTask = runTaskTimer(i3, 1, 1);
+
+		return id;
 	}
 
-	public void removeCallOut(int i) {
-		if (i < this.callOuts.size())
-			this.callOuts.remove(i);
+	public void removeCallOut(int id) {
+		if (id < 0 || this.callOuts.size() == 0)
+			return;
+
+		for (Map<String, Object> callout : this.callOuts) {
+			if (id == (Integer) callout.get("id")) {
+				this.callOuts.remove(callout);
+
+				break;
+			}
+		}
+
+		if (this.callOuts.size() == 0)
+			this.bukkitTask.cancel();
 	}
 
 	public void removeCallOuts(Object owner) {
-		if (owner == null)
+		if (owner == null || this.callOuts.size() == 0)
 			return;
 
-		Vector<Object> callouts = new Vector<Object>();
+		Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>();
 
-		for (Object obj : this.callOuts)
-			if (owner == ((Map<?, ?>) obj).get("owner"))
-				callouts.add(obj);
+		for (Map<String, Object> callout : this.callOuts)
+			if (owner == callout.get("owner"))
+				callouts.add(callout);
 
-		for (Object obj : callouts)
-			this.callOuts.remove(obj);
-	}
+		for (Map<String, Object> callout : callouts)
+			this.callOuts.remove(callout);
 
-	public void removeHeartBeat(Object owner) {
-		if (owner == null)
-			return;
-
-		int i = 0;
-
-		for (Object obj : this.heartBeats) {
-			if (owner == ((Map<?, ?>) obj).get("owner"))
-				break;
-
-			i++;
-		}
-
-		if (i < this.heartBeats.size())
-			this.heartBeats.remove(i);
+		if (this.callOuts.size() == 0)
+			this.bukkitTask.cancel();
 	}
 
 	@Override
 	public void run() {
-		@SuppressWarnings("unchecked")
-		Vector<Map<String, Object>> callOutsCopy = (Vector<Map<String, Object>>) this.callOuts
-				.clone();
-		@SuppressWarnings("unchecked")
-		Vector<Map<String, Object>> heartBeatsCopy = (Vector<Map<String, Object>>) this.heartBeats
-				.clone();
-		int i = 0;
+		if (this.callOuts.size() > 0) {
+			Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>();
 
-		for (Object obj : callOutsCopy) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> data = (Map<String, Object>) obj;
-			Object owner = data.get("owner");
-			long currentDelay = (Long) data.get("currentDelay");
-			long delay = (Long) data.get("delay");
+			for (Map<String, Object> callout : this.callOuts) {
+				long currentDelay = (Long) callout.get("currentDelay") + 1;
 
-			currentDelay++;
+				if (currentDelay >= (Long) callout.get("delay")) {
+					callouts.add(callout);
+				} else {
+					int index = this.callOuts.indexOf(callout);
 
-			if (currentDelay >= delay) {
+					callout.put("currentDelay", currentDelay);
+					this.callOuts.set(index, callout);
+				}
+			}
+
+			for (Map<String, Object> callout : callouts) {
+				Object owner = callout.get("owner");
 				Method method = null;
 
 				try {
 					method = owner.getClass().getMethod(
-							(String) data.get("func"));
+							(String) callout.get("func"));
 				} catch (NoSuchMethodException e) {
 				} catch (SecurityException e) {
 				}
 
 				if (method != null) {
 					try {
-						Object[] args = (Object[]) data.get("args");
+						Object[] args = (Object[]) callout.get("args");
 
 						if (args == null)
 							method.invoke(owner);
@@ -127,80 +126,19 @@ public class CallOut extends BukkitRunnable {
 							method.invoke(owner, args);
 
 					} catch (IllegalAccessException e) {
-						Intermud3.instance.logError("", e);
+						i3.logError("", e);
 					} catch (IllegalArgumentException e) {
-						Intermud3.instance.logError("", e);
+						i3.logError("", e);
 					} catch (InvocationTargetException e) {
-						Intermud3.instance.logError("", e);
+						i3.logError("", e);
 					}
 				}
 
-				this.callOuts.remove(data);
-			} else {
-				data.put("currentDelay", currentDelay);
-				this.callOuts.set(i, data);
+				this.callOuts.remove(callout);
 			}
 
-			i++;
+			if (this.callOuts.size() == 0)
+				this.bukkitTask.cancel();
 		}
-
-		i = 0;
-
-		for (Object obj : heartBeatsCopy) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> data = (Map<String, Object>) obj;
-			Object owner = data.get("owner");
-			long currentDelay = (Long) data.get("currentDelay");
-			long delay = (Long) data.get("delay");
-
-			currentDelay++;
-
-			if (currentDelay >= delay) {
-				currentDelay = 0;
-
-				Method method = null;
-
-				try {
-					method = owner.getClass().getMethod("heartBeat");
-				} catch (NoSuchMethodException e) {
-					method = null;
-				} catch (SecurityException e) {
-					method = null;
-				}
-
-				if (method != null) {
-					try {
-						method.invoke(owner);
-					} catch (IllegalAccessException e) {
-					} catch (IllegalArgumentException e) {
-					} catch (InvocationTargetException e) {
-					}
-				}
-			}
-
-			data.put("currentDelay", currentDelay);
-			this.heartBeats.set(i, data);
-			i++;
-		}
-	}
-
-	public void setHeartBeat(Object owner, long delay) {
-		if (owner == null || delay <= 0)
-			return;
-
-		for (Object obj : this.heartBeats) {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> data = (Map<String, Object>) obj;
-
-			if (owner == data.get("owner"))
-				return;
-		}
-
-		Map<String, Object> data = new Hashtable<String, Object>();
-
-		data.put("owner", owner);
-		data.put("currentDelay", 0L);
-		data.put("delay", delay);
-		this.heartBeats.add(data);
 	}
 }

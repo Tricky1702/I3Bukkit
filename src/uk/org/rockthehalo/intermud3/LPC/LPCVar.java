@@ -1,107 +1,78 @@
 package uk.org.rockthehalo.intermud3.LPC;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Intermud3;
 
-public abstract class LPCVar implements Cloneable {
+public abstract class LPCVar {
+	public enum LPCTypes {
+		ARRAY, INT, MAPPING, MIXED, STRING;
+	}
+
 	private LPCTypes lpcType = LPCTypes.MIXED;
 
-	public enum LPCTypes {
-		MIXED("mixed"), STRING("string"), INT("int"), ARRAY("array"), MAPPING(
-				"mapping");
-
-		private static Map<String, LPCTypes> nameToType;
-		private String name;
-
-		private LPCTypes(String typeName) {
-			this.name = typeName;
-		}
-
-		public String getName() {
-			return this.name;
-		}
-
-		public LPCTypes getNamedType(String typeName) {
-			if (nameToType == null) {
-				initMapping();
-			}
-
-			return nameToType.get(typeName);
-		}
-
-		private static void initMapping() {
-			nameToType = new HashMap<String, LPCTypes>();
-
-			for (LPCTypes type : values())
-				nameToType.put(type.name, type);
-		}
+	public LPCVar() {
 	}
 
 	public LPCTypes getType() {
 		return this.lpcType;
 	}
 
+	public static LPCTypes getType(Object lpcData) {
+		if (LPCVar.isLPCArray(lpcData))
+			return LPCTypes.ARRAY;
+
+		if (LPCVar.isLPCInt(lpcData))
+			return LPCTypes.INT;
+
+		if (LPCVar.isLPCMapping(lpcData))
+			return LPCTypes.MAPPING;
+
+		if (LPCVar.isLPCString(lpcData))
+			return LPCTypes.STRING;
+
+		return LPCTypes.MIXED;
+	}
+
 	public void setType(LPCTypes lpcType) {
 		this.lpcType = lpcType;
 	}
 
-	public static boolean isArray(Object obj) {
+	public static boolean isLPCArray(Object obj) {
 		return LPCArray.class.isInstance(obj);
 	}
 
-	public static boolean isInt(Object obj) {
+	public static boolean isLPCInt(Object obj) {
 		return LPCInt.class.isInstance(obj);
 	}
 
-	public static boolean isLPCVar(Object obj) {
-		return LPCArray.class.isInstance(obj) || LPCInt.class.isInstance(obj)
-				|| LPCMapping.class.isInstance(obj)
-				|| LPCMixed.class.isInstance(obj)
-				|| LPCString.class.isInstance(obj);
-	}
-
-	public static boolean isMapping(Object obj) {
+	public static boolean isLPCMapping(Object obj) {
 		return LPCMapping.class.isInstance(obj);
 	}
 
-	public static boolean isMixed(Object obj) {
+	public static boolean isLPCMixed(Object obj) {
 		return LPCMixed.class.isInstance(obj);
 	}
 
-	public static boolean isPlayer(Object obj) {
-		return Player.class.isInstance(obj);
+	public static boolean isLPCString(Object obj) {
+		return LPCString.class.isInstance(obj);
 	}
 
-	public static boolean isString(Object obj) {
-		return LPCString.class.isInstance(obj);
+	public static boolean isLPCVar(Object obj) {
+		return isLPCArray(obj) || isLPCInt(obj) || isLPCMapping(obj)
+				|| isLPCMixed(obj) || isLPCString(obj);
 	}
 
 	public static String toMudMode(Object obj) {
 		if (obj == null)
 			return "0";
 
-		switch (((LPCVar) obj).getType()) {
-		case MAPPING: {
-			Set<?> keySet = ((LPCMapping) obj).keySet();
-			Vector<String> list = new Vector<String>();
-
-			for (Object key : keySet)
-				list.add(toMudMode(key) + ":"
-						+ toMudMode(((LPCMapping) obj).get(key)));
-
-			if (list.isEmpty())
-				return "([])";
-			else
-				return "([" + StringUtils.join(list, ",") + ",])";
-		}
+		switch (getType(obj)) {
 		case ARRAY: {
 			Iterator<Object> itr = ((LPCArray) obj).iterator();
 			Vector<String> list = new Vector<String>();
@@ -116,6 +87,21 @@ public abstract class LPCVar implements Cloneable {
 				return "({})";
 			else
 				return "({" + StringUtils.join(list, ",") + ",})";
+		}
+		case INT:
+			return ((LPCInt) obj).toString();
+		case MAPPING: {
+			Set<?> keySet = ((LPCMapping) obj).keySet();
+			Vector<String> list = new Vector<String>();
+
+			for (Object key : keySet)
+				list.add(toMudMode(key) + ":"
+						+ toMudMode(((LPCMapping) obj).get(key)));
+
+			if (list.isEmpty())
+				return "([])";
+			else
+				return "([" + StringUtils.join(list, ",") + ",])";
 		}
 		case STRING: {
 			String str = ((LPCString) obj).toString();
@@ -132,14 +118,7 @@ public abstract class LPCVar implements Cloneable {
 
 			return str;
 		}
-		case INT:
-			return ((LPCInt) obj).toString();
-		case MIXED:
-			return ((LPCMixed) obj).toString();
 		default:
-			if (LPCVar.isPlayer(obj))
-				return ((Player) obj).getName();
-
 			return obj.toString();
 		}
 	}
@@ -158,8 +137,7 @@ public abstract class LPCVar implements Cloneable {
 			if (c == '\\') {
 				if (x + 1 < str.length()) {
 					in.append("\\");
-					x++;
-					c = str.charAt(x);
+					c = str.charAt(++x);
 				}
 
 				in.append(c);
@@ -173,9 +151,8 @@ public abstract class LPCVar implements Cloneable {
 					StringBuffer tmp = new StringBuffer("\"");
 
 					while (x < str.length()) {
-						c = str.charAt(x);
+						c = str.charAt(x++);
 						tmp.append(c);
-						x++;
 
 						if (c == '"')
 							break;
@@ -215,8 +192,7 @@ public abstract class LPCVar implements Cloneable {
 			if (c == '\\') {
 				if (x + 1 < str.length()) {
 					in.append("\\");
-					x++;
-					c = str.charAt(x);
+					c = str.charAt(++x);
 				}
 
 				in.append(c);
@@ -235,8 +211,7 @@ public abstract class LPCVar implements Cloneable {
 						if (c == '\\') {
 							if (x + 1 < str.length()) {
 								tmpIn.append("\\");
-								x++;
-								c = str.charAt(x);
+								c = str.charAt(++x);
 							}
 
 							tmpIn.append(c);
@@ -417,8 +392,7 @@ public abstract class LPCVar implements Cloneable {
 				switch (c) {
 				case '\\':
 					if ((x + 1) < mudModeString.length()) {
-						x++;
-						c = mudModeString.charAt(x);
+						c = mudModeString.charAt(++x);
 					}
 
 					in.append(c);
@@ -478,7 +452,7 @@ public abstract class LPCVar implements Cloneable {
 	}
 
 	/**
-	 * Converts a MudMode string into a LPCArray element.
+	 * Converts a MudMode string into a LPC variable.
 	 * 
 	 * @param mudModeString
 	 *            the MudMode string to convert
@@ -491,8 +465,8 @@ public abstract class LPCVar implements Cloneable {
 
 		try {
 			obj = p_fromMudMode(mudModeString);
-		} catch (I3Exception e) {
-			e.printStackTrace();
+		} catch (I3Exception i3E) {
+			Intermud3.instance.logError("", i3E);
 		}
 
 		return obj;
@@ -511,8 +485,6 @@ public abstract class LPCVar implements Cloneable {
 	public abstract LPCMapping getLPCMapping(Object index) throws I3Exception;
 
 	public abstract LPCString getLPCString(Object index) throws I3Exception;
-
-	public abstract Player getPlayer(Object index) throws I3Exception;
 
 	public abstract boolean isEmpty();
 
