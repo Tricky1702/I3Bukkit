@@ -14,7 +14,7 @@ public class I3Command implements CommandExecutor {
 	/**
 	 * Constructor.
 	 */
-	I3Command() {
+	public I3Command() {
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class I3Command implements CommandExecutor {
 
 			return true;
 		} else if (subcmd.equals("emote")) {
-			if (!(Player.class.isInstance(sender))) {
+			if (!(Utils.isPlayer(sender))) {
 				sender.sendMessage("Can only send emotes as player.");
 
 				return true;
@@ -107,7 +107,7 @@ public class I3Command implements CommandExecutor {
 
 			return true;
 		} else if (subcmd.equals("msg")) {
-			if (!(Player.class.isInstance(sender))) {
+			if (!(Utils.isPlayer(sender))) {
 				sender.sendMessage("Can only send messages as player.");
 
 				return true;
@@ -130,7 +130,7 @@ public class I3Command implements CommandExecutor {
 
 			return true;
 		} else if (subcmd.equals("debug")) {
-			if (Player.class.isInstance(sender)) {
+			if (Utils.isPlayer(sender)) {
 				sender.sendMessage("Can only get debug info from the console.");
 
 				return true;

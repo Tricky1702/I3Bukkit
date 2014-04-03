@@ -1,6 +1,7 @@
 package uk.org.rockthehalo.intermud3.services;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
@@ -12,7 +13,7 @@ public class I3Ping extends ServiceTemplate {
 	private final int baseDelay = 5;
 	private final int delay = 5;
 
-	private int hBeat = this.rnd(this.delay) + this.baseDelay;
+	private int hBeat = Utils.rnd(this.delay) + this.baseDelay;
 
 	public I3Ping() {
 		setServiceName("ping");
@@ -24,7 +25,7 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
+		Utils.logInfo("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
 	}
 
 	public void heartBeat() {
@@ -40,7 +41,7 @@ public class I3Ping extends ServiceTemplate {
 		}
 
 		if (this.hBeat <= 0) {
-			this.i3.logWarn("I3Ping: Not connected to the router. Re-connecting.");
+			Utils.logWarn("I3Ping: Not connected to the router. Re-connecting.");
 			this.hBeat = 3;
 			Intermud3.network.setRouterConnected(false);
 			Intermud3.network.reconnect(5);
@@ -61,7 +62,7 @@ public class I3Ping extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		this.hBeat = this.rnd(this.delay) + this.baseDelay;
+		this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 		Intermud3.network.setRouterConnected(true);
 
 		/* Nothing more for now. */
@@ -94,20 +95,12 @@ public class I3Ping extends ServiceTemplate {
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(this.i3.getServer().getServerName())) {
-			this.hBeat = this.rnd(this.delay) + this.baseDelay;
+			this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 			Intermud3.network.setRouterConnected(true);
 		}
 
 		Intermud3.network
 				.sendToMud(replyType, null, oMudName.toString(), extra);
-	}
-
-	public int rnd(int range) {
-		return (int) (Math.random() * range);
-	}
-
-	public long rnd(long range) {
-		return (long) (Math.random() * range);
 	}
 
 	public void send(String type, String tmud, Packet packet) {
@@ -116,8 +109,8 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	private void testConnection() {
-		long tm = (long) System.currentTimeMillis();
-		long hash = this.rnd(19720231) + ((tm & 0xffffffff) ^ 0xa5a5a5a5);
+		long tm = System.currentTimeMillis();
+		long hash = Utils.rnd(19720231) + ((tm & 0xffffffff) ^ 0xa5a5a5a5);
 		Packet packet = new Packet();
 
 		packet.add(new LPCInt((int) (hash & 0xffffffff)));

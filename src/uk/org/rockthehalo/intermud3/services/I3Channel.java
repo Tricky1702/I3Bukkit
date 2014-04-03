@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
@@ -96,9 +97,9 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	public void chanListReply(Packet packet) {
 		if (packet.size() != 8) {
-			this.i3.logError("We don't like chanlist packet size. Should be 8 but is "
+			Utils.logError("We don't like chanlist packet size. Should be 8 but is "
 					+ packet.size());
-			this.i3.logError(packet.toMudMode());
+			Utils.logError(packet.toMudMode());
 
 			return;
 		}
@@ -107,8 +108,8 @@ public class I3Channel extends ServiceTemplate {
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
-			this.i3.logError("Illegal access. Not from the router.");
-			this.i3.logError(packet.toMudMode());
+			Utils.logError("Illegal access. Not from the router.");
+			Utils.logError(packet.toMudMode());
 
 			return;
 		}
@@ -137,11 +138,11 @@ public class I3Channel extends ServiceTemplate {
 				LPCArray chanInfo = this.chanList.getLPCArray(channel);
 
 				if (((LPCString) channel).isEmpty()) {
-					this.i3.debug("Empty channel name. Ignoring.");
+					Utils.debug("Empty channel name. Ignoring.");
 
 					continue;
 				} else if (hostInfo == null && chanInfo != null) {
-					this.i3.debug("Deleting channel '" + channel
+					Utils.debug("Deleting channel '" + channel
 							+ "' from the chanlist.");
 					this.chanList.remove(channel);
 
@@ -152,14 +153,14 @@ public class I3Channel extends ServiceTemplate {
 					if (this.chanList.size() != 0) {
 						if (chanInfo != null
 								&& chanInfo.toString() != hostInfo.toString()) {
-							this.i3.debug("Updating data for channel '"
-									+ channel + "' in the chanlist.");
+							Utils.debug("Updating data for channel '" + channel
+									+ "' in the chanlist.");
 						} else if (chanInfo == null) {
-							this.i3.debug("Adding channel '" + channel
+							Utils.debug("Adding channel '" + channel
 									+ "' to the chanlist.");
 						}
 					} else {
-						this.i3.debug("Creating chanlist. Adding channel '"
+						Utils.debug("Creating chanlist. Adding channel '"
 								+ channel + "' to the chanlist.");
 					}
 
@@ -255,8 +256,8 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("Channel: listening: " + this.listening.toString());
-		this.i3.logInfo("Channel: chanList:  "
+		Utils.logInfo("Channel: listening: " + this.listening.toString());
+		Utils.logInfo("Channel: chanList:  "
 				+ this.chanList.keySet().toString());
 	}
 
@@ -326,8 +327,8 @@ public class I3Channel extends ServiceTemplate {
 
 			break;
 		case CHAN_FILTER_REPLY:
-			this.i3.logError("Filter reply not recognized.");
-			this.i3.logError("Packet: " + packet.toMudMode());
+			Utils.logError("Filter reply not recognized.");
+			Utils.logError("Packet: " + packet.toMudMode());
 
 			break;
 		case CHAN_MESSAGE:
@@ -351,8 +352,8 @@ public class I3Channel extends ServiceTemplate {
 
 			break;
 		default:
-			this.i3.logError("Unhandled channel reply handler: " + namedType);
-			this.i3.logError("Packet: " + packet.toMudMode());
+			Utils.logError("Unhandled channel reply handler: " + namedType);
+			Utils.logError("Packet: " + packet.toMudMode());
 
 			break;
 		}
@@ -373,8 +374,8 @@ public class I3Channel extends ServiceTemplate {
 
 		switch (type) {
 		case CHAN_FILTER_REQ:
-			this.i3.logError("Filter request not recognized.");
-			this.i3.logError("Packet: " + packet.toMudMode());
+			Utils.logError("Filter request not recognized.");
+			Utils.logError("Packet: " + packet.toMudMode());
 
 			break;
 		case CHAN_USER_REQ:
@@ -386,8 +387,8 @@ public class I3Channel extends ServiceTemplate {
 
 			break;
 		default:
-			this.i3.logError("Unhandled channel request handler: " + namedType);
-			this.i3.logError("Packet: " + packet.toMudMode());
+			Utils.logError("Unhandled channel request handler: " + namedType);
+			Utils.logError("Packet: " + packet.toMudMode());
 
 			break;
 		}
@@ -409,7 +410,7 @@ public class I3Channel extends ServiceTemplate {
 		try {
 			getChanlistConfig().save(this.chanlistConfigFile);
 		} catch (IOException ioE) {
-			this.i3.logError("Could not save config to "
+			Utils.logError("Could not save config to "
 					+ this.chanlistConfigFile, ioE);
 		}
 	}

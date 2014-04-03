@@ -10,10 +10,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class CallOut extends BukkitRunnable {
-	private final Intermud3 i3 = Intermud3.instance;
-
 	private Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>();
 	private BukkitTask bukkitTask = null;
 	private long id = 0;
@@ -22,7 +21,7 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("callOuts: " + this.callOuts.toString());
+		Utils.logInfo("callOuts: " + this.callOuts.toString());
 	}
 
 	public long callOut(Object owner, String func, long delay) {
@@ -49,7 +48,7 @@ public class CallOut extends BukkitRunnable {
 		this.callOuts.add(data);
 
 		if (this.callOuts.size() == 1)
-			this.bukkitTask = runTaskTimer(i3, 1, 1);
+			this.bukkitTask = runTaskTimer(Intermud3.instance, 1, 1);
 
 		return id;
 	}
@@ -58,13 +57,12 @@ public class CallOut extends BukkitRunnable {
 		if (id < 0 || this.callOuts.size() == 0)
 			return;
 
-		for (Map<String, Object> callout : this.callOuts) {
+		for (Map<String, Object> callout : this.callOuts)
 			if (id == (Integer) callout.get("id")) {
 				this.callOuts.remove(callout);
 
 				break;
 			}
-		}
 
 		if (this.callOuts.size() == 0)
 			this.bukkitTask.cancel();
@@ -124,13 +122,12 @@ public class CallOut extends BukkitRunnable {
 							method.invoke(owner);
 						else
 							method.invoke(owner, args);
-
 					} catch (IllegalAccessException e) {
-						i3.logError("", e);
+						Utils.logError("", e);
 					} catch (IllegalArgumentException e) {
-						i3.logError("", e);
+						Utils.logError("", e);
 					} catch (InvocationTargetException e) {
-						i3.logError("", e);
+						Utils.logError("", e);
 					}
 				}
 

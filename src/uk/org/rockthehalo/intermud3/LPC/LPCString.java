@@ -3,21 +3,20 @@ package uk.org.rockthehalo.intermud3.LPC;
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCString extends LPCVar implements Cloneable {
-	private String lpcData;
+	private String lpcData = new String();
 
 	public LPCString() {
-		this.lpcData = new String();
-		this.setType(LPCTypes.STRING);
+		super.setType(LPCTypes.STRING);
 	}
 
 	public LPCString(LPCString obj) {
-		this.lpcData = new String(obj.lpcData);
-		this.setType(LPCTypes.STRING);
+		super.setType(LPCTypes.STRING);
+		this.lpcData = new String(obj.getLPCData());
 	}
 
 	public LPCString(String lpcData) {
+		super.setType(LPCTypes.STRING);
 		this.lpcData = new String(lpcData);
-		this.setType(LPCTypes.STRING);
 	}
 
 	@Override

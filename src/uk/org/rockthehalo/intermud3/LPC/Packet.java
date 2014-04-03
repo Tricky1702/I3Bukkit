@@ -3,7 +3,7 @@ package uk.org.rockthehalo.intermud3.LPC;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.I3Error;
 import uk.org.rockthehalo.intermud3.services.I3Mudlist;
@@ -44,15 +44,13 @@ public class Packet extends LPCArray {
 		AUTH_MUD_REPLY("auth-mud-reply") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		AUTH_MUD_REQ("auth-mud-req") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		CHAN_FILTER_REPLY("chan-filter-reply") {
@@ -148,8 +146,7 @@ public class Packet extends LPCArray {
 		EMOTE("emoteto") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		ERROR("error") {
@@ -164,29 +161,25 @@ public class Packet extends LPCArray {
 		FINGER_REPLY("finger-reply") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		FINGER_REQ("finger-req") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		LOCATE_REPLY("locate-reply") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		LOCATE_REQ("locate-req") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		MUDLIST("mudlist") {
@@ -246,29 +239,25 @@ public class Packet extends LPCArray {
 		TELL("tell") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		UCACHE_UPDATE("ucache-update") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		WHO_REQ("who-req") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		},
 		WHO_REPLY("who-reply") {
 			@Override
 			public void handler(Packet data) {
-				Intermud3.instance.logWarn(this.toString() + ": "
-						+ data.toMudMode());
+				Utils.logWarn(this.toString() + ": " + data.toMudMode());
 			}
 		};
 

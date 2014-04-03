@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
@@ -32,6 +33,7 @@ public class Network implements Runnable {
 	private Socket sock = null;
 	private DataOutputStream sockOut = null;
 	private DataInputStream sockIn = null;
+
 	private LPCString adminEmail = new LPCString();
 	private LPCInt chanlistID = new LPCInt();
 	private List<String> configRouterList = new ArrayList<String>();
@@ -62,17 +64,21 @@ public class Network implements Runnable {
 		newRouterArray.add(new LPCString(routerIP + " " + routerPort));
 		newRouterList.add(newRouterArray);
 
-		if (this.routerList != null)
-			for (Object obj : this.routerList) {
-				String name = ((LPCArray) obj).getLPCString(0).toString();
-				String ipport = ((LPCArray) obj).getLPCString(1).toString();
+		if (this.routerList != null) {
+			ListIterator<Object> litr = this.routerList.listIterator();
+
+			while (litr.hasNext()) {
+				LPCArray arr = (LPCArray) litr.next();
+				String name = arr.getLPCString(0).toString();
+				String ipport = arr.getLPCString(1).toString();
 				String[] router = StringUtils.split(ipport, " ");
 
 				if (!name.equals(routerName.toString())
 						|| !router[0].equals(routerIP.toString())
 						|| Integer.parseInt(router[1]) != routerPort.toInt())
-					newRouterList.add((LPCArray) obj);
+					newRouterList.add(arr);
 			}
+		}
 
 		this.routerList = new LPCArray(newRouterList);
 	}
@@ -82,7 +88,7 @@ public class Network implements Runnable {
 			return;
 
 		if (this.preferredRouter == null || this.preferredRouter.size() < 2) {
-			this.i3.logError("No preferred router.");
+			Utils.logError("No preferred router.");
 
 			return;
 		}
@@ -113,7 +119,7 @@ public class Network implements Runnable {
 		Object service = Services.getService("startup");
 
 		if (service == null)
-			this.i3.logError("I3Startup service not found!");
+			Utils.logError("I3Startup service not found!");
 		else
 			Intermud3.callout.callOut(service, "send", 2);
 	}
@@ -322,7 +328,7 @@ public class Network implements Runnable {
 				Thread.sleep(100);
 			} catch (InterruptedException iE) {
 				if (!isConnected()) {
-					this.i3.logWarn("Shutdown!!!");
+					Utils.logWarn("Shutdown!!!");
 
 					return;
 				}
@@ -361,8 +367,8 @@ public class Network implements Runnable {
 					} catch (IOException e) {
 					}
 
-					this.i3.logError("Got illegal packet: " + skipped + "/"
-							+ len + " bytes.");
+					Utils.logError("Got illegal packet: " + skipped + "/" + len
+							+ " bytes.");
 
 					continue;
 				}
@@ -385,8 +391,7 @@ public class Network implements Runnable {
 						} catch (InterruptedException ie) {
 						}
 
-						this.i3.logError("Timeout receiving packet sized "
-								+ len);
+						Utils.logError("Timeout receiving packet sized " + len);
 
 						continue;
 					}
@@ -398,7 +403,7 @@ public class Network implements Runnable {
 					Thread.sleep(1000);
 				} catch (InterruptedException iE) {
 					if (!isConnected()) {
-						this.i3.logWarn("Shutdown!!!");
+						Utils.logWarn("Shutdown!!!");
 
 						return;
 					}
@@ -408,7 +413,7 @@ public class Network implements Runnable {
 						.getMessage();
 
 				if (errMsg != null)
-					this.i3.logError("inputThread: " + errMsg);
+					Utils.logError("inputThread: " + errMsg);
 
 				this.routerConnected = false;
 				reconnect(this.reconnectWait);
@@ -438,7 +443,7 @@ public class Network implements Runnable {
 						&& !tmud.toString().equals(
 								this.i3.getServer().getServerName())) {
 					if (namedType.equals("mudlist")) {
-						this.i3.logWarn("Wrong destination (" + tmud
+						Utils.logWarn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
 						packet.set(PacketBase.T_MUD.getIndex(), new LPCString(
 								this.i3.getServer().getServerName()));
@@ -453,8 +458,8 @@ public class Network implements Runnable {
 			}
 
 			if (err != null) {
-				this.i3.logError(err + ".");
-				this.i3.logError(packet.toMudMode());
+				Utils.logError(err + ".");
+				Utils.logError(packet.toMudMode());
 
 				continue;
 			}
@@ -473,7 +478,7 @@ public class Network implements Runnable {
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			if (type == null)
-				this.i3.logWarn("Service handler for I3 packet "
+				Utils.logWarn("Service handler for I3 packet "
 						+ packet.toMudMode() + " not available.");
 			else
 				type.handler(packet);
@@ -517,18 +522,18 @@ public class Network implements Runnable {
 				String errMsg = ueE.getMessage() == null ? ueE.toString() : ueE
 						.getMessage();
 
-				this.i3.logError("Unsupported encoding: " + str);
+				Utils.logError("Unsupported encoding: " + str);
 
 				if (errMsg != null)
-					this.i3.logError(errMsg);
+					Utils.logError(errMsg);
 			} catch (IOException ioE) {
 				String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE
 						.getMessage();
 
-				this.i3.logError("Problem sending data: " + str);
+				Utils.logError("Problem sending data: " + str);
 
 				if (errMsg != null)
-					this.i3.logError(errMsg);
+					Utils.logError(errMsg);
 			}
 		}
 	}

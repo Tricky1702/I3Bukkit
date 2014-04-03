@@ -4,13 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Vector;
 
-import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
 public class Services {
-	private static Intermud3 i3 = Intermud3.instance;
 	private static Vector<Object> i3Services = new Vector<Object>();
 	private static Vector<String> i3RouterServiceNames = new Vector<String>();
 
@@ -60,11 +59,11 @@ public class Services {
 				try {
 					method.invoke(service);
 				} catch (IllegalAccessException e) {
-					i3.logError("", e);
+					Utils.logError("", e);
 				} catch (IllegalArgumentException e) {
-					i3.logError("", e);
+					Utils.logError("", e);
 				} catch (InvocationTargetException e) {
-					i3.logError("", e);
+					Utils.logError("", e);
 				}
 			}
 		}
@@ -74,8 +73,9 @@ public class Services {
 	 * Show debug info for all I3 services.
 	 */
 	public static void debugInfo() {
-		i3.logInfo("i3Services:           " + i3Services.toString());
-		i3.logInfo("i3RouterServiceNames: " + i3RouterServiceNames.toString());
+		Utils.logInfo("i3Services:           " + i3Services.toString());
+		Utils.logInfo("i3RouterServiceNames: "
+				+ i3RouterServiceNames.toString());
 
 		for (Object service : i3Services) {
 			Method method = null;

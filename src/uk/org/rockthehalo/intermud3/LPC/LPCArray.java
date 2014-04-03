@@ -9,23 +9,20 @@ import java.util.Vector;
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCArray extends LPCVar implements Cloneable, List<Object> {
-	private Vector<Object> lpcData;
+	private Vector<Object> lpcData = new Vector<Object>();
 
 	public LPCArray() {
-		this.lpcData = new Vector<Object>();
-		this.setType(LPCTypes.ARRAY);
+		super.setType(LPCTypes.ARRAY);
 	}
 
 	public LPCArray(LPCArray obj) {
-		this.lpcData = new Vector<Object>();
-		this.lpcData.addAll(obj.getLPCData());
-		this.setType(LPCTypes.ARRAY);
+		super.setType(LPCTypes.ARRAY);
+		this.addAll(obj.getLPCData());
 	}
 
 	public LPCArray(Vector<Object> lpcData) {
-		this.lpcData = new Vector<Object>();
-		this.lpcData.addAll(lpcData);
-		this.setType(LPCTypes.ARRAY);
+		super.setType(LPCTypes.ARRAY);
+		this.addAll(lpcData);
 	}
 
 	public boolean add(LPCArray arr) {
@@ -140,18 +137,15 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	}
 
 	public Object getValue(Object key, int index) {
-		if (key == null)
+		if (key == null || index < 0 || index >= this.size())
 			return null;
 
+		ListIterator<Object> litr = this.listIterator(index);
 		Class<? extends Object> kClass = key.getClass();
 		String kString = key.toString();
-		int i = -1;
 
-		for (Object obj : this.lpcData) {
-			i++;
-
-			if (i < index)
-				continue;
+		while (litr.hasNext()) {
+			Object obj = litr.next();
 
 			if (kClass.isInstance(obj) && obj.toString().equals(kString))
 				return obj;
@@ -162,32 +156,24 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 
 	@Override
 	public int indexOf(Object o) {
-		if (o == null)
-			return -1;
-
 		return this.indexOf(o, 0);
 	}
 
 	public int indexOf(Object o, int index) {
-		if (o == null)
+		if (o == null || index < 0 || index >= this.size())
 			return -1;
 
-		ListIterator<Object> litr = this.listIterator();
+		ListIterator<Object> litr = this.listIterator(index);
 		Class<? extends Object> oClass = o.getClass();
-		Object obj;
 		String oString = o.toString();
-		int i = -1;
 
 		while (litr.hasNext()) {
-			i++;
-
-			if (i < index)
-				continue;
-
-			obj = litr.next();
+			Object obj = litr.next();
 
 			if (oClass.isInstance(obj) && obj.toString().equals(oString))
-				return i;
+				return index;
+
+			++index;
 		}
 
 		return -1;
@@ -205,38 +191,25 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 
 	@Override
 	public int lastIndexOf(Object o) {
-		if (o == null)
-			return -1;
-
-		return this.lastIndexOf(o, this.size() - 1);
+		return this.lastIndexOf(o, this.size());
 	}
 
 	public int lastIndexOf(Object o, int index) {
-		if (o == null)
+		if (o == null || index < 0 || index > this.size())
 			return -1;
 
-		if (index < 0 || index >= this.size())
-			return -1;
-
-		ListIterator<Object> litr = this.listIterator();
-
-		while (litr.hasNext())
-			litr.next();
+		ListIterator<Object> litr = this.listIterator(index);
 
 		Class<? extends Object> oClass = o.getClass();
 		String oString = o.toString();
-		int i = this.size();
 
 		while (litr.hasPrevious()) {
-			i--;
-
-			if (i > index)
-				continue;
-
 			Object obj = litr.previous();
 
 			if (oClass.isInstance(obj) && obj.toString().equals(oString))
-				return i;
+				return index;
+
+			--index;
 		}
 
 		return -1;
@@ -304,36 +277,36 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 
 	@Override
 	public void setLPCData(LPCArray obj) {
-		this.lpcData.clear();
-		this.lpcData.addAll(obj.getLPCData());
+		this.clear();
+		this.addAll(obj.getLPCData());
 	}
 
 	@Override
 	public void setLPCData(LPCInt obj) {
-		this.lpcData.clear();
-		this.lpcData.add(obj);
+		this.clear();
+		this.add(obj);
 	}
 
 	@Override
 	public void setLPCData(LPCMapping obj) {
-		this.lpcData.clear();
-		this.lpcData.add(obj);
+		this.clear();
+		this.add(obj);
 	}
 
 	@Override
 	public void setLPCData(LPCString obj) {
-		this.lpcData.clear();
-		this.lpcData.add(obj);
+		this.clear();
+		this.add(obj);
 	}
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
 		if (LPCVar.isLPCArray(obj)) {
-			this.lpcData.clear();
-			this.lpcData.addAll(((LPCArray) obj).getLPCData());
+			this.clear();
+			this.addAll(((LPCArray) obj).getLPCData());
 		} else if (LPCVar.isLPCVar(obj)) {
-			this.lpcData.clear();
-			this.lpcData.add(obj);
+			this.clear();
+			this.add(obj);
 		} else {
 			throw new I3Exception(
 					"Invalid data for LPCArray: setLPCData(Object) '"

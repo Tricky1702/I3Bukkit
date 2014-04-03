@@ -10,26 +10,21 @@ import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCMapping extends LPCVar implements Cloneable,
 		Map<Object, Object> {
-	private Map<Object, Object> lpcData;
+	private Map<Object, Object> lpcData = Collections
+			.synchronizedMap(new LinkedHashMap<Object, Object>());
 
 	public LPCMapping() {
-		this.lpcData = Collections
-				.synchronizedMap(new LinkedHashMap<Object, Object>());
-		this.setType(LPCTypes.MAPPING);
+		super.setType(LPCTypes.MAPPING);
 	}
 
 	public LPCMapping(LPCMapping obj) {
-		this.lpcData = Collections
-				.synchronizedMap(new LinkedHashMap<Object, Object>());
-		this.lpcData.putAll(Collections.synchronizedMap(obj.getLPCData()));
-		this.setType(LPCTypes.MAPPING);
+		super.setType(LPCTypes.MAPPING);
+		this.putAll(Collections.synchronizedMap(obj.getLPCData()));
 	}
 
 	public LPCMapping(Map<Object, Object> lpcData) {
-		this.lpcData = Collections
-				.synchronizedMap(new LinkedHashMap<Object, Object>());
-		this.lpcData.putAll(Collections.synchronizedMap(lpcData));
-		this.setType(LPCTypes.MAPPING);
+		super.setType(LPCTypes.MAPPING);
+		this.putAll(Collections.synchronizedMap(lpcData));
 	}
 
 	@Override
@@ -178,7 +173,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	}
 
 	@Override
-	public void putAll(Map<?, ?> map) {
+	public void putAll(Map<? extends Object, ? extends Object> map) {
 		this.lpcData.putAll(map);
 	}
 
@@ -217,8 +212,8 @@ public class LPCMapping extends LPCVar implements Cloneable,
 
 	@Override
 	public void setLPCData(LPCMapping obj) {
-		this.lpcData.clear();
-		this.lpcData.putAll(Collections.synchronizedMap(obj.getLPCData()));
+		this.clear();
+		this.putAll(Collections.synchronizedMap(obj.getLPCData()));
 	}
 
 	@Override

@@ -10,10 +10,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class HeartBeat extends BukkitRunnable {
-	private final Intermud3 i3 = Intermud3.instance;
-
 	private Vector<Map<String, Object>> heartBeats = new Vector<Map<String, Object>>();
 	private BukkitTask bukkitTask = null;
 	private long id = 0;
@@ -22,7 +21,7 @@ public class HeartBeat extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		this.i3.logInfo("heartBeats: " + this.heartBeats.toString());
+		Utils.logInfo("heartBeats: " + this.heartBeats.toString());
 	}
 
 	public void removeHeartBeat(Object owner) {
@@ -97,6 +96,6 @@ public class HeartBeat extends BukkitRunnable {
 		this.heartBeats.add(data);
 
 		if (this.heartBeats.size() == 1)
-			this.bukkitTask = runTaskTimer(i3, 20, 20);
+			this.bukkitTask = runTaskTimer(Intermud3.instance, 20, 20);
 	}
 }

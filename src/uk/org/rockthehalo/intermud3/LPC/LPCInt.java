@@ -3,21 +3,20 @@ package uk.org.rockthehalo.intermud3.LPC;
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCInt extends LPCVar implements Cloneable {
-	private Integer lpcData;
+	private Integer lpcData = new Integer(0);
 
 	public LPCInt() {
-		this.lpcData = new Integer(0);
-		this.setType(LPCTypes.INT);
+		super.setType(LPCTypes.INT);
 	}
 
 	public LPCInt(LPCInt obj) {
-		this.lpcData = new Integer(obj.lpcData);
-		this.setType(LPCTypes.INT);
+		super.setType(LPCTypes.INT);
+		this.lpcData = new Integer(obj.getLPCData());
 	}
 
 	public LPCInt(Integer lpcData) {
+		super.setType(LPCTypes.INT);
 		this.lpcData = new Integer(lpcData);
-		this.setType(LPCTypes.INT);
 	}
 
 	@Override
@@ -34,7 +33,7 @@ public class LPCInt extends LPCVar implements Cloneable {
 	}
 
 	@Override
-	public Object get(Object index) throws I3Exception {
+	public Object get(Object index) {
 		if (index == null)
 			return null;
 

@@ -7,21 +7,20 @@ import java.util.Vector;
 import uk.org.rockthehalo.intermud3.I3Exception;
 
 public class LPCMixed extends LPCVar implements Cloneable {
-	private Object lpcData;
+	private Object lpcData = null;
 
 	public LPCMixed() {
-		this.lpcData = null;
-		this.setType(LPCTypes.MIXED);
+		super.setType(LPCTypes.MIXED);
 	}
 
 	public LPCMixed(LPCMixed obj) {
+		super.setType(LPCTypes.MIXED);
 		this.lpcData = obj.getLPCData();
-		this.setType(LPCTypes.MIXED);
 	}
 
 	public LPCMixed(Object lpcData) {
+		super.setType(LPCTypes.MIXED);
 		this.lpcData = lpcData;
-		this.setType(LPCTypes.MIXED);
 	}
 
 	@Override

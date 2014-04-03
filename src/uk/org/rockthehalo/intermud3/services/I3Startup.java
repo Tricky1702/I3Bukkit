@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
@@ -34,9 +35,9 @@ public class I3Startup extends ServiceTemplate {
 	@Override
 	public void replyHandler(Packet packet) {
 		if (packet.size() != 8) {
-			this.i3.logError("We don't like startup-reply packet size. Should be 8 but is "
+			Utils.logError("We don't like startup-reply packet size. Should be 8 but is "
 					+ packet.size());
-			this.i3.logError(packet.toMudMode());
+			Utils.logError(packet.toMudMode());
 
 			return;
 		}
@@ -45,8 +46,8 @@ public class I3Startup extends ServiceTemplate {
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
-			this.i3.logError("Illegal access. Not from the router.");
-			this.i3.logError(packet.toMudMode());
+			Utils.logError("Illegal access. Not from the router.");
+			Utils.logError(packet.toMudMode());
 
 			return;
 		}
@@ -57,8 +58,8 @@ public class I3Startup extends ServiceTemplate {
 			routerList.setLPCData(packet.getLPCArray(6));
 
 		if (routerList.size() < 1) {
-			this.i3.logError("We don't like the absence of packet element 6.");
-			this.i3.logError(packet.toMudMode());
+			Utils.logError("We don't like the absence of packet element 6.");
+			Utils.logError(packet.toMudMode());
 
 			return;
 		}
@@ -100,9 +101,9 @@ public class I3Startup extends ServiceTemplate {
 				Intermud3.network.setRouterPassword(i);
 			}
 		} else {
-			this.i3.logInfo("Current router details are "
+			Utils.logInfo("Current router details are "
 					+ LPCVar.toMudMode(currentRouter));
-			this.i3.logInfo("Changing router details to "
+			Utils.logInfo("Changing router details to "
 					+ LPCVar.toMudMode(preferredRouter));
 
 			this.i3.getConfig().set("router.password", 0);
@@ -118,7 +119,7 @@ public class I3Startup extends ServiceTemplate {
 
 		this.i3.saveConfig();
 
-		this.i3.logInfo("Connection established to I3 router " + preferredName
+		Utils.logInfo("Connection established to I3 router " + preferredName
 				+ " at " + preferredAddr);
 
 		Object service = Services.getService("channel");
@@ -207,7 +208,7 @@ public class I3Startup extends ServiceTemplate {
 		otherInfo.set(new LPCString("architecture"), new LPCString("Java"));
 
 		payload.add(otherInfo);
-		this.i3.debug("I3Startup packet: " + payload.toMudMode());
+		Utils.debug("I3Startup packet: " + payload.toMudMode());
 		Intermud3.network.sendToRouter("startup-req-3", null, payload);
 	}
 }

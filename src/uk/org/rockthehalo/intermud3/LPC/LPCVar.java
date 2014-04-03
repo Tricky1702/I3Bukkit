@@ -7,7 +7,7 @@ import java.util.Vector;
 import org.apache.commons.lang.StringUtils;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
-import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public abstract class LPCVar {
 	public enum LPCTypes {
@@ -39,10 +39,6 @@ public abstract class LPCVar {
 		return LPCTypes.MIXED;
 	}
 
-	public void setType(LPCTypes lpcType) {
-		this.lpcType = lpcType;
-	}
-
 	public static boolean isLPCArray(Object obj) {
 		return LPCArray.class.isInstance(obj);
 	}
@@ -66,6 +62,10 @@ public abstract class LPCVar {
 	public static boolean isLPCVar(Object obj) {
 		return isLPCArray(obj) || isLPCInt(obj) || isLPCMapping(obj)
 				|| isLPCMixed(obj) || isLPCString(obj);
+	}
+
+	public void setType(LPCTypes lpcType) {
+		this.lpcType = lpcType;
 	}
 
 	public static String toMudMode(Object obj) {
@@ -466,7 +466,7 @@ public abstract class LPCVar {
 		try {
 			obj = p_fromMudMode(mudModeString);
 		} catch (I3Exception i3E) {
-			Intermud3.instance.logError("", i3E);
+			Utils.logError("", i3E);
 		}
 
 		return obj;
