@@ -121,7 +121,7 @@ public class Network implements Runnable {
 		if (service == null)
 			Utils.logError("I3Startup service not found!");
 		else
-			Intermud3.callout.callOut(service, "send", 2);
+			Intermud3.callout.add(service, "send", 2);
 	}
 
 	public void create() {
@@ -287,12 +287,12 @@ public class Network implements Runnable {
 			return;
 		} else {
 			create();
-			Intermud3.callout.callOut(this, "connect", 2);
+			Intermud3.callout.add(this, "connect", 2);
 		}
 	}
 
 	public void reconnect(long reconnectWait) {
-		Intermud3.callout.callOut(this, "reconnect", reconnectWait);
+		Intermud3.callout.add(this, "reconnect", reconnectWait);
 	}
 
 	public void remove() {
@@ -778,8 +778,6 @@ public class Network implements Runnable {
 
 	public void shutdown(int restartDelay) {
 		if (isConnected() && isRouterConnected()) {
-			Services.remove();
-
 			Packet packet = new Packet();
 
 			packet.add(new LPCInt(restartDelay));

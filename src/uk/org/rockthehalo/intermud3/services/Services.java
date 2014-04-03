@@ -73,9 +73,8 @@ public class Services {
 	 * Show debug info for all I3 services.
 	 */
 	public static void debugInfo() {
-		Utils.logInfo("i3Services:           " + i3Services.toString());
-		Utils.logInfo("i3RouterServiceNames: "
-				+ i3RouterServiceNames.toString());
+		Utils.debug("i3Services:           " + i3Services.toString());
+		Utils.debug("i3RouterServiceNames: " + i3RouterServiceNames.toString());
 
 		for (Object service : i3Services) {
 			Method method = null;
@@ -132,9 +131,7 @@ public class Services {
 			try {
 				method = service.getClass().getMethod("remove");
 			} catch (NoSuchMethodException e) {
-				method = null;
 			} catch (SecurityException e) {
-				method = null;
 			}
 
 			if (method != null) {

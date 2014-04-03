@@ -21,10 +21,43 @@ public class HeartBeat extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		Utils.logInfo("heartBeats: " + this.heartBeats.toString());
+		Utils.debug("heartBeats: " + this.heartBeats.toString());
 	}
 
-	public void removeHeartBeat(Object owner) {
+	/**
+	 * @param owner
+	 *            the class owner
+	 * @param delay
+	 *            the delay in seconds between heartbeats
+	 */
+	public void add(Object owner, long delay) {
+		if (owner == null || delay <= 0)
+			return;
+
+		for (Map<String, Object> heartbeat : this.heartBeats)
+			if (owner == heartbeat.get("owner"))
+				return;
+
+		Map<String, Object> data = new Hashtable<String, Object>();
+
+		data.put("id", this.id++);
+		data.put("owner", owner);
+		data.put("currentDelay", 0);
+		data.put("delay", delay);
+
+		this.heartBeats.add(data);
+
+		if (this.heartBeats.size() == 1)
+			this.bukkitTask = runTaskTimer(Intermud3.instance, 20, 20);
+	}
+
+	/**
+	 * Remove heatbeats by class owner.
+	 * 
+	 * @param owner
+	 *            the class owner
+	 */
+	public void remove(Object owner) {
 		if (owner == null || this.heartBeats.size() == 0)
 			return;
 
@@ -76,26 +109,5 @@ public class HeartBeat extends BukkitRunnable {
 				}
 			}
 		}
-	}
-
-	public void setHeartBeat(Object owner, long delay) {
-		if (owner == null || delay <= 0)
-			return;
-
-		for (Map<String, Object> heartbeat : this.heartBeats)
-			if (owner == heartbeat.get("owner"))
-				return;
-
-		Map<String, Object> data = new Hashtable<String, Object>();
-
-		data.put("id", this.id++);
-		data.put("owner", owner);
-		data.put("currentDelay", 0);
-		data.put("delay", delay);
-
-		this.heartBeats.add(data);
-
-		if (this.heartBeats.size() == 1)
-			this.bukkitTask = runTaskTimer(Intermud3.instance, 20, 20);
 	}
 }

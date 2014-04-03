@@ -21,11 +21,11 @@ public class I3Ping extends ServiceTemplate {
 
 	public void create() {
 		Services.addServiceName(this.toString());
-		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.add(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		Utils.logInfo("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
+		Utils.debug("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
 	}
 
 	public void heartBeat() {
@@ -49,7 +49,7 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.removeHeartBeat(this);
+		Intermud3.heartbeat.remove(this);
 		Services.removeServiceName(this.toString());
 	}
 

@@ -252,13 +252,12 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		Services.addServiceName(this.toString());
-		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.add(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		Utils.logInfo("Channel: listening: " + this.listening.toString());
-		Utils.logInfo("Channel: chanList:  "
-				+ this.chanList.keySet().toString());
+		Utils.debug("Channel: listening: " + this.listening.toString());
+		Utils.debug("Channel: chanList:  " + this.chanList.keySet().toString());
 	}
 
 	public FileConfiguration getChanlistConfig() {
@@ -296,7 +295,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.removeHeartBeat(this);
+		Intermud3.heartbeat.remove(this);
 		Services.removeServiceName(this.toString());
 		saveChanlistConfig();
 

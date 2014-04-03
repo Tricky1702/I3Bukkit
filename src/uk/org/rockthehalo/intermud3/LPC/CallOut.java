@@ -21,14 +21,34 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		Utils.logInfo("callOuts: " + this.callOuts.toString());
+		Utils.debug("callOuts: " + this.callOuts.toString());
 	}
 
-	public long callOut(Object owner, String func, long delay) {
-		return callOut(owner, func, delay, null);
+	/**
+	 * @param owner
+	 *            the class owner
+	 * @param func
+	 *            the method to call
+	 * @param delay
+	 *            the delay in seconds to wait
+	 * @return the callout ID
+	 */
+	public long add(Object owner, String func, long delay) {
+		return add(owner, func, delay, null);
 	}
 
-	public long callOut(Object owner, String func, long delay, Object[] args) {
+	/**
+	 * @param owner
+	 *            the class owner
+	 * @param func
+	 *            the method to call
+	 * @param delay
+	 *            the delay in seconds to wait
+	 * @param args
+	 *            the arguments to pass to the method
+	 * @return the callout ID
+	 */
+	public long add(Object owner, String func, long delay, Object[] args) {
 		if (owner == null || func == null || func.isEmpty() || delay <= 0)
 			return -1;
 
@@ -53,7 +73,13 @@ public class CallOut extends BukkitRunnable {
 		return id;
 	}
 
-	public void removeCallOut(int id) {
+	/**
+	 * Remove callout by callout ID.
+	 * 
+	 * @param id
+	 *            the callout ID
+	 */
+	public void remove(int id) {
 		if (id < 0 || this.callOuts.size() == 0)
 			return;
 
@@ -68,7 +94,13 @@ public class CallOut extends BukkitRunnable {
 			this.bukkitTask.cancel();
 	}
 
-	public void removeCallOuts(Object owner) {
+	/**
+	 * Remove callouts by class owner.
+	 * 
+	 * @param owner
+	 *            the class owner
+	 */
+	public void remove(Object owner) {
 		if (owner == null || this.callOuts.size() == 0)
 			return;
 
@@ -83,6 +115,14 @@ public class CallOut extends BukkitRunnable {
 
 		if (this.callOuts.size() == 0)
 			this.bukkitTask.cancel();
+	}
+
+	/**
+	 * Remove all the callouts.
+	 */
+	public void removeAll() {
+		this.callOuts.clear();
+		this.bukkitTask.cancel();
 	}
 
 	@Override

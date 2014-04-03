@@ -45,13 +45,12 @@ public class I3Mudlist extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		Intermud3.heartbeat.setHeartBeat(this, this.hBeatDelay);
+		Intermud3.heartbeat.add(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		Utils.logInfo("I3Mudlist: mudList:   "
-				+ this.mudList.keySet().toString());
-		Utils.logInfo("I3Mudlist: mudUpdate: " + this.mudUpdate.toString());
+		Utils.debug("I3Mudlist: mudList:   " + this.mudList.keySet().toString());
+		Utils.debug("I3Mudlist: mudUpdate: " + this.mudUpdate.toString());
 	}
 
 	public FileConfiguration getMudlistConfig() {
@@ -115,7 +114,7 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.removeHeartBeat(this);
+		Intermud3.heartbeat.remove(this);
 		saveMudlistConfig();
 		this.mudList.clear();
 		this.mudUpdate.clear();

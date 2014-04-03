@@ -112,7 +112,7 @@ public class I3Startup extends ServiceTemplate {
 			this.i3.saveConfig();
 			Intermud3.network.setPreferredRouter(preferredRouter);
 			Intermud3.network.shutdown(0);
-			Intermud3.callout.callOut(Intermud3.network, "connect", 1);
+			Intermud3.callout.add(Intermud3.network, "connect", 1);
 
 			return;
 		}
@@ -125,7 +125,7 @@ public class I3Startup extends ServiceTemplate {
 		Object service = Services.getService("channel");
 
 		if (service != null)
-			Intermud3.callout.callOut(service, "requestChanList", 5);
+			Intermud3.callout.add(service, "requestChanList", 5);
 	}
 
 	/*

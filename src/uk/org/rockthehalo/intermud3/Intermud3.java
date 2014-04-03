@@ -38,7 +38,7 @@ public class Intermud3 extends JavaPlugin {
 		if (network != null && network.isConnected())
 			network.shutdown(0);
 
-		heartbeat.removeHeartBeat(this);
+		heartbeat.remove(this);
 		Utils.logInfo(this.toString() + " has been disabled!");
 	}
 
@@ -50,7 +50,7 @@ public class Intermud3 extends JavaPlugin {
 		heartbeat = new HeartBeat();
 		network = new Network();
 
-		heartbeat.setHeartBeat(this, this.hBeatDelay);
+		heartbeat.add(this, this.hBeatDelay);
 		Services.addServices();
 		getCommand("intermud3").setExecutor(new I3Command());
 
