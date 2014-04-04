@@ -18,7 +18,7 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 
 public class I3Mudlist extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
@@ -145,7 +145,7 @@ public class I3Mudlist extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketBase.O_MUD.getIndex();
+		int oMud = PacketEnums.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {

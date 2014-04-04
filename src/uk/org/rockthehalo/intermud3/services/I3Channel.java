@@ -21,7 +21,7 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
 public class I3Channel extends ServiceTemplate {
@@ -62,7 +62,7 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanEmoteHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(PacketBase.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(PacketEnums.O_MUD.getIndex());
 
 		if (oMudName == null)
 			return;
@@ -76,17 +76,21 @@ public class I3Channel extends ServiceTemplate {
 		LPCString visName = packet.getLPCString(7);
 
 		if (visName == null)
-			visName = packet.getLPCString(PacketBase.O_USER.getIndex());
+			visName = packet.getLPCString(PacketEnums.O_USER.getIndex());
 
 		String name;
 
-		if (oMudName.toString().equals(this.i3.getServer().getServerName()))
+		if (!oMudName.toString().equals(this.i3.getServer().getServerName()))
 			name = visName + "@" + oMudName;
 		else
 			name = visName.toString();
 
-		String msg = message.toString().replace("$N", name);
 		Player[] players = this.i3.getServer().getOnlinePlayers();
+		String chan = channel.toString();
+		String msg = message.toString().replace("$N", name);
+
+		chan = this.channelToAlias.get(chan);
+		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)
 			if (player.hasPermission("intermud3.emote"))
@@ -105,7 +109,7 @@ public class I3Channel extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketBase.O_MUD.getIndex();
+		int oMud = PacketEnums.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -181,7 +185,7 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanMessageHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(PacketBase.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(PacketEnums.O_MUD.getIndex());
 
 		if (oMudName == null)
 			return;
@@ -195,21 +199,25 @@ public class I3Channel extends ServiceTemplate {
 		LPCString visName = packet.getLPCString(7);
 
 		if (visName == null)
-			visName = packet.getLPCString(PacketBase.O_USER.getIndex());
+			visName = packet.getLPCString(PacketEnums.O_USER.getIndex());
 
 		String name;
 
-		if (oMudName.toString().equals(this.i3.getServer().getServerName()))
+		if (!oMudName.toString().equals(this.i3.getServer().getServerName()))
 			name = visName + "@" + oMudName;
 		else
 			name = visName.toString();
 
 		Player[] players = this.i3.getServer().getOnlinePlayers();
+		String chan = channel.toString();
+		String msg = message.toString();
+
+		chan = this.channelToAlias.get(chan);
+		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)
 			if (player.hasPermission("intermud3.msg"))
-				player.sendMessage("[I3/" + channel + "] " + name + ": "
-						+ message);
+				player.sendMessage("[I3/" + chan + "] " + name + ": " + msg);
 	}
 
 	/**
@@ -317,7 +325,7 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		String namedType = packet.getLPCString(PacketBase.TYPE.getIndex())
+		String namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
 				.toString();
 		PacketTypes type = PacketTypes.getNamedType(namedType);
 
@@ -368,7 +376,7 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void reqHandler(Packet packet) {
-		String namedType = packet.getLPCString(PacketBase.TYPE.getIndex())
+		String namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
 				.toString();
 		PacketTypes type = PacketTypes.getNamedType(namedType);
 
@@ -437,36 +445,34 @@ public class I3Channel extends ServiceTemplate {
 		sendChannelListen(new LPCString(channel), flag);
 	}
 
-	public void sendEmote(String chan, Player player, String msg) {
+	public void sendEmote(String chan, String plrName, String msg) {
 		Packet payload = new Packet();
-		String plrName = ChatColor.stripColor(player.getDisplayName());
 
 		if (this.aliasToChannel.containsKey(chan)
 				&& !this.aliasToChannel.containsValue(chan))
 			chan = this.aliasToChannel.get(chan);
 
-		msg = ChatColor.stripColor(msg);
+		plrName = ChatColor.stripColor(plrName);
+		msg = Utils.toPinkfish(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
 		payload.add(new LPCString("$N " + msg));
-		Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE,
-				player.getDisplayName(), payload);
+		Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE, plrName, payload);
 	}
 
-	public void sendMessage(String chan, Player player, String msg) {
+	public void sendMessage(String chan, String plrName, String msg) {
 		Packet payload = new Packet();
-		String plrName = ChatColor.stripColor(player.getDisplayName());
 
 		if (this.aliasToChannel.containsKey(chan)
 				&& !this.aliasToChannel.containsValue(chan))
 			chan = this.aliasToChannel.get(chan);
 
-		msg = ChatColor.stripColor(msg);
+		plrName = ChatColor.stripColor(plrName);
+		msg = Utils.toPinkfish(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
 		payload.add(new LPCString(msg));
-		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE,
-				player.getDisplayName(), payload);
+		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE, plrName, payload);
 	}
 
 	private void tuneChannel(LPCString channel, boolean flag) {

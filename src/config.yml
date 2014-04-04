@@ -6,5 +6,5 @@ router:
   mudlistID: 0
   chanlistID: 0
 adminEmail: 'your@email.address.here'
-url: 'minecraft.hostname.here:25565'
+hostName: 'minecraft.hostname.here:25565'
 debug: false

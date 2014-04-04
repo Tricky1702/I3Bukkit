@@ -1,10 +1,13 @@
 package uk.org.rockthehalo.intermud3.services;
 
+import org.bukkit.ChatColor;
+
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketPingEnums;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
 public class I3Ping extends ServiceTemplate {
@@ -82,26 +85,27 @@ public class I3Ping extends ServiceTemplate {
 
 		Utils.debug(packet.toMudMode());
 
-		if (packet.getLPCString(PacketBase.TYPE.getIndex()).toString()
+		if (packet.getLPCString(PacketEnums.TYPE.getIndex()).toString()
 				.equals("ping"))
 			reply = "pong";
 
 		replyType = PacketTypes.getNamedType(reply);
 
-		if (packet.size() >= 7)
-			for (Object obj : packet.subList(6, packet.size()))
+		if (packet.size() >= PacketPingEnums.size())
+			for (Object obj : packet.subList(PacketEnums.size(), packet.size()))
 				extra.add(obj);
 
-		int oMud = PacketBase.O_MUD.getIndex();
-		String oMudName = packet.getLPCString(oMud).toString();
+		int oMud = PacketEnums.O_MUD.getIndex();
+		String oMudName = ChatColor.stripColor(packet.getLPCString(oMud)
+				.toString());
 
-		if (!oMudName.equals(this.i3.getServer().getServerName())) {
+		if (!oMudName.equals(ChatColor.stripColor(this.i3.getServer()
+				.getServerName()))) {
 			this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 			Intermud3.network.setRouterConnected(true);
 		}
 
-		Intermud3.network
-				.sendToMud(replyType, null, oMudName.toString(), extra);
+		Intermud3.network.sendToMud(replyType, null, oMudName, extra);
 	}
 
 	public void send(String type, String tmud, Packet packet) {
@@ -111,11 +115,12 @@ public class I3Ping extends ServiceTemplate {
 
 	private void testConnection() {
 		long tm = System.currentTimeMillis();
-		long hash = Utils.rnd(19720231) + ((tm & 0xffffffff) ^ 0xa5a5a5a5);
+		long hash = Utils.rnd(19720231L) + ((tm & 0x7fffffffL) ^ 0x25a5a5a5L);
 		Packet packet = new Packet();
 
-		packet.add(new LPCInt((int) (hash & 0xffffffff)));
+		packet.add(new LPCInt((int) (hash & 0x7fffffff)));
 		Intermud3.network.sendToMud(PacketTypes.getNamedType("ping-req"), null,
-				this.i3.getServer().getServerName(), packet);
+				ChatColor.stripColor(this.i3.getServer().getServerName()),
+				packet);
 	}
 }

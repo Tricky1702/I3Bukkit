@@ -1,7 +1,6 @@
 package uk.org.rockthehalo.intermud3.services;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
@@ -9,8 +8,8 @@ import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketErrorBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketErrorEnums;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 
 public class I3Error extends ServiceTemplate {
@@ -19,7 +18,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Bad Mojo/" + errorMsg);
@@ -37,7 +36,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Bad Packet/" + errorMsg);
@@ -49,7 +48,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null
 						&& errorMsg.toString()
@@ -67,18 +66,17 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				if (packet.size() > 8) {
-					LPCArray data = packet
-							.getLPCArray(PacketErrorBase.ERROR_PACKET
-									.getIndex());
+					LPCArray data = packet.getLPCArray(PacketErrorEnums.PACKET
+							.getIndex());
 
 					if (data != null
-							&& data.getLPCString(PacketBase.TYPE.getIndex())
+							&& data.getLPCString(PacketEnums.TYPE.getIndex())
 									.toString().equals("channel-listen")) {
 						LPCString channel = data.getLPCString(6);
 
 						if (channel != null) {
 							LPCString errorMsg = packet
-									.getLPCString(PacketErrorBase.ERROR_MESSAGE
+									.getLPCString(PacketErrorEnums.MESSAGE
 											.getIndex());
 
 							if (errorMsg != null)
@@ -100,7 +98,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Not Implemented/" + errorMsg);
@@ -112,18 +110,17 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				if (packet.size() > 8) {
-					LPCArray data = packet
-							.getLPCArray(PacketErrorBase.ERROR_PACKET
-									.getIndex());
+					LPCArray data = packet.getLPCArray(PacketErrorEnums.PACKET
+							.getIndex());
 
 					if (data != null
-							&& data.getLPCString(PacketBase.TYPE.getIndex())
+							&& data.getLPCString(PacketEnums.TYPE.getIndex())
 									.toString().equals("channel-listen")) {
 						LPCString channel = data.getLPCString(6);
 
 						if (channel != null) {
 							LPCString errorMsg = packet
-									.getLPCString(PacketErrorBase.ERROR_MESSAGE
+									.getLPCString(PacketErrorEnums.MESSAGE
 											.getIndex());
 
 							if (errorMsg != null)
@@ -145,7 +142,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Unknown Destination/" + errorMsg);
@@ -157,7 +154,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Unknown Source/" + errorMsg);
@@ -169,7 +166,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Unknown Packet Type/" + errorMsg);
@@ -181,7 +178,7 @@ public class I3Error extends ServiceTemplate {
 			@Override
 			public void handler(Packet packet) {
 				LPCString errorMsg = packet
-						.getLPCString(PacketErrorBase.ERROR_MESSAGE.getIndex());
+						.getLPCString(PacketErrorEnums.MESSAGE.getIndex());
 
 				if (errorMsg != null)
 					Utils.logError("Unknown Target User/" + errorMsg);
@@ -232,8 +229,8 @@ public class I3Error extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		String errorCode = packet.getLPCString(
-				PacketErrorBase.ERROR_CODE.getIndex()).toString();
+		String errorCode = packet
+				.getLPCString(PacketErrorEnums.CODE.getIndex()).toString();
 		I3ErrorCodes i3ErrorCode = I3ErrorCodes.getNamedErrorCode(errorCode);
 
 		if (i3ErrorCode != null) {
@@ -242,9 +239,10 @@ public class I3Error extends ServiceTemplate {
 			return;
 		}
 
-		LPCString errorMsg = packet.getLPCString(PacketErrorBase.ERROR_MESSAGE
+		LPCString errorMsg = packet.getLPCString(PacketErrorEnums.MESSAGE
 				.getIndex());
-		LPCString originator = packet.getLPCString(PacketBase.O_MUD.getIndex());
+		LPCString originator = packet
+				.getLPCString(PacketEnums.O_MUD.getIndex());
 
 		Utils.logError("Unhandled Error: " + originator + "/" + errorCode + "/"
 				+ errorMsg);
@@ -268,16 +266,14 @@ public class I3Error extends ServiceTemplate {
 		if (packet.getLPCInt(0) != null)
 			oUser = null;
 		else if (packet.getLPCString(0) != null)
-			oUser = packet.getLPCString(0).toString()
-					.toLowerCase(Locale.ENGLISH);
+			oUser = packet.getLPCString(0).toString();
 		else
 			oUser = null;
 
 		if (packet.getLPCInt(2) != null)
 			tUser = null;
 		else if (packet.getLPCString(2) != null)
-			tUser = packet.getLPCString(2).toString()
-					.toLowerCase(Locale.ENGLISH);
+			tUser = packet.getLPCString(2).toString();
 		else
 			tUser = null;
 

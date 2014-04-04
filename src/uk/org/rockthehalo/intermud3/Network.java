@@ -12,13 +12,14 @@ import java.util.ListIterator;
 import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.ChatColor;
 
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 import uk.org.rockthehalo.intermud3.services.Services;
 
@@ -41,6 +42,7 @@ public class Network implements Runnable {
 	private LPCString defRouterIP = new LPCString();
 	private LPCString defRouterName = new LPCString();
 	private LPCInt defRouterPort = new LPCInt();
+	private LPCString hostName = new LPCString();
 	private long idleTimeout = 0;
 	private LPCInt mudlistID = new LPCInt();
 	private LPCArray preferredRouter = new LPCArray();
@@ -128,12 +130,14 @@ public class Network implements Runnable {
 	public void create() {
 		String[] parts, ipport;
 
-		this.adminEmail = new LPCString(this.i3.getConfig().getString(
-				"adminEmail"));
+		this.adminEmail = new LPCString(ChatColor.stripColor(this.i3
+				.getConfig().getString("adminEmail")));
 		this.chanlistID = new LPCInt(this.i3.getConfig().getInt(
 				"router.chanlistID"));
 		this.configRouterList = new ArrayList<String>(this.i3.getConfig()
 				.getStringList("router.list"));
+		this.hostName = new LPCString(ChatColor.stripColor(this.i3.getConfig()
+				.getString("hostName", "")));
 		this.mudlistID = new LPCInt(this.i3.getConfig().getInt(
 				"router.mudlistID"));
 		this.routerPassword = new LPCInt(this.i3.getConfig().getInt(
@@ -191,6 +195,13 @@ public class Network implements Runnable {
 	 */
 	public List<String> getConfigRouterList() {
 		return this.configRouterList;
+	}
+
+	/**
+	 * @return the hostName
+	 */
+	public LPCString getHostName() {
+		return this.hostName;
 	}
 
 	/**
@@ -431,13 +442,13 @@ public class Network implements Runnable {
 			else if (packet.size() <= 6)
 				err = "packet size too small";
 			else {
-				namedType = packet.getLPCString(PacketBase.TYPE.getIndex())
+				namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
 						.toString();
 				type = PacketTypes.getNamedType(namedType);
-				omud = packet.getLPCString(PacketBase.O_MUD.getIndex());
-				ouser = packet.getLPCString(PacketBase.O_USER.getIndex());
-				tmud = packet.getLPCString(PacketBase.T_MUD.getIndex());
-				tuser = packet.getLPCString(PacketBase.T_USER.getIndex());
+				omud = packet.getLPCString(PacketEnums.O_MUD.getIndex());
+				ouser = packet.getLPCString(PacketEnums.O_USER.getIndex());
+				tmud = packet.getLPCString(PacketEnums.T_MUD.getIndex());
+				tuser = packet.getLPCString(PacketEnums.T_USER.getIndex());
 
 				if (tmud != null
 						&& !tmud.toString().equals(
@@ -445,7 +456,7 @@ public class Network implements Runnable {
 					if (namedType.equals("mudlist")) {
 						Utils.logWarn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
-						packet.set(PacketBase.T_MUD.getIndex(), new LPCString(
+						packet.set(PacketEnums.T_MUD.getIndex(), new LPCString(
 								this.i3.getServer().getServerName()));
 					} else {
 						err = "wrong destination mud (" + tmud + ")";
@@ -469,12 +480,12 @@ public class Network implements Runnable {
 
 			// Sanity check on the originator username
 			if (ouser != null)
-				packet.set(PacketBase.O_USER.getIndex(), new LPCString(ouser
+				packet.set(PacketEnums.O_USER.getIndex(), new LPCString(ouser
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			// Sanity check on the target username
 			if (tuser != null)
-				packet.set(PacketBase.T_USER.getIndex(), new LPCString(tuser
+				packet.set(PacketEnums.T_USER.getIndex(), new LPCString(tuser
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			if (type == null)
@@ -544,24 +555,27 @@ public class Network implements Runnable {
 
 		packet.add(new LPCString(i3Type));
 		packet.add(new LPCInt(5));
-		packet.add(new LPCString(this.i3.getServer().getServerName()));
+		packet.add(new LPCString(ChatColor.stripColor(this.i3.getServer()
+				.getServerName())));
 
 		if (origUser == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(origUser.toLowerCase(Locale.ENGLISH)));
+			packet.add(new LPCString(ChatColor.stripColor(origUser)
+					.toLowerCase(Locale.ENGLISH)));
 		}
 
 		if (targMud == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(targMud));
+			packet.add(new LPCString(ChatColor.stripColor(targMud)));
 		}
 
 		if (targUser == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(targUser.toLowerCase(Locale.ENGLISH)));
+			packet.add(new LPCString(ChatColor.stripColor(targUser)
+					.toLowerCase(Locale.ENGLISH)));
 		}
 
 		if (payload == null)
@@ -615,7 +629,8 @@ public class Network implements Runnable {
 	 *            the adminEmail to set
 	 */
 	public void setAdminEmail(LPCString adminEmail) {
-		this.adminEmail = new LPCString(adminEmail);
+		this.adminEmail = new LPCString(ChatColor.stripColor(adminEmail
+				.toString()));
 	}
 
 	/**
@@ -649,6 +664,22 @@ public class Network implements Runnable {
 	 */
 	public void setConfigRouterList(List<String> configRouterList) {
 		this.configRouterList = new ArrayList<String>(configRouterList);
+	}
+
+	/**
+	 * @param adminEmail
+	 *            the adminEmail to set
+	 */
+	public void setHostName(LPCString hostName) {
+		this.hostName = new LPCString(ChatColor.stripColor(hostName.toString()));
+	}
+
+	/**
+	 * @param adminEmail
+	 *            the adminEmail to set
+	 */
+	public void setHostName(String hostName) {
+		this.hostName = new LPCString(ChatColor.stripColor(hostName));
 	}
 
 	/**

@@ -15,7 +15,7 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketBase;
+import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 
 public class I3Startup extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
@@ -41,7 +41,7 @@ public class I3Startup extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketBase.O_MUD.getIndex();
+		int oMud = PacketEnums.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -176,10 +176,13 @@ public class I3Startup extends ServiceTemplate {
 		String tmStr = fmt.format(bootTime);
 
 		LPCMapping otherInfo = new LPCMapping();
-		LPCString url = new LPCString(this.i3.getConfig().getString("url"));
 
 		otherInfo.set(new LPCString("upsince"), new LPCString(tmStr));
-		otherInfo.set(new LPCString("connection url"), url);
+
+		if (!Intermud3.network.getHostName().isEmpty())
+			otherInfo.set(new LPCString("host"),
+					Intermud3.network.getHostName());
+
 		otherInfo.set(new LPCString("architecture"), new LPCString("Java"));
 
 		payload.add(otherInfo);

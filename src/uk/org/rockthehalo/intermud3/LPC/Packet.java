@@ -12,31 +12,57 @@ import uk.org.rockthehalo.intermud3.services.I3Startup;
 import uk.org.rockthehalo.intermud3.services.Services;
 
 public class Packet extends LPCArray {
-	public enum PacketBase {
+	public enum PacketEnums {
 		TYPE(0), TTL(1), O_MUD(2), O_USER(3), T_MUD(4), T_USER(5);
 
 		private int index;
 
-		private PacketBase(int index) {
+		private PacketEnums(int index) {
 			this.index = index;
 		}
 
 		public int getIndex() {
 			return this.index;
+		}
+
+		public static int size() {
+			return PacketEnums.values().length;
 		}
 	}
 
-	public enum PacketErrorBase {
-		ERROR_CODE(6), ERROR_MESSAGE(7), ERROR_PACKET(8);
+	public enum PacketErrorEnums {
+		CODE(6), MESSAGE(7), PACKET(8);
 
 		private int index;
 
-		private PacketErrorBase(int index) {
+		private PacketErrorEnums(int index) {
 			this.index = index;
 		}
 
 		public int getIndex() {
 			return this.index;
+		}
+
+		public static int size() {
+			return PacketEnums.size() + PacketErrorEnums.values().length;
+		}
+	}
+
+	public enum PacketPingEnums {
+		PAYLOAD(6);
+
+		private int index;
+
+		private PacketPingEnums(int index) {
+			this.index = index;
+		}
+
+		public int getIndex() {
+			return this.index;
+		}
+
+		public static int size() {
+			return PacketEnums.size() + PacketPingEnums.values().length;
 		}
 	}
 

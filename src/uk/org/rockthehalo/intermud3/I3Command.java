@@ -103,7 +103,7 @@ public class I3Command implements CommandExecutor {
 			I3Channel service = (I3Channel) Services.getService("channel");
 
 			if (service != null)
-				service.sendEmote(chan, player, msg);
+				service.sendEmote(chan, player.getDisplayName(), msg);
 
 			return true;
 		} else if (subcmd.equals("msg")) {
@@ -126,7 +126,7 @@ public class I3Command implements CommandExecutor {
 			I3Channel service = (I3Channel) Services.getService("channel");
 
 			if (service != null)
-				service.sendMessage(chan, player, msg);
+				service.sendMessage(chan, player.getDisplayName(), msg);
 
 			return true;
 		} else if (subcmd.equals("debug")) {
