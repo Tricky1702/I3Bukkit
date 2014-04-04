@@ -137,7 +137,6 @@ public class I3Command implements CommandExecutor {
 			}
 
 			Intermud3.callout.debugInfo();
-			Intermud3.heartbeat.debugInfo();
 			Services.debugInfo();
 
 			return true;

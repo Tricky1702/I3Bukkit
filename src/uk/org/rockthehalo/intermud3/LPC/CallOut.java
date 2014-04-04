@@ -14,14 +14,17 @@ import uk.org.rockthehalo.intermud3.Utils;
 
 public class CallOut extends BukkitRunnable {
 	private Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>();
+	private Vector<Map<String, Object>> heartBeats = new Vector<Map<String, Object>>();
 	private BukkitTask bukkitTask = null;
 	private long id = 0;
 
 	public CallOut() {
+		this.bukkitTask = runTaskTimer(Intermud3.instance, 1, 1);
 	}
 
 	public void debugInfo() {
-		Utils.debug("callOuts: " + this.callOuts.toString());
+		Utils.debug("callOuts:   " + this.callOuts.toString());
+		Utils.debug("heartBeats: " + this.heartBeats.toString());
 	}
 
 	/**
@@ -33,8 +36,8 @@ public class CallOut extends BukkitRunnable {
 	 *            the delay in seconds to wait
 	 * @return the callout ID
 	 */
-	public long add(Object owner, String func, long delay) {
-		return add(owner, func, delay, null);
+	public long addCallOut(Object owner, String func, long delay) {
+		return addCallOut(owner, func, delay, null);
 	}
 
 	/**
@@ -48,7 +51,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the arguments to pass to the method
 	 * @return the callout ID
 	 */
-	public long add(Object owner, String func, long delay, Object[] args) {
+	public long addCallOut(Object owner, String func, long delay, Object[] args) {
 		if (owner == null || func == null || func.isEmpty() || delay <= 0)
 			return -1;
 
@@ -58,8 +61,8 @@ public class CallOut extends BukkitRunnable {
 
 		data.put("id", id);
 		data.put("owner", owner);
-		data.put("currentDelay", 0);
-		data.put("delay", delay * 20);
+		data.put("currentDelay", 0L);
+		data.put("delay", delay * 20L);
 		data.put("func", func);
 
 		if (args != null)
@@ -67,10 +70,45 @@ public class CallOut extends BukkitRunnable {
 
 		this.callOuts.add(data);
 
-		if (this.callOuts.size() == 1)
-			this.bukkitTask = runTaskTimer(Intermud3.instance, 1, 1);
-
 		return id;
+	}
+
+	/**
+	 * @param owner
+	 *            the class owner
+	 * @param delay
+	 *            the delay in seconds between heartbeats
+	 */
+	public void addHeartBeat(Object owner, long delay) {
+		if (owner == null || delay <= 0)
+			return;
+
+		for (Map<String, Object> heartbeat : this.heartBeats)
+			if (owner == heartbeat.get("owner"))
+				return;
+
+		Map<String, Object> data = new Hashtable<String, Object>();
+
+		data.put("id", this.id++);
+		data.put("owner", owner);
+		data.put("currentDelay", 0L);
+		data.put("delay", delay * 20L);
+
+		this.heartBeats.add(data);
+	}
+
+	/**
+	 * Remove all the callouts.
+	 */
+	public void removeAllCallOuts() {
+		this.callOuts.clear();
+	}
+
+	/**
+	 * Remove all the callouts.
+	 */
+	public void removeAllHeartBeats() {
+		this.heartBeats.clear();
 	}
 
 	/**
@@ -79,7 +117,7 @@ public class CallOut extends BukkitRunnable {
 	 * @param id
 	 *            the callout ID
 	 */
-	public void remove(int id) {
+	public void removeCallOut(int id) {
 		if (id < 0 || this.callOuts.size() == 0)
 			return;
 
@@ -100,7 +138,7 @@ public class CallOut extends BukkitRunnable {
 	 * @param owner
 	 *            the class owner
 	 */
-	public void remove(Object owner) {
+	public void removeCallOut(Object owner) {
 		if (owner == null || this.callOuts.size() == 0)
 			return;
 
@@ -112,17 +150,25 @@ public class CallOut extends BukkitRunnable {
 
 		for (Map<String, Object> callout : callouts)
 			this.callOuts.remove(callout);
-
-		if (this.callOuts.size() == 0)
-			this.bukkitTask.cancel();
 	}
 
 	/**
-	 * Remove all the callouts.
+	 * Remove heatbeats by class owner.
+	 * 
+	 * @param owner
+	 *            the class owner
 	 */
-	public void removeAll() {
-		this.callOuts.clear();
-		this.bukkitTask.cancel();
+	public void removeHeartBeat(Object owner) {
+		if (owner == null || this.heartBeats.size() == 0)
+			return;
+
+		for (Map<String, Object> heartbeat : this.heartBeats) {
+			if (owner == heartbeat.get("owner")) {
+				this.heartBeats.remove(heartbeat);
+
+				break;
+			}
+		}
 	}
 
 	@Override
@@ -173,9 +219,43 @@ public class CallOut extends BukkitRunnable {
 
 				this.callOuts.remove(callout);
 			}
+		}
 
-			if (this.callOuts.size() == 0)
-				this.bukkitTask.cancel();
+		if (this.heartBeats.size() > 0) {
+			Vector<Map<String, Object>> heartbeats = new Vector<Map<String, Object>>();
+
+			for (Map<String, Object> heartbeat : this.heartBeats) {
+				long currentDelay = (Long) heartbeat.get("currentDelay") + 1;
+				int index = this.heartBeats.indexOf(heartbeat);
+
+				if (currentDelay >= (Long) heartbeat.get("delay")) {
+					currentDelay = 0;
+					heartbeats.add(heartbeat);
+				}
+
+				heartbeat.put("currentDelay", currentDelay);
+				this.heartBeats.set(index, heartbeat);
+			}
+
+			for (Map<String, Object> heartbeat : heartbeats) {
+				Object owner = heartbeat.get("owner");
+				Method method = null;
+
+				try {
+					method = owner.getClass().getMethod("heartBeat");
+				} catch (NoSuchMethodException e) {
+				} catch (SecurityException e) {
+				}
+
+				if (method != null) {
+					try {
+						method.invoke(owner);
+					} catch (IllegalAccessException e) {
+					} catch (IllegalArgumentException e) {
+					} catch (InvocationTargetException e) {
+					}
+				}
+			}
 		}
 	}
 }

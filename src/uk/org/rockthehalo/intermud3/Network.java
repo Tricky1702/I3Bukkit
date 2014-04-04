@@ -26,9 +26,10 @@ public class Network implements Runnable {
 	private volatile Thread inputThread = null;
 
 	private final Intermud3 i3 = Intermud3.instance;
-	private final long maxRetryTime = 600;
-	private final long minRetryTime = 30;
-	private final long retryTimeStep = 20;
+
+	public final long maxRetryTime = 600;
+	public final long minRetryTime = 30;
+	public final long retryTimeStep = 20;
 
 	private Socket sock = null;
 	private DataOutputStream sockOut = null;
@@ -121,7 +122,7 @@ public class Network implements Runnable {
 		if (service == null)
 			Utils.logError("I3Startup service not found!");
 		else
-			Intermud3.callout.add(service, "send", 2);
+			Intermud3.callout.addCallOut(service, "send", 2);
 	}
 
 	public void create() {
@@ -277,22 +278,21 @@ public class Network implements Runnable {
 		if (this.reconnectWait > this.maxRetryTime)
 			this.reconnectWait = this.maxRetryTime;
 
-		this.i3.saveConfig();
-
 		if (isConnected()) {
 			shutdown(0);
 			this.reconnectWait -= this.retryTimeStep;
+			this.i3.saveConfig();
 			reconnect(5);
 
 			return;
-		} else {
-			create();
-			Intermud3.callout.add(this, "connect", 2);
 		}
+
+		Utils.logWarn("Unable to setup socket.");
+		shutdown();
 	}
 
 	public void reconnect(long reconnectWait) {
-		Intermud3.callout.add(this, "reconnect", reconnectWait);
+		Intermud3.callout.addCallOut(this, "reconnect", reconnectWait);
 	}
 
 	public void remove() {

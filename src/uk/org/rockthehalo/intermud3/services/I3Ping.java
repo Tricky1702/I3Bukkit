@@ -13,15 +13,16 @@ public class I3Ping extends ServiceTemplate {
 	private final int baseDelay = 5;
 	private final int delay = 5;
 
-	private int hBeat = Utils.rnd(this.delay) + this.baseDelay;
+	private int hBeat;
 
 	public I3Ping() {
 		setServiceName("ping");
+		hBeat = Utils.rnd(this.delay) + this.baseDelay;
 	}
 
 	public void create() {
 		Services.addServiceName(this.toString());
-		Intermud3.heartbeat.add(this, this.hBeatDelay);
+		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -29,9 +30,6 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	public void heartBeat() {
-		if (!Intermud3.network.isRouterConnected())
-			return;
-
 		this.hBeat--;
 
 		if (this.hBeat == 1) {
@@ -40,16 +38,17 @@ public class I3Ping extends ServiceTemplate {
 			return;
 		}
 
-		if (this.hBeat <= 0) {
+		if (!Intermud3.network.isRouterConnected() || this.hBeat <= 0) {
 			Utils.logWarn("I3Ping: Not connected to the router. Re-connecting.");
 			this.hBeat = 3;
 			Intermud3.network.setRouterConnected(false);
-			Intermud3.network.reconnect(5);
+			Intermud3.network.setReconnectWait(Intermud3.network.minRetryTime);
+			Intermud3.network.reconnect();
 		}
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.remove(this);
+		Intermud3.callout.removeHeartBeat(this);
 		Services.removeServiceName(this.toString());
 	}
 
@@ -80,6 +79,8 @@ public class I3Ping extends ServiceTemplate {
 		PacketTypes replyType;
 		Packet extra = new Packet();
 		String reply = "ping-reply";
+
+		Utils.debug(packet.toMudMode());
 
 		if (packet.getLPCString(PacketBase.TYPE.getIndex()).toString()
 				.equals("ping"))

@@ -2,7 +2,6 @@ package uk.org.rockthehalo.intermud3.services;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -112,7 +111,7 @@ public class I3Startup extends ServiceTemplate {
 			this.i3.saveConfig();
 			Intermud3.network.setPreferredRouter(preferredRouter);
 			Intermud3.network.shutdown(0);
-			Intermud3.callout.add(Intermud3.network, "connect", 1);
+			Intermud3.callout.addCallOut(Intermud3.network, "connect", 1);
 
 			return;
 		}
@@ -125,7 +124,7 @@ public class I3Startup extends ServiceTemplate {
 		Object service = Services.getService("channel");
 
 		if (service != null)
-			Intermud3.callout.add(service, "requestChanList", 5);
+			Intermud3.callout.addCallOut(service, "requestChanList", 5);
 	}
 
 	/*
@@ -171,40 +170,16 @@ public class I3Startup extends ServiceTemplate {
 		payload.add(Intermud3.network.getAdminEmail());
 		payload.add(Services.getRouterServices());
 
-		Calendar cal = Calendar.getInstance();
-		String ord = "th";
-
-		switch (cal.get(Calendar.DAY_OF_MONTH)) {
-		case 1:
-		case 21:
-		case 31:
-			ord = "st";
-
-			break;
-		case 2:
-		case 22:
-			ord = "nd";
-
-			break;
-		case 3:
-		case 23:
-			ord = "rd";
-
-			break;
-		default:
-			ord = "th";
-		}
-
 		Date bootTime = new Date(this.i3.getBootTime());
 		SimpleDateFormat fmt = new SimpleDateFormat(
-				"E, d'$ord$' MMMM yyyy - HH:mm:ss zzz");
+				"E, d MMMM yyyy - HH:mm:ss zzz");
 		String tmStr = fmt.format(bootTime);
 
-		tmStr = tmStr.replace("$ord$", ord);
-
 		LPCMapping otherInfo = new LPCMapping();
+		LPCString url = new LPCString(this.i3.getConfig().getString("url"));
 
 		otherInfo.set(new LPCString("upsince"), new LPCString(tmStr));
+		otherInfo.set(new LPCString("connection url"), url);
 		otherInfo.set(new LPCString("architecture"), new LPCString("Java"));
 
 		payload.add(otherInfo);

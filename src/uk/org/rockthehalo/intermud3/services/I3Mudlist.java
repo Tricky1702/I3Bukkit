@@ -45,7 +45,7 @@ public class I3Mudlist extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		Intermud3.heartbeat.add(this, this.hBeatDelay);
+		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -114,7 +114,7 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.remove(this);
+		Intermud3.callout.removeHeartBeat(this);
 		saveMudlistConfig();
 		this.mudList.clear();
 		this.mudUpdate.clear();

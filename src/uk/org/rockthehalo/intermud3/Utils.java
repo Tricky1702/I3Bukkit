@@ -13,7 +13,7 @@ public class Utils {
 	 */
 	public static void debug(String msg) {
 		if (Intermud3.instance.getConfig().getBoolean("debug", false))
-			logInfo("[Intermud3] " + msg);
+			logInfo("Debug: " + msg);
 	}
 
 	public static boolean isPlayer(Object player) {
@@ -41,7 +41,7 @@ public class Utils {
 	 * @param msg
 	 */
 	public static void logError(String msg) {
-		log("[Intermud3] Error: " + msg, Level.SEVERE);
+		log("Error: " + msg, Level.SEVERE);
 	}
 
 	/**
@@ -49,14 +49,14 @@ public class Utils {
 	 * @param thrown
 	 */
 	public static void logError(String msg, Throwable thrown) {
-		log("[Intermud3] Error: " + msg, Level.SEVERE, thrown);
+		log("Error: " + msg, Level.SEVERE, thrown);
 	}
 
 	/**
 	 * @param msg
 	 */
 	public static void logInfo(String msg) {
-		log("[Intermud3] " + msg, Level.INFO);
+		log(msg, Level.INFO);
 	}
 
 	/**
@@ -64,14 +64,14 @@ public class Utils {
 	 * @param thrown
 	 */
 	public static void logInfo(String msg, Throwable thrown) {
-		log("[Intermud3] " + msg, Level.INFO, thrown);
+		log(msg, Level.INFO, thrown);
 	}
 
 	/**
 	 * @param msg
 	 */
 	public static void logWarn(String msg) {
-		log("[Intermud3] Warning: " + msg, Level.WARNING);
+		log("Warning: " + msg, Level.WARNING);
 	}
 
 	/**
@@ -79,7 +79,7 @@ public class Utils {
 	 * @param thrown
 	 */
 	public static void logWarn(String msg, Throwable thrown) {
-		log("[Intermud3] Warning: " + msg, Level.WARNING, thrown);
+		log("Warning: " + msg, Level.WARNING, thrown);
 	}
 
 	public static int rnd(int range) {

@@ -7,6 +7,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -252,7 +253,7 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		Services.addServiceName(this.toString());
-		Intermud3.heartbeat.add(this, this.hBeatDelay);
+		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -295,7 +296,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void remove() {
-		Intermud3.heartbeat.remove(this);
+		Intermud3.callout.removeHeartBeat(this);
 		Services.removeServiceName(this.toString());
 		saveChanlistConfig();
 
@@ -438,9 +439,12 @@ public class I3Channel extends ServiceTemplate {
 
 	public void sendEmote(String chan, Player player, String msg) {
 		Packet payload = new Packet();
+		String plrName = ChatColor.stripColor(player.getDisplayName());
 
+		chan = this.aliasToChannel.get(chan);
+		msg = ChatColor.stripColor(msg);
 		payload.add(new LPCString(chan));
-		payload.add(new LPCString(player.getDisplayName()));
+		payload.add(new LPCString(plrName));
 		payload.add(new LPCString("$N " + msg));
 		Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE,
 				player.getDisplayName(), payload);
@@ -448,9 +452,12 @@ public class I3Channel extends ServiceTemplate {
 
 	public void sendMessage(String chan, Player player, String msg) {
 		Packet payload = new Packet();
+		String plrName = ChatColor.stripColor(player.getDisplayName());
 
+		chan = this.aliasToChannel.get(chan);
+		msg = ChatColor.stripColor(msg);
 		payload.add(new LPCString(chan));
-		payload.add(new LPCString(player.getDisplayName()));
+		payload.add(new LPCString(plrName));
 		payload.add(new LPCString(msg));
 		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE,
 				player.getDisplayName(), payload);
