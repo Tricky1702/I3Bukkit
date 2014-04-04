@@ -441,7 +441,10 @@ public class I3Channel extends ServiceTemplate {
 		Packet payload = new Packet();
 		String plrName = ChatColor.stripColor(player.getDisplayName());
 
-		chan = this.aliasToChannel.get(chan);
+		if (this.aliasToChannel.containsKey(chan)
+				&& !this.aliasToChannel.containsValue(chan))
+			chan = this.aliasToChannel.get(chan);
+
 		msg = ChatColor.stripColor(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
@@ -454,7 +457,10 @@ public class I3Channel extends ServiceTemplate {
 		Packet payload = new Packet();
 		String plrName = ChatColor.stripColor(player.getDisplayName());
 
-		chan = this.aliasToChannel.get(chan);
+		if (this.aliasToChannel.containsKey(chan)
+				&& !this.aliasToChannel.containsValue(chan))
+			chan = this.aliasToChannel.get(chan);
+
 		msg = ChatColor.stripColor(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
