@@ -11,12 +11,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 
@@ -37,9 +37,9 @@ public class I3Mudlist extends ServiceTemplate {
 		saveDefaultConfig();
 
 		try {
-			mudList.setLPCData(LPCVar.toObject(getMudlistConfig().getString(
+			mudList.setLPCData(Utils.toObject(getMudlistConfig().getString(
 					"mudList")));
-			mudUpdate.setLPCData(LPCVar.toObject(getMudlistConfig().getString(
+			mudUpdate.setLPCData(Utils.toObject(getMudlistConfig().getString(
 					"mudUpdate")));
 		} catch (I3Exception e) {
 			e.printStackTrace();
@@ -49,8 +49,8 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		Utils.debug("I3Mudlist: mudList:   " + this.mudList.keySet().toString());
-		Utils.debug("I3Mudlist: mudUpdate: " + this.mudUpdate.toString());
+		Log.debug("I3Mudlist: mudList:   " + this.mudList.keySet().toString());
+		Log.debug("I3Mudlist: mudUpdate: " + this.mudUpdate.toString());
 	}
 
 	public FileConfiguration getMudlistConfig() {
@@ -75,11 +75,11 @@ public class I3Mudlist extends ServiceTemplate {
 		}
 
 		if (muds.size() == 1) {
-			Utils.debug("Removing mud '" + muds.get(0) + "' from the mudlist.");
+			Log.debug("Removing mud '" + muds.get(0) + "' from the mudlist.");
 			this.removeMudFromList(new LPCString(muds.get(0)));
 			this.removeMudFromUpdate(new LPCString(muds.get(0)));
 		} else if (muds.size() > 1) {
-			Utils.debug("Removing muds '"
+			Log.debug("Removing muds '"
 					+ StringUtils.join(muds.subList(0, muds.size() - 1), "', '")
 					+ "' and '" + muds.get(muds.size() - 1)
 					+ "' from the mudlist.");
@@ -138,9 +138,9 @@ public class I3Mudlist extends ServiceTemplate {
 	@Override
 	public void replyHandler(Packet packet) {
 		if (packet.size() != 8) {
-			Utils.logError("We don't like mudlist packet size. Should be 8 but is "
+			Log.error("We don't like mudlist packet size. Should be 8 but is "
 					+ packet.size());
-			Utils.logError(packet.toMudMode());
+			Log.error(packet.toMudMode());
 
 			return;
 		}
@@ -149,8 +149,8 @@ public class I3Mudlist extends ServiceTemplate {
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
-			Utils.logError("Illegal access. Not from the router.");
-			Utils.logError(packet.toMudMode());
+			Log.error("Illegal access. Not from the router.");
+			Log.error(packet.toMudMode());
 
 			return;
 		}
@@ -158,7 +158,7 @@ public class I3Mudlist extends ServiceTemplate {
 		LPCInt mudlistID = packet.getLPCInt(6);
 
 		if (mudlistID.toInt() <= Intermud3.network.getMudlistID().toInt())
-			Utils.debug("We don't like packet element 6 ("
+			Log.debug("We don't like packet element 6 ("
 					+ mudlistID
 					+ "). It should be larger than the current one. Continuing anyway.");
 
@@ -176,7 +176,7 @@ public class I3Mudlist extends ServiceTemplate {
 				if (this.mudList.getLPCString(mudname) != null) {
 					removeMudFromList(mudname);
 					removeMudFromUpdate(mudname);
-					Utils.debug("Removing mud '"
+					Log.debug("Removing mud '"
 							+ mudname
 							+ "', reason: Router has purged it from the listing.");
 				}
@@ -197,7 +197,7 @@ public class I3Mudlist extends ServiceTemplate {
 					if (state > 7 * 24 * 60 * 60) {
 						removeMudFromList(mudname);
 						removeMudFromUpdate(mudname);
-						Utils.debug("Removing mud '" + mudname
+						Log.debug("Removing mud '" + mudname
 								+ "', reason: Shutdown delay is too long.");
 
 					} else {
@@ -213,7 +213,7 @@ public class I3Mudlist extends ServiceTemplate {
 						else
 							msg += "indefinate.";
 
-						Utils.debug(msg);
+						Log.debug(msg);
 					}
 
 					this.mudList.set(mudname, infoData);
@@ -258,9 +258,9 @@ public class I3Mudlist extends ServiceTemplate {
 					extra = " (" + libname + ", " + driver + ")";
 
 				if (mudData != null)
-					Utils.debug("Mud '" + mudname + "' is up." + extra);
+					Log.debug("Mud '" + mudname + "' is up." + extra);
 				else
-					Utils.debug("Adding mud '" + mudname + "' to the mudlist."
+					Log.debug("Adding mud '" + mudname + "' to the mudlist."
 							+ extra);
 
 				this.mudList.set(mudname, infoData);
@@ -295,14 +295,13 @@ public class I3Mudlist extends ServiceTemplate {
 		if (this.mudlistConfig == null || this.mudlistConfigFile == null)
 			return;
 
-		getMudlistConfig().set("mudList", LPCVar.toMudMode(this.mudList));
-		getMudlistConfig().set("mudUpdate", LPCVar.toMudMode(this.mudUpdate));
+		getMudlistConfig().set("mudList", Utils.toMudMode(this.mudList));
+		getMudlistConfig().set("mudUpdate", Utils.toMudMode(this.mudUpdate));
 
 		try {
 			getMudlistConfig().save(this.mudlistConfigFile);
 		} catch (IOException ioE) {
-			Utils.logError(
-					"Could not save config to " + this.mudlistConfigFile, ioE);
+			Log.error("Could not save config to " + this.mudlistConfigFile, ioE);
 		}
 	}
 }

@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Vector;
 
-import uk.org.rockthehalo.intermud3.Utils;
+import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
@@ -59,11 +59,11 @@ public class Services {
 				try {
 					method.invoke(service);
 				} catch (IllegalAccessException e) {
-					Utils.logError("", e);
+					Log.error("", e);
 				} catch (IllegalArgumentException e) {
-					Utils.logError("", e);
+					Log.error("", e);
 				} catch (InvocationTargetException e) {
-					Utils.logError("", e);
+					Log.error("", e);
 				}
 			}
 		}
@@ -73,8 +73,8 @@ public class Services {
 	 * Show debug info for all I3 services.
 	 */
 	public static void debugInfo() {
-		Utils.debug("i3Services:           " + i3Services.toString());
-		Utils.debug("i3RouterServiceNames: " + i3RouterServiceNames.toString());
+		Log.debug("i3Services:           " + i3Services.toString());
+		Log.debug("i3RouterServiceNames: " + i3RouterServiceNames.toString());
 
 		for (Object service : i3Services) {
 			Method method = null;

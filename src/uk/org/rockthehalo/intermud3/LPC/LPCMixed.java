@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Vector;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCMixed extends LPCVar implements Cloneable {
 	private Object lpcData = null;
@@ -302,7 +303,7 @@ public class LPCMixed extends LPCVar implements Cloneable {
 		case INT:
 		case MAPPING:
 		case STRING:
-			return LPCVar.toMudMode(this.lpcData);
+			return Utils.toMudMode(this.lpcData);
 		default:
 			break;
 		}

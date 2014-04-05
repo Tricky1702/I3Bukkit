@@ -17,7 +17,6 @@ import org.bukkit.ChatColor;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
 import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
@@ -91,7 +90,7 @@ public class Network implements Runnable {
 			return;
 
 		if (this.preferredRouter == null || this.preferredRouter.size() < 2) {
-			Utils.logError("No preferred router.");
+			Log.error("No preferred router.");
 
 			return;
 		}
@@ -122,7 +121,7 @@ public class Network implements Runnable {
 		Object service = Services.getService("startup");
 
 		if (service == null)
-			Utils.logError("I3Startup service not found!");
+			Log.error("I3Startup service not found!");
 		else
 			Intermud3.callout.addCallOut(service, "send", 2);
 	}
@@ -298,7 +297,7 @@ public class Network implements Runnable {
 			return;
 		}
 
-		Utils.logWarn("Unable to setup socket.");
+		Log.warn("Unable to setup socket.");
 		shutdown();
 	}
 
@@ -339,7 +338,7 @@ public class Network implements Runnable {
 				Thread.sleep(100);
 			} catch (InterruptedException iE) {
 				if (!isConnected()) {
-					Utils.logWarn("Shutdown!!!");
+					Log.warn("Shutdown!!!");
 
 					return;
 				}
@@ -378,7 +377,7 @@ public class Network implements Runnable {
 					} catch (IOException e) {
 					}
 
-					Utils.logError("Got illegal packet: " + skipped + "/" + len
+					Log.error("Got illegal packet: " + skipped + "/" + len
 							+ " bytes.");
 
 					continue;
@@ -402,7 +401,7 @@ public class Network implements Runnable {
 						} catch (InterruptedException ie) {
 						}
 
-						Utils.logError("Timeout receiving packet sized " + len);
+						Log.error("Timeout receiving packet sized " + len);
 
 						continue;
 					}
@@ -414,7 +413,7 @@ public class Network implements Runnable {
 					Thread.sleep(1000);
 				} catch (InterruptedException iE) {
 					if (!isConnected()) {
-						Utils.logWarn("Shutdown!!!");
+						Log.warn("Shutdown!!!");
 
 						return;
 					}
@@ -424,7 +423,7 @@ public class Network implements Runnable {
 						.getMessage();
 
 				if (errMsg != null)
-					Utils.logError("inputThread: " + errMsg);
+					Log.error("inputThread: " + errMsg);
 
 				this.routerConnected = false;
 				reconnect(this.reconnectWait);
@@ -437,7 +436,7 @@ public class Network implements Runnable {
 
 			if (packet.size() == 0)
 				continue;
-			else if (!LPCVar.isLPCArray(packet))
+			else if (!Utils.isLPCArray(packet))
 				err = "packet not array";
 			else if (packet.size() <= 6)
 				err = "packet size too small";
@@ -454,7 +453,7 @@ public class Network implements Runnable {
 						&& !tmud.toString().equals(
 								this.i3.getServer().getServerName())) {
 					if (namedType.equals("mudlist")) {
-						Utils.logWarn("Wrong destination (" + tmud
+						Log.warn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
 						packet.set(PacketEnums.T_MUD.getIndex(), new LPCString(
 								this.i3.getServer().getServerName()));
@@ -469,8 +468,8 @@ public class Network implements Runnable {
 			}
 
 			if (err != null) {
-				Utils.logError(err + ".");
-				Utils.logError(packet.toMudMode());
+				Log.error(err + ".");
+				Log.error(packet.toMudMode());
 
 				continue;
 			}
@@ -489,7 +488,7 @@ public class Network implements Runnable {
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			if (type == null)
-				Utils.logWarn("Service handler for I3 packet "
+				Log.warn("Service handler for I3 packet "
 						+ packet.toMudMode() + " not available.");
 			else
 				type.handler(packet);
@@ -533,18 +532,18 @@ public class Network implements Runnable {
 				String errMsg = ueE.getMessage() == null ? ueE.toString() : ueE
 						.getMessage();
 
-				Utils.logError("Unsupported encoding: " + str);
+				Log.error("Unsupported encoding: " + str);
 
 				if (errMsg != null)
-					Utils.logError(errMsg);
+					Log.error(errMsg);
 			} catch (IOException ioE) {
 				String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE
 						.getMessage();
 
-				Utils.logError("Problem sending data: " + str);
+				Log.error("Problem sending data: " + str);
 
 				if (errMsg != null)
-					Utils.logError(errMsg);
+					Log.error(errMsg);
 			}
 		}
 	}

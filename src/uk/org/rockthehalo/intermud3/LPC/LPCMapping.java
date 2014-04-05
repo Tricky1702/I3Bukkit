@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCMapping extends LPCVar implements Cloneable,
 		Map<Object, Object> {
@@ -94,7 +95,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCArray getLPCArray(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCArray(obj))
+		if (Utils.isLPCArray(obj))
 			return (LPCArray) obj;
 
 		return null;
@@ -109,7 +110,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCInt getLPCInt(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCInt(obj))
+		if (Utils.isLPCInt(obj))
 			return (LPCInt) obj;
 
 		return null;
@@ -119,7 +120,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCMapping getLPCMapping(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCMapping(obj))
+		if (Utils.isLPCMapping(obj))
 			return (LPCMapping) obj;
 
 		return null;
@@ -129,7 +130,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	public LPCString getLPCString(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCString(obj))
+		if (Utils.isLPCString(obj))
 			return (LPCString) obj;
 
 		return null;
@@ -224,13 +225,13 @@ public class LPCMapping extends LPCVar implements Cloneable,
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isLPCArray(obj))
+		if (Utils.isLPCArray(obj))
 			setLPCData((LPCArray) obj);
-		else if (LPCVar.isLPCInt(obj))
+		else if (Utils.isLPCInt(obj))
 			setLPCData((LPCInt) obj);
-		else if (LPCVar.isLPCMapping(obj))
+		else if (Utils.isLPCMapping(obj))
 			setLPCData((LPCMapping) obj);
-		else if (LPCVar.isLPCString(obj))
+		else if (Utils.isLPCString(obj))
 			setLPCData((LPCString) obj);
 		else
 			throw new I3Exception(

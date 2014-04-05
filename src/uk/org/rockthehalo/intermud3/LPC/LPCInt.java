@@ -1,6 +1,7 @@
 package uk.org.rockthehalo.intermud3.LPC;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCInt extends LPCVar implements Cloneable {
 	private Integer lpcData = new Integer(0);
@@ -128,13 +129,13 @@ public class LPCInt extends LPCVar implements Cloneable {
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isLPCArray(obj))
+		if (Utils.isLPCArray(obj))
 			setLPCData((LPCArray) obj);
-		else if (LPCVar.isLPCInt(obj))
+		else if (Utils.isLPCInt(obj))
 			setLPCData((LPCInt) obj);
-		else if (LPCVar.isLPCMapping(obj))
+		else if (Utils.isLPCMapping(obj))
 			setLPCData((LPCMapping) obj);
-		else if (LPCVar.isLPCString(obj))
+		else if (Utils.isLPCString(obj))
 			setLPCData((LPCString) obj);
 		else
 			throw new I3Exception(

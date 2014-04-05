@@ -3,6 +3,7 @@ package uk.org.rockthehalo.intermud3.services;
 import org.bukkit.ChatColor;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
+import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
@@ -29,7 +30,7 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		Utils.debug("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
+		Log.debug("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
 	}
 
 	public void heartBeat() {
@@ -42,7 +43,7 @@ public class I3Ping extends ServiceTemplate {
 		}
 
 		if (!Intermud3.network.isRouterConnected() || this.hBeat <= 0) {
-			Utils.logWarn("I3Ping: Not connected to the router. Re-connecting.");
+			Log.warn("I3Ping: Not connected to the router. Re-connecting.");
 			this.hBeat = 3;
 			Intermud3.network.setRouterConnected(false);
 			Intermud3.network.setReconnectWait(Intermud3.network.minRetryTime);
@@ -83,7 +84,7 @@ public class I3Ping extends ServiceTemplate {
 		Packet extra = new Packet();
 		String reply = "ping-reply";
 
-		Utils.debug(packet.toMudMode());
+		Log.debug(packet.toMudMode());
 
 		if (packet.getLPCString(PacketEnums.TYPE.getIndex()).toString()
 				.equals("ping"))

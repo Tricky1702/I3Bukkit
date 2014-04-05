@@ -7,6 +7,7 @@ import java.util.ListIterator;
 import java.util.Vector;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	private Vector<Object> lpcData = new Vector<Object>();
@@ -91,7 +92,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCArray getLPCArray(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCArray(obj))
+		if (Utils.isLPCArray(obj))
 			return (LPCArray) obj;
 
 		return null;
@@ -106,7 +107,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCInt getLPCInt(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCInt(obj))
+		if (Utils.isLPCInt(obj))
 			return (LPCInt) obj;
 
 		return null;
@@ -116,7 +117,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCMapping getLPCMapping(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCMapping(obj))
+		if (Utils.isLPCMapping(obj))
 			return (LPCMapping) obj;
 
 		return null;
@@ -126,7 +127,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	public LPCString getLPCString(Object index) {
 		Object obj = this.get(index);
 
-		if (LPCVar.isLPCString(obj))
+		if (Utils.isLPCString(obj))
 			return (LPCString) obj;
 
 		return null;
@@ -301,10 +302,10 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isLPCArray(obj)) {
+		if (Utils.isLPCArray(obj)) {
 			this.clear();
 			this.addAll(((LPCArray) obj).getLPCData());
-		} else if (LPCVar.isLPCVar(obj)) {
+		} else if (Utils.isLPCVar(obj)) {
 			this.clear();
 			this.add(obj);
 		} else {

@@ -1,6 +1,7 @@
 package uk.org.rockthehalo.intermud3.LPC;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
+import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCString extends LPCVar implements Cloneable {
 	private String lpcData = new String();
@@ -115,28 +116,28 @@ public class LPCString extends LPCVar implements Cloneable {
 
 	@Override
 	public void setLPCData(LPCArray obj) {
-		this.lpcData = new String(LPCVar.toMudMode(obj));
+		this.lpcData = new String(Utils.toMudMode(obj));
 	}
 
 	@Override
 	public void setLPCData(LPCInt obj) {
-		this.lpcData = new String(LPCVar.toMudMode(obj));
+		this.lpcData = new String(Utils.toMudMode(obj));
 	}
 
 	@Override
 	public void setLPCData(LPCMapping obj) {
-		this.lpcData = new String(LPCVar.toMudMode(obj));
+		this.lpcData = new String(Utils.toMudMode(obj));
 	}
 
 	@Override
 	public void setLPCData(LPCString obj) {
-		this.lpcData = new String(LPCVar.toMudMode(obj));
+		this.lpcData = new String(Utils.toMudMode(obj));
 	}
 
 	@Override
 	public void setLPCData(Object obj) throws I3Exception {
-		if (LPCVar.isLPCVar(obj))
-			this.lpcData = new String(LPCVar.toMudMode(obj));
+		if (Utils.isLPCVar(obj))
+			this.lpcData = new String(Utils.toMudMode(obj));
 		else
 			throw new I3Exception(
 					"Invalid data for LPCString: setLPCData(Object) '"

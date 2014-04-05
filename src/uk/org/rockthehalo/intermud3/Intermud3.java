@@ -38,7 +38,7 @@ public class Intermud3 extends JavaPlugin {
 
 		callout.removeAllCallOuts();
 		callout.removeAllHeartBeats();
-		Utils.logInfo(this.toString() + " has been disabled!");
+		Log.info(this.toString() + " has been disabled!");
 
 		super.onDisable();
 	}
@@ -56,7 +56,7 @@ public class Intermud3 extends JavaPlugin {
 		Services.addServices();
 		getCommand("intermud3").setExecutor(new I3Command());
 
-		Utils.logInfo(this.toString() + " has been enabled");
+		Log.info(this.toString() + " has been enabled");
 	}
 
 	@Override

@@ -10,7 +10,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
-import uk.org.rockthehalo.intermud3.Utils;
+import uk.org.rockthehalo.intermud3.Log;
 
 public class CallOut extends BukkitRunnable {
 	private Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>();
@@ -23,8 +23,8 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		Utils.debug("callOuts:   " + this.callOuts.toString());
-		Utils.debug("heartBeats: " + this.heartBeats.toString());
+		Log.debug("callOuts:   " + this.callOuts.toString());
+		Log.debug("heartBeats: " + this.heartBeats.toString());
 	}
 
 	/**
@@ -209,11 +209,11 @@ public class CallOut extends BukkitRunnable {
 						else
 							method.invoke(owner, args);
 					} catch (IllegalAccessException e) {
-						Utils.logError("", e);
+						Log.error("", e);
 					} catch (IllegalArgumentException e) {
-						Utils.logError("", e);
+						Log.error("", e);
 					} catch (InvocationTargetException e) {
-						Utils.logError("", e);
+						Log.error("", e);
 					}
 				}
 
