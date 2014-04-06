@@ -3,7 +3,9 @@ I3Bukkit
 
 Bukkit to Intermud3 bridge.
 
-# Intermud3 commands.
+Intermud3 commands
+==================
+```
 commands:
   intermud3:
     aliases: [ i3 ]
@@ -19,8 +21,11 @@ commands:
         /<command> channels unalias <alias> - remove the alias.
         /<command> msg <channel> <message> - sends a message to an I3 channel.
         /<command> emote <channel> <emote> - sends an emote to an I3 channel.
+```
 
-# Intermud3 permissions.        
+Intermud3 permissions
+=====================
+```
 permissions:
   intermud3.*:
     default: op
@@ -47,3 +52,4 @@ permissions:
     description: Allows the use of /intermud3 msg.
   intermud3.emote:
     description: Allows the use of /intermud3 emote.
+```
