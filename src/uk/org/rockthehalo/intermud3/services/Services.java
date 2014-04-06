@@ -4,6 +4,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
+
 import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
@@ -14,14 +16,6 @@ public class Services {
 	private static Vector<String> i3RouterServiceNames = new Vector<String>();
 
 	private Services() {
-	}
-
-	public static void addServices() {
-		addService(new I3Error());
-		addService(new I3Startup());
-		addService(new I3Mudlist());
-		addService(new I3Channel());
-		addService(new I3Ping());
 	}
 
 	/**
@@ -43,7 +37,7 @@ public class Services {
 	}
 
 	/**
-	 * Execute the method create for all I3 services.
+	 * Call the create method on all I3 services that have defined it.
 	 */
 	public static void create() {
 		for (Object service : i3Services) {
@@ -53,6 +47,7 @@ public class Services {
 				method = service.getClass().getMethod("create");
 			} catch (NoSuchMethodException e) {
 			} catch (SecurityException e) {
+				Log.error("", e);
 			}
 
 			if (method != null) {
@@ -70,11 +65,27 @@ public class Services {
 	}
 
 	/**
-	 * Show debug info for all I3 services.
+	 * Create all I3 services.
+	 */
+	public static void createServices() {
+		addService(new I3Error());
+		addService(new I3Startup());
+		addService(new I3Mudlist());
+		addService(new I3Channel());
+		addService(new I3Ping());
+
+		create();
+	}
+
+	/**
+	 * Show debug info for all I3 services that have defined the debugInfo
+	 * method.
 	 */
 	public static void debugInfo() {
-		Log.debug("i3Services:           " + i3Services.toString());
-		Log.debug("i3RouterServiceNames: " + i3RouterServiceNames.toString());
+		Log.debug("i3Services:           "
+				+ StringUtils.join(i3Services.iterator(), ", "));
+		Log.debug("i3RouterServiceNames: "
+				+ StringUtils.join(i3RouterServiceNames.iterator(), ", "));
 
 		for (Object service : i3Services) {
 			Method method = null;
@@ -83,14 +94,18 @@ public class Services {
 				method = service.getClass().getMethod("debugInfo");
 			} catch (NoSuchMethodException e) {
 			} catch (SecurityException e) {
+				Log.error("", e);
 			}
 
 			if (method != null) {
 				try {
 					method.invoke(service);
 				} catch (IllegalAccessException e) {
+					Log.error("", e);
 				} catch (IllegalArgumentException e) {
+					Log.error("", e);
 				} catch (InvocationTargetException e) {
+					Log.error("", e);
 				}
 			}
 		}
@@ -122,7 +137,7 @@ public class Services {
 	}
 
 	/**
-	 * Remove all I3 services.
+	 * Call the remove method on all I3 services that have defined it.
 	 */
 	public static void remove() {
 		for (Object service : i3Services) {
@@ -132,17 +147,31 @@ public class Services {
 				method = service.getClass().getMethod("remove");
 			} catch (NoSuchMethodException e) {
 			} catch (SecurityException e) {
+				Log.error("", e);
 			}
 
 			if (method != null) {
 				try {
 					method.invoke(service);
 				} catch (IllegalAccessException e) {
+					Log.error("", e);
 				} catch (IllegalArgumentException e) {
+					Log.error("", e);
 				} catch (InvocationTargetException e) {
+					Log.error("", e);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Remove all I3 services.
+	 */
+	public static void removeServices() {
+		remove();
+
+		i3Services.clear();
+		i3RouterServiceNames.clear();
 	}
 
 	/**

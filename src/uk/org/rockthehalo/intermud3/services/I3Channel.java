@@ -3,11 +3,17 @@ package uk.org.rockthehalo.intermud3.services;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -27,8 +33,10 @@ import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
 public class I3Channel extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
 	private final int hBeatDelay = 60;
-	private final Vector<String> defChannels = new Vector<String>();
 
+	private List<String> configTunein = new ArrayList<String>();
+	private List<String> configAliases = new ArrayList<String>();
+	private Vector<String> defChannels = new Vector<String>();
 	private Map<String, String> aliasToChannel = new Hashtable<String, String>();
 	private Map<String, String> channelToAlias = new Hashtable<String, String>();
 	private FileConfiguration chanlistConfig = null;
@@ -38,24 +46,6 @@ public class I3Channel extends ServiceTemplate {
 
 	public I3Channel() {
 		setServiceName("channel");
-
-		this.defChannels.add("dchat");
-		this.defChannels.add("dead_souls");
-		this.defChannels.add("dead_test4");
-		this.defChannels.add("imud_code");
-		this.defChannels.add("minecraft");
-
-		this.aliasToChannel.put("dc", "dchat");
-		this.aliasToChannel.put("ds", "dead_souls");
-		this.aliasToChannel.put("dt", "dead_test4");
-		this.aliasToChannel.put("ic", "imud_code");
-		this.aliasToChannel.put("mc", "minecraft");
-
-		this.channelToAlias.put("dchat", "dc");
-		this.channelToAlias.put("dead_souls", "ds");
-		this.channelToAlias.put("dead_test4", "dt");
-		this.channelToAlias.put("imud_code", "ic");
-		this.channelToAlias.put("minecraft", "mc");
 	}
 
 	/**
@@ -254,10 +244,31 @@ public class I3Channel extends ServiceTemplate {
 		saveDefaultConfig();
 
 		try {
+			this.configTunein = new ArrayList<String>(getChanlistConfig()
+					.getStringList("tunein"));
+			this.configAliases = new ArrayList<String>(getChanlistConfig()
+					.getStringList("aliases"));
 			this.chanList.setLPCData(Utils.toObject(getChanlistConfig()
 					.getString("chanList")));
 		} catch (I3Exception e) {
 			e.printStackTrace();
+		}
+
+		this.defChannels.clear();
+
+		for (String s : this.configTunein)
+			this.defChannels.add(s);
+
+		this.aliasToChannel.clear();
+		this.channelToAlias.clear();
+
+		for (String s : this.configAliases) {
+			String[] parts = StringUtils.split(s, ":");
+			String alias = parts[0].trim();
+			String channel = parts[1].trim();
+
+			this.aliasToChannel.put(alias, channel);
+			this.channelToAlias.put(channel, alias);
 		}
 
 		Services.addServiceName(this.toString());
@@ -265,8 +276,23 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		Log.debug("Channel: listening: " + this.listening.toString());
-		Log.debug("Channel: chanList:  " + this.chanList.keySet().toString());
+		Log.debug("Channel: listening: "
+				+ StringUtils.join(this.listening.iterator(), ", "));
+		Log.debug("Channel: chanList:  "
+				+ StringUtils.join(this.chanList.keySet().iterator(), ", "));
+	}
+
+	public Map<String, String> getAliases() {
+		Map<String, String> aliases = new Hashtable<String, String>();
+
+		for (Object o : this.aliasToChannel.keySet())
+			aliases.put(o.toString(), this.aliasToChannel.get(o));
+
+		return aliases;
+	}
+
+	public LPCMapping getChanList() {
+		return (LPCMapping) this.chanList.clone();
 	}
 
 	public FileConfiguration getChanlistConfig() {
@@ -313,6 +339,7 @@ public class I3Channel extends ServiceTemplate {
 		for (Object obj : listeningCopy)
 			sendChannelListen((LPCString) obj, false);
 
+		this.listening.clear();
 		this.chanList.clear();
 	}
 
@@ -413,6 +440,8 @@ public class I3Channel extends ServiceTemplate {
 		if (this.chanlistConfig == null || this.chanlistConfigFile == null)
 			return;
 
+		getChanlistConfig().set("tunein", this.configTunein);
+		getChanlistConfig().set("aliases", this.configAliases);
 		getChanlistConfig().set("chanList", Utils.toMudMode(this.chanList));
 
 		try {
@@ -433,6 +462,14 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	private void sendChannelListen(LPCString channel, boolean flag) {
+		if (flag) {
+			if (!this.chanList.containsKey(channel))
+				return;
+		} else {
+			if (!this.listening.contains(channel))
+				return;
+		}
+
 		tuneChannel(channel, flag);
 
 		if (!flag)
@@ -475,7 +512,92 @@ public class I3Channel extends ServiceTemplate {
 		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE, plrName, payload);
 	}
 
+	public void setAlias(String alias, String channel) {
+		if (channel == null) {
+			channel = this.aliasToChannel.get(alias);
+			this.aliasToChannel.remove(alias);
+			this.channelToAlias.remove(channel);
+		} else {
+			this.aliasToChannel.put(alias, channel);
+			this.channelToAlias.put(channel, alias);
+		}
+
+		this.configAliases.clear();
+
+		for (String s : this.aliasToChannel.keySet())
+			this.configAliases.add(s + ": " + this.aliasToChannel.get(s));
+
+		saveChanlistConfig();
+	}
+
+	public void showChannelsListening(CommandSender sender) {
+		String listeningChannels = null;
+		List<String> list = new ArrayList<String>();
+		Iterator<?> it;
+
+		it = this.listening.iterator();
+
+		while (it.hasNext())
+			list.add(ChatColor.GREEN + it.next().toString() + ChatColor.RESET);
+
+		Collections.sort(list);
+		listeningChannels = StringUtils.join(list, ", ");
+		sender.sendMessage("Listening (" + list.size() + "): "
+				+ listeningChannels);
+	}
+
+	public void showChannelsAvailable(CommandSender sender) {
+		String availableChannels = null;
+		List<String> list = new ArrayList<String>();
+		Iterator<?> it;
+
+		it = this.chanList.keySet().iterator();
+
+		while (it.hasNext()) {
+			String key = it.next().toString();
+
+			if (!this.listening.contains(key))
+				list.add(ChatColor.GREEN + key + ChatColor.RESET);
+		}
+
+		Collections.sort(list);
+		availableChannels = StringUtils.join(list, ", ");
+		sender.sendMessage("Available (" + list.size() + "): "
+				+ availableChannels);
+	}
+
+	public void showChannelAliases(CommandSender sender) {
+		List<String> list = new ArrayList<String>();
+		Iterator<?> it;
+
+		it = this.aliasToChannel.keySet().iterator();
+
+		while (it.hasNext()) {
+			String key = it.next().toString();
+			String val = this.aliasToChannel.get(key);
+
+			list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
+					+ ChatColor.GREEN + val + ChatColor.RESET);
+		}
+
+		Collections.sort(list);
+		sender.sendMessage("Aliases (" + list.size() + "):");
+
+		it = list.iterator();
+
+		while (it.hasNext())
+			sender.sendMessage(" - " + it.next().toString());
+	}
+
 	private void tuneChannel(LPCString channel, boolean flag) {
+		if (flag) {
+			if (!this.chanList.containsKey(channel))
+				return;
+		} else {
+			if (!this.listening.contains(channel))
+				return;
+		}
+
 		Packet packet = new Packet();
 
 		packet.add(channel);
@@ -484,10 +606,18 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void tuneIn(String channel) {
+		if (!this.configTunein.contains(channel))
+			this.configTunein.add(channel);
+
 		sendChannelListen(channel, true);
+		saveChanlistConfig();
 	}
 
 	public void tuneOut(String channel) {
+		if (this.configTunein.contains(channel))
+			this.configTunein.remove(channel);
+
 		sendChannelListen(channel, false);
+		saveChanlistConfig();
 	}
 }

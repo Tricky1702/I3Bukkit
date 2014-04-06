@@ -120,11 +120,6 @@ public class I3Startup extends ServiceTemplate {
 
 		Log.info("Connection established to I3 router " + preferredName
 				+ " at " + preferredAddr);
-
-		Object service = Services.getService("channel");
-
-		if (service != null)
-			Intermud3.callout.addCallOut(service, "requestChanList", 5);
 	}
 
 	/*

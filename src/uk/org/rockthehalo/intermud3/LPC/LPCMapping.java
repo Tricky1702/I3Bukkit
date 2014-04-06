@@ -51,12 +51,26 @@ public class LPCMapping extends LPCVar implements Cloneable,
 		return this.getKey(index) != null;
 	}
 
+	public boolean containsKey(String index) {
+		if (index == null)
+			return false;
+
+		return this.getKey(new LPCString(index)) != null;
+	}
+
 	@Override
 	public boolean containsValue(Object lpcData) {
 		if (lpcData == null)
 			return false;
 
 		return this.getValue(lpcData) != null;
+	}
+
+	public boolean containsValue(String lpcData) {
+		if (lpcData == null)
+			return false;
+
+		return this.getValue(new LPCString(lpcData)) != null;
 	}
 
 	@Override

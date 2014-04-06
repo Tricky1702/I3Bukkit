@@ -68,6 +68,13 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 		return this.getValue(o) != null;
 	}
 
+	public boolean contains(String s) {
+		if (s == null)
+			return false;
+
+		return this.getValue(new LPCString(s)) != null;
+	}
+
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		return this.lpcData.containsAll(c);

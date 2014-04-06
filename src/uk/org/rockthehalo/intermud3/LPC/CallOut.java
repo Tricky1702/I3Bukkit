@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -23,8 +24,10 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		Log.debug("callOuts:   " + this.callOuts.toString());
-		Log.debug("heartBeats: " + this.heartBeats.toString());
+		Log.debug("callOuts:   "
+				+ StringUtils.join(this.callOuts.iterator(), ", "));
+		Log.debug("heartBeats: "
+				+ StringUtils.join(this.heartBeats.iterator(), ", "));
 	}
 
 	/**

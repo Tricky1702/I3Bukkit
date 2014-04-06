@@ -36,24 +36,25 @@ public class Intermud3 extends JavaPlugin {
 		if (network != null && network.isConnected())
 			network.shutdown(0);
 
+		Services.removeServices();
+
 		callout.removeAllCallOuts();
 		callout.removeAllHeartBeats();
-		Log.info(this.toString() + " has been disabled!");
 
-		super.onDisable();
+		callout = null;
+		network = null;
+
+		Log.info(this.toString() + " has been disabled!");
 	}
 
 	@Override
 	public void onEnable() {
-		super.onEnable();
-
 		saveDefaultConfig();
 
 		callout = new CallOut();
 		network = new Network();
 
 		callout.addHeartBeat(this, this.hBeatDelay);
-		Services.addServices();
 		getCommand("intermud3").setExecutor(new I3Command());
 
 		Log.info(this.toString() + " has been enabled");
@@ -61,8 +62,6 @@ public class Intermud3 extends JavaPlugin {
 
 	@Override
 	public void onLoad() {
-		super.onLoad();
-
 		bootTime = System.currentTimeMillis();
 	}
 }
