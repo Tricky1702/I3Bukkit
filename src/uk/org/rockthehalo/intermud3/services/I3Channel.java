@@ -538,7 +538,7 @@ public class I3Channel extends ServiceTemplate {
 		it = this.listening.iterator();
 
 		while (it.hasNext())
-			list.add(ChatColor.GREEN + it.next().toString() + ChatColor.RESET);
+			list.add(ChatColor.GREEN + it.next().toString());
 
 		Collections.sort(list);
 		listeningChannels = StringUtils.join(list, ", ");
@@ -557,7 +557,7 @@ public class I3Channel extends ServiceTemplate {
 			String key = it.next().toString();
 
 			if (!this.listening.contains(key))
-				list.add(ChatColor.GREEN + key + ChatColor.RESET);
+				list.add(ChatColor.GREEN + key);
 		}
 
 		Collections.sort(list);
@@ -577,7 +577,7 @@ public class I3Channel extends ServiceTemplate {
 			String val = this.aliasToChannel.get(key);
 
 			list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
-					+ ChatColor.GREEN + val + ChatColor.RESET);
+					+ ChatColor.GREEN + val);
 		}
 
 		Collections.sort(list);

@@ -101,14 +101,14 @@ public class I3Command implements CommandExecutor {
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
-						+ "I3 channel service not available." + ChatColor.RESET);
+						+ "I3 channel service not available.");
 			else {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
 
 				if (!service.getListening().contains(chan)) {
 					sender.sendMessage("Not listening to I3 channel "
-							+ ChatColor.GREEN + input + ChatColor.RESET);
+							+ ChatColor.GREEN + input);
 
 					return true;
 				}
@@ -135,14 +135,14 @@ public class I3Command implements CommandExecutor {
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
-						+ "I3 channel service not available." + ChatColor.RESET);
+						+ "I3 channel service not available.");
 			else {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
 
 				if (!service.getListening().contains(chan)) {
 					sender.sendMessage("Not listening to I3 channel "
-							+ ChatColor.GREEN + input + ChatColor.RESET);
+							+ ChatColor.GREEN + input);
 
 					return true;
 				}
@@ -160,7 +160,7 @@ public class I3Command implements CommandExecutor {
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
-						+ "I3 channel service not available." + ChatColor.RESET);
+						+ "I3 channel service not available.");
 			else {
 				if (args.length > 0)
 					input = args[0].toLowerCase();
@@ -191,7 +191,7 @@ public class I3Command implements CommandExecutor {
 
 						service.tuneIn(input);
 						sender.sendMessage("Tuned into I3 channel "
-								+ ChatColor.GREEN + input + ChatColor.RESET);
+								+ ChatColor.GREEN + input);
 					} else if (input.equals("tuneout")) {
 						if (!checkPerm(sender, "tune"))
 							return false;
@@ -203,14 +203,14 @@ public class I3Command implements CommandExecutor {
 
 						if (!service.getListening().contains(input)) {
 							sender.sendMessage("Not listening to I3 channel "
-									+ ChatColor.GREEN + input + ChatColor.RESET);
+									+ ChatColor.GREEN + input);
 
 							return true;
 						}
 
 						service.tuneOut(input);
 						sender.sendMessage("Tuned out of I3 channel "
-								+ ChatColor.GREEN + input + ChatColor.RESET);
+								+ ChatColor.GREEN + input);
 					} else if (input.equals("alias")) {
 						if (!checkPerm(sender, "alias"))
 							return false;
@@ -224,7 +224,7 @@ public class I3Command implements CommandExecutor {
 						service.setAlias(alias, chan);
 						sender.sendMessage("Alias set: " + ChatColor.GREEN
 								+ alias + ChatColor.RESET + " -> "
-								+ ChatColor.GREEN + chan + ChatColor.RESET);
+								+ ChatColor.GREEN + chan);
 					} else if (input.equals("unalias")) {
 						if (!checkPerm(sender, "alias"))
 							return false;
@@ -244,7 +244,7 @@ public class I3Command implements CommandExecutor {
 
 						service.setAlias(alias, null);
 						sender.sendMessage("Alias unset: " + ChatColor.GREEN
-								+ alias + ChatColor.RESET);
+								+ alias);
 					}
 				}
 			}
@@ -265,7 +265,7 @@ public class I3Command implements CommandExecutor {
 			return true;
 		} else {
 			sender.sendMessage(ChatColor.RED + "Unknown I3 command. (" + subcmd
-					+ ")" + ChatColor.RESET);
+					+ ")");
 
 			return false;
 		}

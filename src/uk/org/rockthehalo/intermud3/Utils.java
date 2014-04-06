@@ -55,55 +55,58 @@ public class Utils {
 	 * @return ChatColor version of Pinkfish coded message.
 	 */
 	public static String toChatColor(String msg) {
-		msg.replace("%^BOLD%^BLACK", ChatColor.DARK_GRAY.toString());
-		msg.replace("%^BOLD%^%^BLACK", ChatColor.DARK_GRAY.toString());
-		msg.replace("%^BLACK", ChatColor.BLACK.toString());
+		if (!msg.contains("%^"))
+			return msg;
 
-		msg.replace("%^LIGHTRED", ChatColor.RED.toString());
-		msg.replace("%^RED", ChatColor.DARK_RED.toString());
-		msg.replace("%^DARKRED", ChatColor.DARK_RED.toString());
+		msg.replace("%^BOLD%^BLACK", ChatColor.DARK_GRAY + "");
+		msg.replace("%^BOLD%^%^BLACK", ChatColor.DARK_GRAY + "");
+		msg.replace("%^BLACK", ChatColor.BLACK + "");
 
-		msg.replace("%^LIGHTGREEN", ChatColor.GREEN.toString());
-		msg.replace("%^GREEN", ChatColor.DARK_GREEN.toString());
-		msg.replace("%^DARKGREEN", ChatColor.DARK_GREEN.toString());
+		msg.replace("%^LIGHTRED", ChatColor.RED + "");
+		msg.replace("%^RED", ChatColor.DARK_RED + "");
+		msg.replace("%^DARKRED", ChatColor.DARK_RED + "");
 
-		msg.replace("%^ORANGE", ChatColor.GOLD.toString());
-		msg.replace("%^LIGHTYELLOW", ChatColor.YELLOW.toString());
-		msg.replace("%^YELLOW", ChatColor.YELLOW.toString());
-		msg.replace("%^DARKYELLOW", ChatColor.GOLD.toString());
+		msg.replace("%^LIGHTGREEN", ChatColor.GREEN + "");
+		msg.replace("%^GREEN", ChatColor.DARK_GREEN + "");
+		msg.replace("%^DARKGREEN", ChatColor.DARK_GREEN + "");
 
-		msg.replace("%^LIGHTBLUE", ChatColor.BLUE.toString());
-		msg.replace("%^BLUE", ChatColor.DARK_BLUE.toString());
-		msg.replace("%^DARKBLUE", ChatColor.DARK_BLUE.toString());
+		msg.replace("%^ORANGE", ChatColor.GOLD + "");
+		msg.replace("%^LIGHTYELLOW", ChatColor.YELLOW + "");
+		msg.replace("%^YELLOW", ChatColor.YELLOW + "");
+		msg.replace("%^DARKYELLOW", ChatColor.GOLD + "");
 
-		msg.replace("%^PINK", ChatColor.LIGHT_PURPLE.toString());
-		msg.replace("%^LIGHTMAGENTA", ChatColor.LIGHT_PURPLE.toString());
-		msg.replace("%^PURPLE", ChatColor.DARK_PURPLE.toString());
-		msg.replace("%^MAGENTA", ChatColor.DARK_PURPLE.toString());
-		msg.replace("%^DARKMAGENTA", ChatColor.DARK_PURPLE.toString());
+		msg.replace("%^LIGHTBLUE", ChatColor.BLUE + "");
+		msg.replace("%^BLUE", ChatColor.DARK_BLUE + "");
+		msg.replace("%^DARKBLUE", ChatColor.DARK_BLUE + "");
 
-		msg.replace("%^LIGHTCYAN", ChatColor.AQUA.toString());
-		msg.replace("%^CYAN", ChatColor.DARK_AQUA.toString());
-		msg.replace("%^DARKCYAN", ChatColor.DARK_AQUA.toString());
+		msg.replace("%^PINK", ChatColor.LIGHT_PURPLE + "");
+		msg.replace("%^LIGHTMAGENTA", ChatColor.LIGHT_PURPLE + "");
+		msg.replace("%^PURPLE", ChatColor.DARK_PURPLE + "");
+		msg.replace("%^MAGENTA", ChatColor.DARK_PURPLE + "");
+		msg.replace("%^DARKMAGENTA", ChatColor.DARK_PURPLE + "");
 
-		msg.replace("%^LIGHTGREY", ChatColor.WHITE.toString());
-		msg.replace("%^LIGHTGRAY", ChatColor.WHITE.toString());
-		msg.replace("%^GREY", ChatColor.GRAY.toString());
-		msg.replace("%^GRAY", ChatColor.GRAY.toString());
-		msg.replace("%^DARKGREY", ChatColor.DARK_GRAY.toString());
-		msg.replace("%^DARKGRAY", ChatColor.DARK_GRAY.toString());
+		msg.replace("%^LIGHTCYAN", ChatColor.AQUA + "");
+		msg.replace("%^CYAN", ChatColor.DARK_AQUA + "");
+		msg.replace("%^DARKCYAN", ChatColor.DARK_AQUA + "");
 
-		msg.replace("%^WHITE", ChatColor.GRAY.toString());
+		msg.replace("%^LIGHTGREY", ChatColor.WHITE + "");
+		msg.replace("%^LIGHTGRAY", ChatColor.WHITE + "");
+		msg.replace("%^GREY", ChatColor.GRAY + "");
+		msg.replace("%^GRAY", ChatColor.GRAY + "");
+		msg.replace("%^DARKGREY", ChatColor.DARK_GRAY + "");
+		msg.replace("%^DARKGRAY", ChatColor.DARK_GRAY + "");
 
-		msg.replace("%^BOLD", ChatColor.BOLD.toString());
-		msg.replace("%^UNDERLINE", ChatColor.UNDERLINE.toString());
-		msg.replace("%^ITALIC", ChatColor.ITALIC.toString());
+		msg.replace("%^WHITE", ChatColor.GRAY + "");
 
-		msg.replace("%^RESET", ChatColor.RESET.toString());
+		msg.replace("%^BOLD", ChatColor.BOLD + "");
+		msg.replace("%^UNDERLINE", ChatColor.UNDERLINE + "");
+		msg.replace("%^ITALIC", ChatColor.ITALIC + "");
 
-		msg.replaceAll("%^[A-Z0-9_]", "");
+		msg.replace("%^RESET", ChatColor.RESET + "");
 
-		return msg.replace("%^", "") + ChatColor.RESET;
+		msg.replaceAll("%^[A-Z0-9_]%^", "");
+
+		return msg.replace("%^", "");
 	}
 
 	/**
@@ -112,6 +115,9 @@ public class Utils {
 	 * @return Pinkfish version of ChatColor coded message.
 	 */
 	public static String toPinkfish(String msg) {
+		if (!msg.contains(ChatColor.COLOR_CHAR + ""))
+			return msg;
+
 		String output = new String();
 
 		while (msg.length() > 1) {
@@ -198,11 +204,6 @@ public class Utils {
 		}
 
 		output += msg;
-		output.replace("\\n", "\n");
-		output.replace("\\r", "\r");
-		output.replace("\\\"", "'");
-		output.replace("\"", "");
-		output.replace("\\\\", "\\");
 
 		return output + "%^RESET%^";
 	}
