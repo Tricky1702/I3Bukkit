@@ -79,7 +79,9 @@ public class I3Channel extends ServiceTemplate {
 		String chan = channel.toString();
 		String msg = message.toString().replace("$N", name);
 
-		chan = this.channelToAlias.get(chan);
+		if (this.channelToAlias.containsKey(chan))
+			chan = this.channelToAlias.get(chan);
+
 		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)
@@ -202,7 +204,9 @@ public class I3Channel extends ServiceTemplate {
 		String chan = channel.toString();
 		String msg = message.toString();
 
-		chan = this.channelToAlias.get(chan);
+		if (this.channelToAlias.containsKey(chan))
+			chan = this.channelToAlias.get(chan);
+
 		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)

@@ -106,6 +106,10 @@ public class I3Command implements CommandExecutor {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
 
+				if (service.getAliases().containsKey(chan)
+						&& !service.getAliases().containsValue(chan))
+					chan = service.getAliases().get(chan);
+
 				if (!service.getListening().contains(chan)) {
 					sender.sendMessage("Not listening to I3 channel "
 							+ ChatColor.GREEN + input);
@@ -139,6 +143,10 @@ public class I3Command implements CommandExecutor {
 			else {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
+
+				if (service.getAliases().containsKey(chan)
+						&& !service.getAliases().containsValue(chan))
+					chan = service.getAliases().get(chan);
 
 				if (!service.getListening().contains(chan)) {
 					sender.sendMessage("Not listening to I3 channel "
