@@ -41,6 +41,7 @@ public class Intermud3 extends JavaPlugin {
 		callout.removeAllCallOuts();
 		callout.removeAllHeartBeats();
 
+		instance = null;
 		callout = null;
 		network = null;
 

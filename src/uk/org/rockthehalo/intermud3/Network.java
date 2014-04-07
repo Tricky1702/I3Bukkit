@@ -860,6 +860,7 @@ public class Network implements Runnable {
 		create();
 
 		if (this.autoConnect) {
+			Services.removeServices();
 			Services.createServices();
 			connect();
 		}

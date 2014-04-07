@@ -646,10 +646,23 @@ public class I3Channel extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
+		for (Object obj : this.listening) {
+			String channel = obj.toString();
+
+			if (!this.configTunein.contains(channel)
+					&& this.chanList.containsKey(channel))
+				sendChannelListen(channel, false);
+		}
+
 		this.tuneinChannels.clear();
 
-		for (String s : this.configTunein)
-			this.tuneinChannels.add(s);
+		for (String channel : this.configTunein) {
+			this.tuneinChannels.add(channel);
+
+			if (!this.listening.contains(channel)
+					&& this.chanList.containsKey(channel))
+				sendChannelListen(channel, true);
+		}
 
 		this.aliasToChannel.clear();
 		this.channelToAlias.clear();
@@ -659,8 +672,7 @@ public class I3Channel extends ServiceTemplate {
 			String alias = parts[0].trim();
 			String channel = parts[1].trim();
 
-			this.aliasToChannel.put(alias, channel);
-			this.channelToAlias.put(channel, alias);
+			setAlias(alias, channel);
 		}
 
 	}
