@@ -651,7 +651,9 @@ public class I3Channel extends ServiceTemplate {
 
 		for (String channel : this.configTunein) {
 			this.tuneinChannels.add(channel);
-			sendChannelListen(channel, true);
+
+			if (!this.listening.contains(channel))
+				sendChannelListen(channel, true);
 		}
 
 		this.aliasToChannel.clear();

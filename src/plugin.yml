@@ -1,7 +1,7 @@
 # Plugin meta-data.
 name: Intermud3
 main: uk.org.rockthehalo.intermud3.Intermud3
-version: 1.2.1
+version: 1.2.2
 description: Intermud3 client for Bukkit servers.
 author: Tricky1702
 
