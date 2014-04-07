@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -117,8 +116,10 @@ public class I3Channel extends ServiceTemplate {
 			LPCArray listeningCopy = new LPCArray(this.listening);
 
 			for (Object channel : listeningCopy)
-				if (!info.containsKey(channel))
+				if (!info.containsKey(channel)) {
 					this.listening.remove(channel);
+					this.tuneinChannels.remove(channel.toString());
+				}
 		}
 
 		LPCInt chanlistID = packet.getLPCInt(6);
@@ -132,20 +133,23 @@ public class I3Channel extends ServiceTemplate {
 		if (info != null) {
 			String msg = new String();
 
-			for (Object channel : info.keySet()) {
+			for (Object obj : info.keySet()) {
+				LPCString channel = new LPCString(obj.toString());
 				LPCArray hostInfo = info.getLPCArray(channel);
 				LPCArray chanInfo = this.chanList.getLPCArray(channel);
 
-				if (((LPCString) channel).isEmpty()) {
+				if (channel.isEmpty()) {
 					msg = "Empty channel name. Ignoring.";
 				} else if (hostInfo == null && chanInfo != null) {
 					msg = "Deleting channel '" + channel
 							+ "' from the chanlist.";
 					this.chanList.remove(channel);
 
-					if (this.listening.contains(channel)
-							&& this.tuneinChannels.contains(channel.toString()))
-						sendChannelListen((LPCString) channel, false);
+					if (this.listening.contains(channel))
+						sendChannelListen(channel, false);
+
+					if (this.tuneinChannels.contains(channel.toString()))
+						this.tuneinChannels.remove(channel.toString());
 				} else if (hostInfo != null) {
 					if (this.chanList.size() != 0) {
 						if (chanInfo != null
@@ -166,7 +170,7 @@ public class I3Channel extends ServiceTemplate {
 
 					if (!this.listening.contains(channel)
 							&& this.tuneinChannels.contains(channel.toString()))
-						sendChannelListen((LPCString) channel, true);
+						sendChannelListen(channel, true);
 				}
 
 				if (!msg.isEmpty())
@@ -541,12 +545,9 @@ public class I3Channel extends ServiceTemplate {
 	public void showChannelsListening(CommandSender sender) {
 		String listeningChannels = null;
 		List<String> list = new ArrayList<String>();
-		Iterator<?> it;
 
-		it = this.listening.iterator();
-
-		while (it.hasNext())
-			list.add(ChatColor.GREEN + it.next().toString());
+		for (Object obj : this.listening)
+			list.add(ChatColor.GREEN + obj.toString());
 
 		Collections.sort(list);
 		listeningChannels = StringUtils.join(list, ChatColor.RESET + ", ");
@@ -557,12 +558,9 @@ public class I3Channel extends ServiceTemplate {
 	public void showChannelsAvailable(CommandSender sender) {
 		String availableChannels = null;
 		List<String> list = new ArrayList<String>();
-		Iterator<?> it;
 
-		it = this.chanList.keySet().iterator();
-
-		while (it.hasNext()) {
-			String key = it.next().toString();
+		for (Object obj : this.chanList.keySet()) {
+			String key = obj.toString();
 
 			if (!this.listening.contains(key))
 				list.add(ChatColor.GREEN + key);
@@ -576,12 +574,8 @@ public class I3Channel extends ServiceTemplate {
 
 	public void showChannelAliases(CommandSender sender) {
 		List<String> list = new ArrayList<String>();
-		Iterator<?> it;
 
-		it = this.aliasToChannel.keySet().iterator();
-
-		while (it.hasNext()) {
-			String key = it.next().toString();
+		for (String key : this.aliasToChannel.keySet()) {
 			String val = this.aliasToChannel.get(key);
 
 			list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
@@ -591,10 +585,8 @@ public class I3Channel extends ServiceTemplate {
 		Collections.sort(list);
 		sender.sendMessage("Aliases (" + list.size() + "):");
 
-		it = list.iterator();
-
-		while (it.hasNext())
-			sender.sendMessage(" - " + it.next().toString());
+		for (String line : list)
+			sender.sendMessage("- " + line);
 	}
 
 	private void tuneChannel(LPCString channel, boolean flag) {
@@ -646,11 +638,12 @@ public class I3Channel extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		for (Object obj : this.listening) {
+		LPCArray listeningCopy = new LPCArray(this.listening);
+
+		for (Object obj : listeningCopy) {
 			String channel = obj.toString();
 
-			if (!this.configTunein.contains(channel)
-					&& this.chanList.containsKey(channel))
+			if (!this.configTunein.contains(channel))
 				sendChannelListen(channel, false);
 		}
 
@@ -658,10 +651,7 @@ public class I3Channel extends ServiceTemplate {
 
 		for (String channel : this.configTunein) {
 			this.tuneinChannels.add(channel);
-
-			if (!this.listening.contains(channel)
-					&& this.chanList.containsKey(channel))
-				sendChannelListen(channel, true);
+			sendChannelListen(channel, true);
 		}
 
 		this.aliasToChannel.clear();
@@ -672,8 +662,8 @@ public class I3Channel extends ServiceTemplate {
 			String alias = parts[0].trim();
 			String channel = parts[1].trim();
 
-			setAlias(alias, channel);
+			this.aliasToChannel.put(alias, channel);
+			this.channelToAlias.put(channel, alias);
 		}
-
 	}
 }

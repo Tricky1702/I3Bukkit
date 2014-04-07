@@ -859,7 +859,7 @@ public class Network implements Runnable {
 		Intermud3.instance.reloadConfig();
 		create();
 
-		if (this.autoConnect) {
+		if (this.autoConnect && !isConnected()) {
 			Services.removeServices();
 			Services.createServices();
 			connect();

@@ -1,10 +1,8 @@
-I3Bukkit
-========
+# I3Bukkit
 
 Bukkit to Intermud3 bridge.
 
-Commands
-========
+# Commands
 ```
 commands:
   intermud3:
@@ -24,8 +22,7 @@ commands:
         /<command> emote <channel|.> <emote> - sends an emote to an I3 channel. Use '.' for the last channel used.
 ```
 
-Permissions
-===========
+# Permissions
 ```
 permissions:
   intermud3.*:
@@ -58,8 +55,7 @@ permissions:
     description: Allows the use of /intermud3 emote.
 ```
 
-config.yml
-==========
+# config.yml
 ```
 router:
   preferred: '*dalet, 97.107.133.86 8787'
