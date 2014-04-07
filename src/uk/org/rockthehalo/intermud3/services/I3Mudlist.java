@@ -3,6 +3,9 @@ package uk.org.rockthehalo.intermud3.services;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +31,8 @@ public class I3Mudlist extends ServiceTemplate {
 	private File mudlistConfigFile = null;
 	private LPCMapping mudList = new LPCMapping();
 	private LPCMapping mudUpdate = new LPCMapping();
+	private Map<String, Integer> mudStateCounter = new Hashtable<String, Integer>();
+	private int HBeat = 0;
 
 	public I3Mudlist() {
 		setServiceName("mudlist");
@@ -37,10 +42,10 @@ public class I3Mudlist extends ServiceTemplate {
 		saveDefaultConfig();
 
 		try {
-			mudList.setLPCData(Utils.toObject(getMudlistConfig().getString(
-					"mudList")));
-			mudUpdate.setLPCData(Utils.toObject(getMudlistConfig().getString(
-					"mudUpdate")));
+			this.mudList.setLPCData(Utils.toObject(getMudlistConfig()
+					.getString("mudList")));
+			this.mudUpdate.setLPCData(Utils.toObject(getMudlistConfig()
+					.getString("mudUpdate")));
 		} catch (I3Exception e) {
 			e.printStackTrace();
 		}
@@ -49,9 +54,11 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		Log.debug("I3Mudlist: mudList:   "
+		Log.debug("I3Mudlist: mudStateCounter:   "
+				+ StringUtils.join(this.mudStateCounter.entrySet(), ", "));
+		Log.debug("I3Mudlist: mudList:           "
 				+ StringUtils.join(this.mudList.keySet().iterator(), ", "));
-		Log.debug("I3Mudlist: mudUpdate: "
+		Log.debug("I3Mudlist: mudUpdate:         "
 				+ StringUtils.join(this.mudUpdate.entrySet().iterator(), ", "));
 	}
 
@@ -63,6 +70,24 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void heartBeat() {
+		this.HBeat++;
+
+		if (this.HBeat >= 12)
+			this.HBeat = 0;
+
+		if (this.HBeat == 0) {
+			Iterator<String> it = this.mudStateCounter.keySet().iterator();
+
+			while (it.hasNext()) {
+				String mudname = it.next();
+
+				if (this.mudStateCounter.get(mudname) < 6)
+					continue;
+
+				this.mudStateCounter.put(mudname, 0);
+			}
+		}
+
 		Vector<String> muds = new Vector<String>();
 		int tm = (int) (System.currentTimeMillis() / 1000);
 
@@ -119,6 +144,7 @@ public class I3Mudlist extends ServiceTemplate {
 		Intermud3.callout.removeHeartBeat(this);
 		saveMudlistConfig();
 
+		this.mudStateCounter.clear();
 		this.mudList.clear();
 		this.mudUpdate.clear();
 	}
@@ -177,6 +203,7 @@ public class I3Mudlist extends ServiceTemplate {
 			if (infoData == null || infoData.isEmpty()
 					|| infoData.getLPCInt(0) == null) {
 				if (this.mudList.getLPCString(mudname) != null) {
+					this.mudStateCounter.remove(mudname.toString());
 					removeMudFromList(mudname);
 					removeMudFromUpdate(mudname);
 					Log.debug("Removing mud '"
@@ -186,6 +213,15 @@ public class I3Mudlist extends ServiceTemplate {
 
 				continue;
 			}
+
+			String msg = new String();
+			Integer stateCounter = 0;
+
+			if (this.mudStateCounter.containsKey(mudname.toString()))
+				stateCounter = this.mudStateCounter.get(mudname.toString());
+
+			stateCounter++;
+			this.mudStateCounter.put(mudname.toString(), stateCounter);
 
 			Integer state = infoData.getLPCInt(0).toInt();
 
@@ -200,12 +236,11 @@ public class I3Mudlist extends ServiceTemplate {
 					if (state > 7 * 24 * 60 * 60) {
 						removeMudFromList(mudname);
 						removeMudFromUpdate(mudname);
-						Log.debug("Removing mud '" + mudname
-								+ "', reason: Shutdown delay is too long.");
+						msg = "Removing mud '" + mudname
+								+ "', reason: Shutdown delay is too long.";
 
 					} else {
-						String msg = "Mud '" + mudname
-								+ "' is down. Restart time: ";
+						msg = "Mud '" + mudname + "' is down. Restart time: ";
 
 						if (state == 0)
 							msg += "unknown.";
@@ -215,8 +250,6 @@ public class I3Mudlist extends ServiceTemplate {
 							msg += state + " seconds.";
 						else
 							msg += "indefinate.";
-
-						Log.debug(msg);
 					}
 
 					this.mudList.set(mudname, infoData);
@@ -261,14 +294,17 @@ public class I3Mudlist extends ServiceTemplate {
 					extra = " (" + libname + ", " + driver + ")";
 
 				if (mudData != null)
-					Log.debug("Mud '" + mudname + "' is up." + extra);
+					msg = "Mud '" + mudname + "' is up." + extra;
 				else
-					Log.debug("Adding mud '" + mudname + "' to the mudlist."
-							+ extra);
+					msg = "Adding mud '" + mudname + "' to the mudlist."
+							+ extra;
 
 				this.mudList.set(mudname, infoData);
 				this.mudUpdate.set(mudname, new LPCInt(tm));
 			}
+
+			if (stateCounter < 7 && !msg.isEmpty())
+				Log.debug(msg);
 		}
 
 		saveMudlistConfig();
@@ -306,5 +342,22 @@ public class I3Mudlist extends ServiceTemplate {
 		} catch (IOException ioE) {
 			Log.error("Could not save config to " + this.mudlistConfigFile, ioE);
 		}
+	}
+
+	/**
+	 * Reload the mudlist config file and setup the local variables.
+	 */
+	public void updateConfig() {
+		reloadMudlistConfig();
+
+		try {
+			this.mudList.setLPCData(Utils.toObject(getMudlistConfig()
+					.getString("mudList")));
+			this.mudUpdate.setLPCData(Utils.toObject(getMudlistConfig()
+					.getString("mudUpdate")));
+		} catch (I3Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }

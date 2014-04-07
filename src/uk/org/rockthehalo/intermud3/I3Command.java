@@ -8,9 +8,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.services.I3Channel;
+import uk.org.rockthehalo.intermud3.services.I3Mudlist;
 import uk.org.rockthehalo.intermud3.services.Services;
 
 public class I3Command implements CommandExecutor {
+	private String lastChannel = null;
+
 	/**
 	 * Constructor.
 	 */
@@ -84,6 +87,26 @@ public class I3Command implements CommandExecutor {
 			Services.removeServices();
 
 			return true;
+		} else if (subcmd.equals("reload")) {
+			I3Channel i3Channel = (I3Channel) Services.getService("channel");
+			I3Mudlist i3Mudlist = (I3Mudlist) Services.getService("mudlist");
+
+			if (i3Channel != null) {
+				i3Channel.updateConfig();
+				Log.info("chanlist.yml loaded.");
+			}
+
+			if (i3Mudlist != null) {
+				i3Mudlist.updateConfig();
+				Log.info("mudlist.yml loaded.");
+			}
+
+			Intermud3.network.updateConfig();
+			Log.info("config.yml loaded.");
+
+			sender.sendMessage("Config files reload.");
+
+			return true;
 		} else if (subcmd.equals("emote")) {
 			if (!(Utils.isPlayer(sender))) {
 				sender.sendMessage("Can only send emotes as player.");
@@ -106,6 +129,9 @@ public class I3Command implements CommandExecutor {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
 
+				if (chan.equals(".") && this.lastChannel != null)
+					chan = this.lastChannel;
+
 				if (service.getAliases().containsKey(chan)
 						&& !service.getAliases().containsValue(chan))
 					chan = service.getAliases().get(chan);
@@ -117,6 +143,7 @@ public class I3Command implements CommandExecutor {
 					return true;
 				}
 
+				this.lastChannel = chan;
 				input = StringUtils.join(args, " ", 1, args.length);
 				service.sendEmote(chan, plrName, input);
 			}
@@ -144,6 +171,9 @@ public class I3Command implements CommandExecutor {
 				String plrName = ((Player) sender).getDisplayName();
 				String chan = args[0];
 
+				if (chan.equals(".") && this.lastChannel != null)
+					chan = this.lastChannel;
+
 				if (service.getAliases().containsKey(chan)
 						&& !service.getAliases().containsValue(chan))
 					chan = service.getAliases().get(chan);
@@ -155,6 +185,7 @@ public class I3Command implements CommandExecutor {
 					return true;
 				}
 
+				this.lastChannel = chan;
 				input = StringUtils.join(args, " ", 1, args.length);
 				service.sendMessage(chan, plrName, input);
 			}
@@ -228,6 +259,13 @@ public class I3Command implements CommandExecutor {
 
 						String alias = args[1];
 						String chan = args[2];
+
+						if (service.getChanList().containsKey(chan)) {
+							sender.sendMessage(ChatColor.RED
+									+ "Can not set alias name to an existing I3 channel.");
+
+							return true;
+						}
 
 						service.setAlias(alias, chan);
 						sender.sendMessage("Alias set: " + ChatColor.GREEN

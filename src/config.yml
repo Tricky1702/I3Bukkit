@@ -5,6 +5,7 @@ router:
   password: 0
   mudlistID: 0
   chanlistID: 0
+autoConnect: false
 adminEmail: 'your@email.address.here'
 hostName: 'minecraft.hostname.here:25565'
 debug: false

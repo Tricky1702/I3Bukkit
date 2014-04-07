@@ -36,6 +36,7 @@ public class Network implements Runnable {
 	private DataInputStream sockIn = null;
 
 	private LPCString adminEmail = new LPCString();
+	private boolean autoConnect = false;
 	private LPCInt chanlistID = new LPCInt();
 	private List<String> configRouterList = new ArrayList<String>();
 	private LPCString defRouterIP = new LPCString();
@@ -55,6 +56,11 @@ public class Network implements Runnable {
 
 	public Network() {
 		create();
+
+		if (this.autoConnect) {
+			Services.createServices();
+			connect();
+		}
 	}
 
 	public void addRouter(LPCString routerName, LPCString routerIP,
@@ -127,10 +133,9 @@ public class Network implements Runnable {
 	}
 
 	public void create() {
-		String[] parts, ipport;
-
 		this.adminEmail = new LPCString(ChatColor.stripColor(this.i3
 				.getConfig().getString("adminEmail")));
+		this.autoConnect = this.i3.getConfig().getBoolean("autoConnect", false);
 		this.chanlistID = new LPCInt(this.i3.getConfig().getInt(
 				"router.chanlistID"));
 		this.configRouterList = new ArrayList<String>(this.i3.getConfig()
@@ -144,6 +149,8 @@ public class Network implements Runnable {
 
 		String preferredRouter = this.i3.getConfig().getString(
 				"router.preferred");
+		String[] parts, ipport;
+
 		parts = StringUtils.split(preferredRouter, ",");
 		ipport = StringUtils.split(parts[1].trim(), " ");
 
@@ -488,8 +495,8 @@ public class Network implements Runnable {
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			if (type == null)
-				Log.warn("Service handler for I3 packet "
-						+ packet.toMudMode() + " not available.");
+				Log.warn("Service handler for I3 packet " + packet.toMudMode()
+						+ " not available.");
 			else
 				type.handler(packet);
 		}
@@ -841,6 +848,20 @@ public class Network implements Runnable {
 
 			this.inputThread = null;
 			moribund.interrupt();
+		}
+	}
+
+	/**
+	 * Reload the main config file and setup the local variables.
+	 */
+	public void updateConfig() {
+		this.routerList.clear();
+		Intermud3.instance.reloadConfig();
+		create();
+
+		if (this.autoConnect) {
+			Services.createServices();
+			connect();
 		}
 	}
 }

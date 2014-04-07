@@ -36,7 +36,7 @@ public class I3Channel extends ServiceTemplate {
 
 	private List<String> configTunein = new ArrayList<String>();
 	private List<String> configAliases = new ArrayList<String>();
-	private Vector<String> defChannels = new Vector<String>();
+	private Vector<String> tuneinChannels = new Vector<String>();
 	private Map<String, String> aliasToChannel = new Hashtable<String, String>();
 	private Map<String, String> channelToAlias = new Hashtable<String, String>();
 	private FileConfiguration chanlistConfig = null;
@@ -130,43 +130,47 @@ public class I3Channel extends ServiceTemplate {
 		this.i3.saveConfig();
 
 		if (info != null) {
+			String msg = new String();
+
 			for (Object channel : info.keySet()) {
 				LPCArray hostInfo = info.getLPCArray(channel);
 				LPCArray chanInfo = this.chanList.getLPCArray(channel);
 
 				if (((LPCString) channel).isEmpty()) {
-					Log.debug("Empty channel name. Ignoring.");
-
-					continue;
+					msg = "Empty channel name. Ignoring.";
 				} else if (hostInfo == null && chanInfo != null) {
-					Log.debug("Deleting channel '" + channel
-							+ "' from the chanlist.");
+					msg = "Deleting channel '" + channel
+							+ "' from the chanlist.";
 					this.chanList.remove(channel);
 
 					if (this.listening.contains(channel)
-							&& this.defChannels.contains(channel.toString()))
+							&& this.tuneinChannels.contains(channel.toString()))
 						sendChannelListen((LPCString) channel, false);
 				} else if (hostInfo != null) {
 					if (this.chanList.size() != 0) {
 						if (chanInfo != null
-								&& chanInfo.toString() != hostInfo.toString()) {
-							Log.debug("Updating data for channel '" + channel
-									+ "' in the chanlist.");
+								&& !chanInfo.toString().equals(
+										hostInfo.toString())) {
+							msg = "Updating data for channel '" + channel
+									+ "' in the chanlist.";
 						} else if (chanInfo == null) {
-							Log.debug("Adding channel '" + channel
-									+ "' to the chanlist.");
+							msg = "Adding channel '" + channel
+									+ "' to the chanlist.";
 						}
 					} else {
-						Log.debug("Creating chanlist. Adding channel '"
-								+ channel + "' to the chanlist.");
+						msg = "Creating chanlist. Adding channel '" + channel
+								+ "' to the chanlist.";
 					}
 
 					this.chanList.set(channel, hostInfo);
 
 					if (!this.listening.contains(channel)
-							&& this.defChannels.contains(channel.toString()))
+							&& this.tuneinChannels.contains(channel.toString()))
 						sendChannelListen((LPCString) channel, true);
 				}
+
+				if (!msg.isEmpty())
+					Log.debug(msg);
 			}
 		}
 
@@ -258,10 +262,10 @@ public class I3Channel extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		this.defChannels.clear();
+		this.tuneinChannels.clear();
 
 		for (String s : this.configTunein)
-			this.defChannels.add(s);
+			this.tuneinChannels.add(s);
 
 		this.aliasToChannel.clear();
 		this.channelToAlias.clear();
@@ -545,7 +549,7 @@ public class I3Channel extends ServiceTemplate {
 			list.add(ChatColor.GREEN + it.next().toString());
 
 		Collections.sort(list);
-		listeningChannels = StringUtils.join(list, ", ");
+		listeningChannels = StringUtils.join(list, ChatColor.RESET + ", ");
 		sender.sendMessage("Listening (" + list.size() + "): "
 				+ listeningChannels);
 	}
@@ -565,7 +569,7 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		Collections.sort(list);
-		availableChannels = StringUtils.join(list, ", ");
+		availableChannels = StringUtils.join(list, ChatColor.RESET + ", ");
 		sender.sendMessage("Available (" + list.size() + "): "
 				+ availableChannels);
 	}
@@ -623,5 +627,41 @@ public class I3Channel extends ServiceTemplate {
 
 		sendChannelListen(channel, false);
 		saveChanlistConfig();
+	}
+
+	/**
+	 * Reload the chanlist config file and setup the local variables.
+	 */
+	public void updateConfig() {
+		reloadChanlistConfig();
+
+		try {
+			this.configTunein = new ArrayList<String>(getChanlistConfig()
+					.getStringList("tunein"));
+			this.configAliases = new ArrayList<String>(getChanlistConfig()
+					.getStringList("aliases"));
+			this.chanList.setLPCData(Utils.toObject(getChanlistConfig()
+					.getString("chanList")));
+		} catch (I3Exception e) {
+			e.printStackTrace();
+		}
+
+		this.tuneinChannels.clear();
+
+		for (String s : this.configTunein)
+			this.tuneinChannels.add(s);
+
+		this.aliasToChannel.clear();
+		this.channelToAlias.clear();
+
+		for (String s : this.configAliases) {
+			String[] parts = StringUtils.split(s, ":");
+			String alias = parts[0].trim();
+			String channel = parts[1].trim();
+
+			this.aliasToChannel.put(alias, channel);
+			this.channelToAlias.put(channel, alias);
+		}
+
 	}
 }
