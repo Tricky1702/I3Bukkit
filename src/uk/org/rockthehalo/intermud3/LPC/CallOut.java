@@ -2,9 +2,11 @@ package uk.org.rockthehalo.intermud3.LPC;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -12,6 +14,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class CallOut extends BukkitRunnable {
 	private Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>();
@@ -24,10 +27,37 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void debugInfo() {
-		Log.debug("callOuts:   "
-				+ StringUtils.join(this.callOuts.iterator(), ", "));
-		Log.debug("heartBeats: "
-				+ StringUtils.join(this.heartBeats.iterator(), ", "));
+		List<LPCArray> list = new ArrayList<LPCArray>();
+
+		for (Map<String, Object> callout : this.callOuts) {
+			LPCArray data = new LPCArray();
+
+			data.add(callout.get("id"));
+			data.add(ServiceType.getServiceName(callout.get("owner")));
+			data.add(callout.get("currentDelay"));
+			data.add(callout.get("delay"));
+			data.add(callout.get("func"));
+			data.add(callout.get("args"));
+
+			list.add(data);
+		}
+
+		Log.debug("callOuts:   " + StringUtils.join(list, ", "));
+
+		list.clear();
+
+		for (Map<String, Object> heartbeat : this.heartBeats) {
+			LPCArray data = new LPCArray();
+
+			data.add(heartbeat.get("id"));
+			data.add(ServiceType.getServiceName(heartbeat.get("owner")));
+			data.add(heartbeat.get("currentDelay"));
+			data.add(heartbeat.get("delay"));
+
+			list.add(data);
+		}
+
+		Log.debug("heartBeats: " + StringUtils.join(list, ", "));
 	}
 
 	/**
@@ -58,7 +88,7 @@ public class CallOut extends BukkitRunnable {
 		if (owner == null || func == null || func.isEmpty() || delay <= 0)
 			return -1;
 
-		Map<String, Object> data = new Hashtable<String, Object>();
+		Map<String, Object> data = new ConcurrentHashMap<String, Object>();
 
 		long id = this.id++;
 
@@ -90,7 +120,7 @@ public class CallOut extends BukkitRunnable {
 			if (owner == heartbeat.get("owner"))
 				return;
 
-		Map<String, Object> data = new Hashtable<String, Object>();
+		Map<String, Object> data = new ConcurrentHashMap<String, Object>();
 
 		data.put("id", this.id++);
 		data.put("owner", owner);

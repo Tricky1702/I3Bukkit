@@ -18,9 +18,11 @@ import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
-import uk.org.rockthehalo.intermud3.services.Services;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
+import uk.org.rockthehalo.intermud3.services.I3Startup;
+import uk.org.rockthehalo.intermud3.services.ServiceManager;
+import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class Network implements Runnable {
 	private volatile Thread inputThread = null;
@@ -58,7 +60,7 @@ public class Network implements Runnable {
 		create();
 
 		if (this.autoConnect) {
-			Services.createServices();
+			ServiceManager.createServices();
 			connect();
 		}
 	}
@@ -124,7 +126,7 @@ public class Network implements Runnable {
 		this.routerConnected = false;
 		this.idleTimeout = System.currentTimeMillis();
 
-		Object service = Services.getService("startup");
+		I3Startup service = ServiceType.I3STARTUP.getService();
 
 		if (service == null)
 			Log.error("I3Startup service not found!");
@@ -337,7 +339,7 @@ public class Network implements Runnable {
 
 		while (isConnected()) {
 			Packet packet;
-			PacketTypes type = null;
+			PacketType type = null;
 			LPCString omud = null, ouser = null, tmud = null, tuser = null;
 			String str, err = null, namedType = "";
 
@@ -448,13 +450,13 @@ public class Network implements Runnable {
 			else if (packet.size() <= 6)
 				err = "packet size too small";
 			else {
-				namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
+				namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
 						.toString();
-				type = PacketTypes.getNamedType(namedType);
-				omud = packet.getLPCString(PacketEnums.O_MUD.getIndex());
-				ouser = packet.getLPCString(PacketEnums.O_USER.getIndex());
-				tmud = packet.getLPCString(PacketEnums.T_MUD.getIndex());
-				tuser = packet.getLPCString(PacketEnums.T_USER.getIndex());
+				type = PacketType.getNamedType(namedType);
+				omud = packet.getLPCString(BasePayload.O_MUD.getIndex());
+				ouser = packet.getLPCString(BasePayload.O_USER.getIndex());
+				tmud = packet.getLPCString(BasePayload.T_MUD.getIndex());
+				tuser = packet.getLPCString(BasePayload.T_USER.getIndex());
 
 				if (tmud != null
 						&& !tmud.toString().equals(
@@ -462,7 +464,7 @@ public class Network implements Runnable {
 					if (namedType.equals("mudlist")) {
 						Log.warn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
-						packet.set(PacketEnums.T_MUD.getIndex(), new LPCString(
+						packet.set(BasePayload.T_MUD.getIndex(), new LPCString(
 								this.i3.getServer().getServerName()));
 					} else {
 						err = "wrong destination mud (" + tmud + ")";
@@ -486,12 +488,12 @@ public class Network implements Runnable {
 
 			// Sanity check on the originator username
 			if (ouser != null)
-				packet.set(PacketEnums.O_USER.getIndex(), new LPCString(ouser
+				packet.set(BasePayload.O_USER.getIndex(), new LPCString(ouser
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			// Sanity check on the target username
 			if (tuser != null)
-				packet.set(PacketEnums.T_USER.getIndex(), new LPCString(tuser
+				packet.set(BasePayload.T_USER.getIndex(), new LPCString(tuser
 						.toString().toLowerCase(Locale.ENGLISH)));
 
 			if (type == null)
@@ -593,7 +595,7 @@ public class Network implements Runnable {
 		send(packet);
 	}
 
-	public void sendToRouter(PacketTypes i3Type, String origUser, Packet packet) {
+	public void sendToRouter(PacketType i3Type, String origUser, Packet packet) {
 		sendPacket(i3Type.getName(), origUser, getRouterName().toString(),
 				null, packet);
 	}
@@ -602,7 +604,7 @@ public class Network implements Runnable {
 		sendPacket(i3Type, origUser, getRouterName().toString(), null, packet);
 	}
 
-	public void sendToMud(PacketTypes i3Type, String origUser, String targMud,
+	public void sendToMud(PacketType i3Type, String origUser, String targMud,
 			Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, null, packet);
 	}
@@ -612,7 +614,7 @@ public class Network implements Runnable {
 		sendPacket(i3Type, origUser, targMud, null, packet);
 	}
 
-	public void sendToUser(PacketTypes i3Type, String origUser, String targMud,
+	public void sendToUser(PacketType i3Type, String origUser, String targMud,
 			String targUser, Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, targUser, packet);
 	}
@@ -622,7 +624,7 @@ public class Network implements Runnable {
 		sendPacket(i3Type, origUser, targMud, targUser, packet);
 	}
 
-	public void sendToAll(PacketTypes i3Type, String origUser, Packet packet) {
+	public void sendToAll(PacketType i3Type, String origUser, Packet packet) {
 		sendPacket(i3Type.getName(), origUser, null, null, packet);
 	}
 
@@ -860,8 +862,8 @@ public class Network implements Runnable {
 		create();
 
 		if (this.autoConnect && !isConnected()) {
-			Services.removeServices();
-			Services.createServices();
+			ServiceManager.removeServices();
+			ServiceManager.createServices();
 			connect();
 		}
 	}

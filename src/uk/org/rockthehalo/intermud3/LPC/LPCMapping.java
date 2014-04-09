@@ -9,8 +9,7 @@ import java.util.Set;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
-public class LPCMapping extends LPCVar implements Cloneable,
-		Map<Object, Object> {
+public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	private Map<Object, Object> lpcData = Collections
 			.synchronizedMap(new LinkedHashMap<Object, Object>());
 
@@ -39,7 +38,7 @@ public class LPCMapping extends LPCVar implements Cloneable,
 	}
 
 	@Override
-	public Object clone() {
+	public LPCMapping clone() {
 		return new LPCMapping(this.lpcData);
 	}
 

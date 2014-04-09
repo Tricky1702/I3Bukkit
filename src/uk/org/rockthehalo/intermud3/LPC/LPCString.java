@@ -3,7 +3,7 @@ package uk.org.rockthehalo.intermud3.LPC;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
-public class LPCString extends LPCVar implements Cloneable {
+public class LPCString extends LPCVar {
 	private String lpcData = new String();
 
 	public LPCString() {
@@ -28,7 +28,7 @@ public class LPCString extends LPCVar implements Cloneable {
 	}
 
 	@Override
-	public Object clone() {
+	public LPCString clone() {
 		return new LPCString(this.lpcData);
 	}
 

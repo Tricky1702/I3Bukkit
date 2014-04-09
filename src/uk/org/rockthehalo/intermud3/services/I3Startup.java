@@ -15,13 +15,12 @@ import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
 
 public class I3Startup extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
 
 	public I3Startup() {
-		setServiceName("startup");
 	}
 
 	/*
@@ -41,7 +40,7 @@ public class I3Startup extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketEnums.O_MUD.getIndex();
+		int oMud = BasePayload.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -163,7 +162,7 @@ public class I3Startup extends ServiceTemplate {
 		payload.add(mudType);
 		payload.add(openStatus);
 		payload.add(Intermud3.network.getAdminEmail());
-		payload.add(Services.getRouterServices());
+		payload.add(ServiceManager.getRouterServices());
 
 		Date bootTime = new Date(this.i3.getBootTime());
 		SimpleDateFormat fmt = new SimpleDateFormat(

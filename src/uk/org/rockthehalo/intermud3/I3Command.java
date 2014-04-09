@@ -9,7 +9,8 @@ import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.I3Mudlist;
-import uk.org.rockthehalo.intermud3.services.Services;
+import uk.org.rockthehalo.intermud3.services.ServiceManager;
+import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class I3Command implements CommandExecutor {
 	private String lastChannel = null;
@@ -74,7 +75,7 @@ public class I3Command implements CommandExecutor {
 				return false;
 			}
 
-			Services.createServices();
+			ServiceManager.createServices();
 			Intermud3.network.connect();
 
 			return true;
@@ -84,12 +85,12 @@ public class I3Command implements CommandExecutor {
 			}
 
 			Intermud3.network.shutdown(0);
-			Services.removeServices();
+			ServiceManager.removeServices();
 
 			return true;
 		} else if (subcmd.equals("reload")) {
-			I3Channel i3Channel = (I3Channel) Services.getService("channel");
-			I3Mudlist i3Mudlist = (I3Mudlist) Services.getService("mudlist");
+			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
 
 			if (i3Channel != null) {
 				i3Channel.updateConfig();
@@ -120,7 +121,7 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(sender, command, subcmd);
 
-			I3Channel service = (I3Channel) Services.getService("channel");
+			I3Channel service = ServiceType.I3CHANNEL.getService();
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
@@ -162,7 +163,7 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(sender, command, subcmd);
 
-			I3Channel service = (I3Channel) Services.getService("channel");
+			I3Channel service = ServiceType.I3CHANNEL.getService();
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
@@ -195,7 +196,7 @@ public class I3Command implements CommandExecutor {
 			if (!checkPerm(sender, "channels"))
 				return false;
 
-			I3Channel service = (I3Channel) Services.getService("channel");
+			I3Channel service = ServiceType.I3CHANNEL.getService();
 
 			if (service == null)
 				sender.sendMessage(ChatColor.RED
@@ -306,7 +307,7 @@ public class I3Command implements CommandExecutor {
 			}
 
 			Intermud3.callout.debugInfo();
-			Services.debugInfo();
+			ServiceManager.debugInfo();
 
 			return true;
 		} else {

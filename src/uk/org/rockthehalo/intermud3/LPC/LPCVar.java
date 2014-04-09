@@ -3,7 +3,7 @@ package uk.org.rockthehalo.intermud3.LPC;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
-public abstract class LPCVar {
+public abstract class LPCVar implements Cloneable {
 	public enum LPCTypes {
 		ARRAY, INT, MAPPING, MIXED, STRING;
 	}

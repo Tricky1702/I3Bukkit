@@ -7,7 +7,7 @@ import java.util.Vector;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
-public class LPCMixed extends LPCVar implements Cloneable {
+public class LPCMixed extends LPCVar {
 	private Object lpcData = null;
 
 	public LPCMixed() {

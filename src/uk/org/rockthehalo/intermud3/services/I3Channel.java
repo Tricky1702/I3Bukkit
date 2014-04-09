@@ -5,10 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -26,8 +26,8 @@ import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 
 public class I3Channel extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
@@ -36,22 +36,21 @@ public class I3Channel extends ServiceTemplate {
 	private List<String> configTunein = new ArrayList<String>();
 	private List<String> configAliases = new ArrayList<String>();
 	private Vector<String> tuneinChannels = new Vector<String>();
-	private Map<String, String> aliasToChannel = new Hashtable<String, String>();
-	private Map<String, String> channelToAlias = new Hashtable<String, String>();
+	private Map<String, String> aliasToChannel = new ConcurrentHashMap<String, String>();
+	private Map<String, String> channelToAlias = new ConcurrentHashMap<String, String>();
 	private FileConfiguration chanlistConfig = null;
 	private File chanlistConfigFile = null;
 	private LPCMapping chanList = new LPCMapping();
 	private LPCArray listening = new LPCArray();
 
 	public I3Channel() {
-		setServiceName("channel");
 	}
 
 	/**
 	 * @param packet
 	 */
 	private void chanEmoteHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(PacketEnums.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(BasePayload.O_MUD.getIndex());
 
 		if (oMudName == null)
 			return;
@@ -65,7 +64,7 @@ public class I3Channel extends ServiceTemplate {
 		LPCString visName = packet.getLPCString(7);
 
 		if (visName == null)
-			visName = packet.getLPCString(PacketEnums.O_USER.getIndex());
+			visName = packet.getLPCString(BasePayload.O_USER.getIndex());
 
 		String name;
 
@@ -100,7 +99,7 @@ public class I3Channel extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketEnums.O_MUD.getIndex();
+		int oMud = BasePayload.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -185,7 +184,7 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanMessageHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(PacketEnums.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(BasePayload.O_MUD.getIndex());
 
 		if (oMudName == null)
 			return;
@@ -199,7 +198,7 @@ public class I3Channel extends ServiceTemplate {
 		LPCString visName = packet.getLPCString(7);
 
 		if (visName == null)
-			visName = packet.getLPCString(PacketEnums.O_USER.getIndex());
+			visName = packet.getLPCString(BasePayload.O_USER.getIndex());
 
 		String name;
 
@@ -283,7 +282,7 @@ public class I3Channel extends ServiceTemplate {
 			this.channelToAlias.put(channel, alias);
 		}
 
-		Services.addServiceName(this.toString());
+		ServiceType.I3CHANNEL.setVisibleOnRouter(true);
 		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
@@ -295,7 +294,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public Map<String, String> getAliases() {
-		Map<String, String> aliases = new Hashtable<String, String>();
+		Map<String, String> aliases = new ConcurrentHashMap<String, String>();
 
 		for (Object o : this.aliasToChannel.keySet())
 			aliases.put(o.toString(), this.aliasToChannel.get(o));
@@ -304,7 +303,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public LPCMapping getChanList() {
-		return (LPCMapping) this.chanList.clone();
+		return this.chanList.clone();
 	}
 
 	public FileConfiguration getChanlistConfig() {
@@ -315,7 +314,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public LPCArray getListening() {
-		return (LPCArray) this.listening.clone();
+		return this.listening.clone();
 	}
 
 	public void heartBeat() {
@@ -343,10 +342,9 @@ public class I3Channel extends ServiceTemplate {
 
 	public void remove() {
 		Intermud3.callout.removeHeartBeat(this);
-		Services.removeServiceName(this.toString());
 		saveChanlistConfig();
 
-		LPCArray listeningCopy = (LPCArray) this.listening.clone();
+		LPCArray listeningCopy = this.listening.clone();
 
 		for (Object obj : listeningCopy)
 			sendChannelListen((LPCString) obj, false);
@@ -364,9 +362,9 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		String namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
+		String namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
 				.toString();
-		PacketTypes type = PacketTypes.getNamedType(namedType);
+		PacketType type = PacketType.getNamedType(namedType);
 
 		switch (type) {
 		case CHAN_EMOTE:
@@ -415,9 +413,9 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void reqHandler(Packet packet) {
-		String namedType = packet.getLPCString(PacketEnums.TYPE.getIndex())
+		String namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
 				.toString();
-		PacketTypes type = PacketTypes.getNamedType(namedType);
+		PacketType type = PacketType.getNamedType(namedType);
 
 		switch (type) {
 		case CHAN_FILTER_REQ:
@@ -506,7 +504,7 @@ public class I3Channel extends ServiceTemplate {
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
 		payload.add(new LPCString("$N " + msg));
-		Intermud3.network.sendToAll(PacketTypes.CHAN_EMOTE, plrName, payload);
+		Intermud3.network.sendToAll(PacketType.CHAN_EMOTE, plrName, payload);
 	}
 
 	public void sendMessage(String chan, String plrName, String msg) {
@@ -521,7 +519,7 @@ public class I3Channel extends ServiceTemplate {
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
 		payload.add(new LPCString(msg));
-		Intermud3.network.sendToAll(PacketTypes.CHAN_MESSAGE, plrName, payload);
+		Intermud3.network.sendToAll(PacketType.CHAN_MESSAGE, plrName, payload);
 	}
 
 	public void setAlias(String alias, String channel) {

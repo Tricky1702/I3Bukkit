@@ -9,7 +9,7 @@ import java.util.Vector;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
-public class LPCArray extends LPCVar implements Cloneable, List<Object> {
+public class LPCArray extends LPCVar implements List<Object> {
 	private Vector<Object> lpcData = new Vector<Object>();
 
 	public LPCArray() {
@@ -56,7 +56,7 @@ public class LPCArray extends LPCVar implements Cloneable, List<Object> {
 	}
 
 	@Override
-	public Object clone() {
+	public LPCArray clone() {
 		return new LPCArray(this.lpcData);
 	}
 

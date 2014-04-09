@@ -3,7 +3,7 @@ package uk.org.rockthehalo.intermud3;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import uk.org.rockthehalo.intermud3.LPC.CallOut;
-import uk.org.rockthehalo.intermud3.services.Services;
+import uk.org.rockthehalo.intermud3.services.ServiceManager;
 
 public class Intermud3 extends JavaPlugin {
 	private final int hBeatDelay = 15 * 60;
@@ -36,7 +36,7 @@ public class Intermud3 extends JavaPlugin {
 		if (network != null && network.isConnected())
 			network.shutdown(0);
 
-		Services.removeServices();
+		ServiceManager.removeServices();
 
 		callout.removeAllCallOuts();
 		callout.removeAllHeartBeats();

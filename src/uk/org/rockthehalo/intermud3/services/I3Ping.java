@@ -7,9 +7,9 @@ import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketPingEnums;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketTypes;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PingPayload;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 
 public class I3Ping extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
@@ -20,12 +20,11 @@ public class I3Ping extends ServiceTemplate {
 	private int hBeat;
 
 	public I3Ping() {
-		setServiceName("ping");
 		hBeat = Utils.rnd(this.delay) + this.baseDelay;
 	}
 
 	public void create() {
-		Services.addServiceName(this.toString());
+		ServiceType.I3PING.setVisibleOnRouter(true);
 		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
@@ -53,7 +52,6 @@ public class I3Ping extends ServiceTemplate {
 
 	public void remove() {
 		Intermud3.callout.removeHeartBeat(this);
-		Services.removeServiceName(this.toString());
 	}
 
 	/*
@@ -80,23 +78,23 @@ public class I3Ping extends ServiceTemplate {
 	 */
 	@Override
 	public void reqHandler(Packet packet) {
-		PacketTypes replyType;
+		PacketType replyType;
 		Packet extra = new Packet();
 		String reply = "ping-reply";
 
 		Log.debug(packet.toMudMode());
 
-		if (packet.getLPCString(PacketEnums.TYPE.getIndex()).toString()
+		if (packet.getLPCString(BasePayload.TYPE.getIndex()).toString()
 				.equals("ping"))
 			reply = "pong";
 
-		replyType = PacketTypes.getNamedType(reply);
+		replyType = PacketType.getNamedType(reply);
 
-		if (packet.size() >= PacketPingEnums.size())
-			for (Object obj : packet.subList(PacketEnums.size(), packet.size()))
+		if (packet.size() >= PingPayload.size())
+			for (Object obj : packet.subList(BasePayload.size(), packet.size()))
 				extra.add(obj);
 
-		int oMud = PacketEnums.O_MUD.getIndex();
+		int oMud = BasePayload.O_MUD.getIndex();
 		String oMudName = ChatColor.stripColor(packet.getLPCString(oMud)
 				.toString());
 
@@ -110,7 +108,7 @@ public class I3Ping extends ServiceTemplate {
 	}
 
 	public void send(String type, String tmud, Packet packet) {
-		Intermud3.network.sendToMud(PacketTypes.getNamedType(type), null, tmud,
+		Intermud3.network.sendToMud(PacketType.getNamedType(type), null, tmud,
 				packet);
 	}
 
@@ -120,7 +118,7 @@ public class I3Ping extends ServiceTemplate {
 		Packet packet = new Packet();
 
 		packet.add(new LPCInt((int) (hash & 0x7fffffff)));
-		Intermud3.network.sendToMud(PacketTypes.getNamedType("ping-req"), null,
+		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
 				ChatColor.stripColor(this.i3.getServer().getServerName()),
 				packet);
 	}

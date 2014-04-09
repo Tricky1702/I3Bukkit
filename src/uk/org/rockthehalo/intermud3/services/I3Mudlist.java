@@ -3,10 +3,10 @@ package uk.org.rockthehalo.intermud3.services;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -21,7 +21,7 @@ import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.Packet.PacketEnums;
+import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
 
 public class I3Mudlist extends ServiceTemplate {
 	private final Intermud3 i3 = Intermud3.instance;
@@ -31,11 +31,10 @@ public class I3Mudlist extends ServiceTemplate {
 	private File mudlistConfigFile = null;
 	private LPCMapping mudList = new LPCMapping();
 	private LPCMapping mudUpdate = new LPCMapping();
-	private Map<String, Integer> mudStateCounter = new Hashtable<String, Integer>();
+	private Map<String, Integer> mudStateCounter = new ConcurrentHashMap<String, Integer>();
 	private int HBeat = 0;
 
 	public I3Mudlist() {
-		setServiceName("mudlist");
 	}
 
 	public void create() {
@@ -174,7 +173,7 @@ public class I3Mudlist extends ServiceTemplate {
 			return;
 		}
 
-		int oMud = PacketEnums.O_MUD.getIndex();
+		int oMud = BasePayload.O_MUD.getIndex();
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -189,7 +188,9 @@ public class I3Mudlist extends ServiceTemplate {
 		if (mudlistID.toInt() <= Intermud3.network.getMudlistID().toInt())
 			Log.debug("We don't like packet element 6 ("
 					+ mudlistID
-					+ "). It should be larger than the current one. Continuing anyway.");
+					+ ") for '"
+					+ packet.getLPCMapping(7).keySet().toString()
+					+ "'. It should be larger than the current one. Continuing anyway.");
 
 		Intermud3.network.setMudlistID(mudlistID);
 		this.i3.saveConfig();
