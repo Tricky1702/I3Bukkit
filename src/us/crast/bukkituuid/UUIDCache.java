@@ -109,7 +109,7 @@ public class UUIDCache implements Listener {
 
 	private void asyncFetch(final ArrayList<String> names) {
 		plugin.getServer().getScheduler()
-				.scheduleAsyncDelayedTask(plugin, new Runnable() {
+				.runTaskAsynchronously(plugin, new Runnable() {
 					public void run() {
 						syncFetch(names);
 					}
