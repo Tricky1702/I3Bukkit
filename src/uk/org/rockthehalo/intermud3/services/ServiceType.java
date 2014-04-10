@@ -9,12 +9,12 @@ public enum ServiceType {
 
 	private static Map<String, ServiceType> nameToService = null;
 	private static Map<Object, String> serviceToName = null;
-	private Object service = null;
 	private String name = null;
+	private Object service = null;
 	private boolean visibleOnRouter = false;
 
 	private ServiceType(String name) {
-		this.name = name;
+		setName(name);
 	}
 
 	/**
@@ -30,6 +30,14 @@ public enum ServiceType {
 		}
 
 		return ServiceType.nameToService.get(name);
+	}
+
+	/**
+	 * @return the service
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T getService() {
+		return (T) service;
 	}
 
 	public static String getServiceName(Object service) {
@@ -58,11 +66,18 @@ public enum ServiceType {
 	}
 
 	/**
-	 * @return the service
+	 * @return the visibleOnRouter
 	 */
-	@SuppressWarnings("unchecked")
-	public <T> T getService() {
-		return (T) service;
+	public boolean isVisibleOnRouter() {
+		return visibleOnRouter;
+	}
+
+	/**
+	 * @param service
+	 *            the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	/**
@@ -71,13 +86,6 @@ public enum ServiceType {
 	 */
 	public <T> void setService(T service) {
 		this.service = service;
-	}
-
-	/**
-	 * @return the visibleOnRouter
-	 */
-	public boolean isVisibleOnRouter() {
-		return visibleOnRouter;
 	}
 
 	/**

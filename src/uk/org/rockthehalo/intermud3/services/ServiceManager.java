@@ -17,11 +17,11 @@ public class ServiceManager {
 	}
 
 	/**
-	 * @param services
+	 * @param serviceType
 	 * @param service
 	 */
-	private static <T> void addService(ServiceType services, T service) {
-		services.setService(service);
+	private static <T> void addService(ServiceType serviceType, T service) {
+		serviceType.setService(service);
 	}
 
 	/**

@@ -127,7 +127,7 @@ public class I3Command implements CommandExecutor {
 				sender.sendMessage(ChatColor.RED
 						+ "I3 channel service not available.");
 			else {
-				String plrName = ((Player) sender).getDisplayName();
+				String plrName = ((Player) sender).getName();
 				String chan = args[0];
 
 				if (chan.equals(".") && this.lastChannel != null)
@@ -169,7 +169,7 @@ public class I3Command implements CommandExecutor {
 				sender.sendMessage(ChatColor.RED
 						+ "I3 channel service not available.");
 			else {
-				String plrName = ((Player) sender).getDisplayName();
+				String plrName = ((Player) sender).getName();
 				String chan = args[0];
 
 				if (chan.equals(".") && this.lastChannel != null)
