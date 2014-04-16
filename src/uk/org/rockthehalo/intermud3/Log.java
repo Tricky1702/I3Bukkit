@@ -26,7 +26,7 @@ public class Log {
 	 * @param msg
 	 */
 	public static void error(String msg) {
-		log("Error: " + msg, Level.SEVERE);
+		log("Error: " + msg, Level.INFO);
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class Log {
 	 * @param thrown
 	 */
 	public static void error(String msg, Throwable thrown) {
-		log("Error: " + msg, Level.SEVERE, thrown);
+		log("Error: " + msg, Level.INFO, thrown);
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class Log {
 	 * @param msg
 	 */
 	public static void warn(String msg) {
-		log("Warning: " + msg, Level.WARNING);
+		log("Warning: " + msg, Level.INFO);
 	}
 
 	/**
@@ -81,6 +81,6 @@ public class Log {
 	 * @param thrown
 	 */
 	public static void warn(String msg, Throwable thrown) {
-		log("Warning: " + msg, Level.WARNING, thrown);
+		log("Warning: " + msg, Level.INFO, thrown);
 	}
 }

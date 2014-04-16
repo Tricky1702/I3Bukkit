@@ -329,13 +329,12 @@ public class I3Command implements CommandExecutor {
 				else
 					debug = !oldDebug;
 
-				if (oldDebug && !debug)
-					Log.debug("Switching debug messages off.");
+				if (!debug)
+					Log.info("Switching debug messages off.");
+				else
+					Log.info("Switching debug messages on.");
 
 				Intermud3.instance.getConfig().set("debug", debug);
-
-				if (!oldDebug && debug)
-					Log.debug("Switching debug messages on.");
 			} else {
 				Intermud3.callout.debugInfo();
 				ServiceManager.debugInfo();
