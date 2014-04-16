@@ -9,25 +9,20 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 
+import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 import uk.org.rockthehalo.intermud3.services.I3Startup;
 import uk.org.rockthehalo.intermud3.services.ServiceManager;
 import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class Network implements Runnable {
 	private volatile Thread inputThread = null;
-
-	private final Intermud3 i3 = Intermud3.instance;
 
 	public final long maxRetryTime = 600;
 	public final long minRetryTime = 30;
@@ -50,8 +45,8 @@ public class Network implements Runnable {
 	private LPCArray preferredRouter = new LPCArray();
 	private long reconnectWait = this.minRetryTime;
 	private boolean routerConnected = false;
-	private LPCArray routerList = new LPCArray();
 	private LPCString routerIP = new LPCString();
+	private LPCArray routerList = new LPCArray();
 	private LPCString routerName = new LPCString();
 	private LPCInt routerPassword = new LPCInt();
 	private LPCInt routerPort = new LPCInt();
@@ -135,21 +130,22 @@ public class Network implements Runnable {
 	}
 
 	public void create() {
-		this.adminEmail = new LPCString(ChatColor.stripColor(this.i3
+		this.adminEmail = new LPCString(Utils.stripColor(Intermud3.instance
 				.getConfig().getString("adminEmail")));
-		this.autoConnect = this.i3.getConfig().getBoolean("autoConnect", false);
-		this.chanlistID = new LPCInt(this.i3.getConfig().getInt(
+		this.autoConnect = Intermud3.instance.getConfig().getBoolean(
+				"autoConnect", false);
+		this.chanlistID = new LPCInt(Intermud3.instance.getConfig().getInt(
 				"router.chanlistID"));
-		this.configRouterList = new ArrayList<String>(this.i3.getConfig()
-				.getStringList("router.list"));
-		this.hostName = new LPCString(ChatColor.stripColor(this.i3.getConfig()
-				.getString("hostName", "")));
-		this.mudlistID = new LPCInt(this.i3.getConfig().getInt(
+		this.configRouterList = new ArrayList<String>(Intermud3.instance
+				.getConfig().getStringList("router.list"));
+		this.hostName = new LPCString(Utils.stripColor(Intermud3.instance
+				.getConfig().getString("hostName", "")));
+		this.mudlistID = new LPCInt(Intermud3.instance.getConfig().getInt(
 				"router.mudlistID"));
-		this.routerPassword = new LPCInt(this.i3.getConfig().getInt(
+		this.routerPassword = new LPCInt(Intermud3.instance.getConfig().getInt(
 				"router.password"));
 
-		String preferredRouter = this.i3.getConfig().getString(
+		String preferredRouter = Intermud3.instance.getConfig().getString(
 				"router.preferred");
 		String[] parts, ipport;
 
@@ -300,14 +296,14 @@ public class Network implements Runnable {
 		if (isConnected()) {
 			shutdown(0);
 			this.reconnectWait -= this.retryTimeStep;
-			this.i3.saveConfig();
+			Intermud3.instance.saveConfig();
 			reconnect(5);
 
 			return;
 		}
 
-		Log.warn("Unable to setup socket.");
-		shutdown();
+		Intermud3.callout.addCallOut(this, "connect", 3);
+		Intermud3.instance.saveConfig();
 	}
 
 	public void reconnect(long reconnectWait) {
@@ -320,6 +316,27 @@ public class Network implements Runnable {
 
 	public void remove(int arg) {
 		shutdown(arg);
+
+		// Clear out all lists.
+		this.configRouterList.clear();
+		this.preferredRouter.clear();
+		this.routerList.clear();
+
+		// Remove references.
+		this.adminEmail = null;
+		this.chanlistID = null;
+		this.configRouterList = null;
+		this.defRouterIP = null;
+		this.defRouterName = null;
+		this.defRouterPort = null;
+		this.hostName = null;
+		this.mudlistID = null;
+		this.preferredRouter = null;
+		this.routerIP = null;
+		this.routerList = null;
+		this.routerName = null;
+		this.routerPassword = null;
+		this.routerPort = null;
 	}
 
 	/*
@@ -344,7 +361,7 @@ public class Network implements Runnable {
 			String str, err = null, namedType = "";
 
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException iE) {
 				if (!isConnected()) {
 					Log.warn("Shutdown!!!");
@@ -443,29 +460,32 @@ public class Network implements Runnable {
 			packet = new Packet();
 			packet.fromMudMode(str);
 
-			if (packet.size() == 0)
+			if (packet.isEmpty())
 				continue;
 			else if (!Utils.isLPCArray(packet))
 				err = "packet not array";
 			else if (packet.size() <= 6)
 				err = "packet size too small";
 			else {
-				namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
-						.toString();
+				namedType = packet.getLPCString(Payload.TYPE).toString();
 				type = PacketType.getNamedType(namedType);
-				omud = packet.getLPCString(BasePayload.O_MUD.getIndex());
-				ouser = packet.getLPCString(BasePayload.O_USER.getIndex());
-				tmud = packet.getLPCString(BasePayload.T_MUD.getIndex());
-				tuser = packet.getLPCString(BasePayload.T_USER.getIndex());
+				omud = packet.getLPCString(Payload.O_MUD);
+				ouser = packet.getLPCString(Payload.O_USER);
+				tmud = packet.getLPCString(Payload.T_MUD);
+				tuser = packet.getLPCString(Payload.T_USER);
 
 				if (tmud != null
 						&& !tmud.toString().equals(
-								this.i3.getServer().getServerName())) {
+								Utils.stripColor(Intermud3.instance.getServer()
+										.getServerName()))) {
 					if (namedType.equals("mudlist")) {
 						Log.warn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
-						packet.set(BasePayload.T_MUD.getIndex(), new LPCString(
-								this.i3.getServer().getServerName()));
+						packet.set(
+								Payload.T_MUD,
+								new LPCString(ChatColor
+										.stripColor(Intermud3.instance
+												.getServer().getServerName())));
 					} else {
 						err = "wrong destination mud (" + tmud + ")";
 					}
@@ -488,13 +508,13 @@ public class Network implements Runnable {
 
 			// Sanity check on the originator username
 			if (ouser != null)
-				packet.set(BasePayload.O_USER.getIndex(), new LPCString(ouser
-						.toString().toLowerCase(Locale.ENGLISH)));
+				packet.set(Payload.O_USER, new LPCString(ouser.toString()
+						.toLowerCase()));
 
 			// Sanity check on the target username
 			if (tuser != null)
-				packet.set(BasePayload.T_USER.getIndex(), new LPCString(tuser
-						.toString().toLowerCase(Locale.ENGLISH)));
+				packet.set(Payload.T_USER, new LPCString(tuser.toString()
+						.toLowerCase()));
 
 			if (type == null)
 				Log.warn("Service handler for I3 packet " + packet.toMudMode()
@@ -563,27 +583,25 @@ public class Network implements Runnable {
 
 		packet.add(new LPCString(i3Type));
 		packet.add(new LPCInt(5));
-		packet.add(new LPCString(ChatColor.stripColor(this.i3.getServer()
-				.getServerName())));
+		packet.add(new LPCString(Utils.stripColor(Intermud3.instance
+				.getServer().getServerName())));
 
 		if (origUser == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(ChatColor.stripColor(origUser)
-					.toLowerCase(Locale.ENGLISH)));
+			packet.add(new LPCString(Utils.stripColor(origUser).toLowerCase()));
 		}
 
 		if (targMud == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(ChatColor.stripColor(targMud)));
+			packet.add(new LPCString(Utils.stripColor(targMud)));
 		}
 
 		if (targUser == null) {
 			packet.add(new LPCInt(0));
 		} else {
-			packet.add(new LPCString(ChatColor.stripColor(targUser)
-					.toLowerCase(Locale.ENGLISH)));
+			packet.add(new LPCString(Utils.stripColor(targUser).toLowerCase()));
 		}
 
 		if (payload == null)
@@ -637,8 +655,7 @@ public class Network implements Runnable {
 	 *            the adminEmail to set
 	 */
 	public void setAdminEmail(LPCString adminEmail) {
-		this.adminEmail = new LPCString(ChatColor.stripColor(adminEmail
-				.toString()));
+		this.adminEmail = new LPCString(Utils.stripColor(adminEmail.toString()));
 	}
 
 	/**
@@ -663,7 +680,8 @@ public class Network implements Runnable {
 	 */
 	public void setChanlistID(LPCInt chanlistID) {
 		this.chanlistID = new LPCInt(chanlistID);
-		this.i3.getConfig().set("router.chanlistID", chanlistID.toInt());
+		Intermud3.instance.getConfig().set("router.chanlistID",
+				chanlistID.toInt());
 	}
 
 	/**
@@ -679,7 +697,7 @@ public class Network implements Runnable {
 	 *            the adminEmail to set
 	 */
 	public void setHostName(LPCString hostName) {
-		this.hostName = new LPCString(ChatColor.stripColor(hostName.toString()));
+		this.hostName = new LPCString(Utils.stripColor(hostName.toString()));
 	}
 
 	/**
@@ -687,7 +705,7 @@ public class Network implements Runnable {
 	 *            the adminEmail to set
 	 */
 	public void setHostName(String hostName) {
-		this.hostName = new LPCString(ChatColor.stripColor(hostName));
+		this.hostName = new LPCString(Utils.stripColor(hostName));
 	}
 
 	/**
@@ -712,7 +730,8 @@ public class Network implements Runnable {
 	 */
 	public void setMudlistID(LPCInt mudlistID) {
 		this.mudlistID = new LPCInt(mudlistID);
-		this.i3.getConfig().set("router.mudlistID", mudlistID.toInt());
+		Intermud3.instance.getConfig().set("router.mudlistID",
+				mudlistID.toInt());
 	}
 
 	/**
@@ -856,7 +875,7 @@ public class Network implements Runnable {
 	/**
 	 * Reload the main config file and setup the local variables.
 	 */
-	public void updateConfig() {
+	public void reloadConfig() {
 		this.routerList.clear();
 		Intermud3.instance.reloadConfig();
 		create();

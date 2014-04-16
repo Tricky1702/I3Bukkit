@@ -1,55 +1,54 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 
+import uk.org.rockthehalo.intermud3.Config;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Packet;
+import uk.org.rockthehalo.intermud3.Payload;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
 
 public class I3Mudlist extends ServiceTemplate {
-	private final Intermud3 i3 = Intermud3.instance;
-	private final int hBeatDelay = 5 * 60;
+	private static final Payload mudlistPayload = new Payload(Arrays.asList(
+			"ML_ID", "ML_INFO"));
 
-	private FileConfiguration mudlistConfig = null;
-	private File mudlistConfigFile = null;
+	private static final int hBeatDelay = 5 * 60;
+
+	private Config config = null;
+	private int HBeat = 0;
 	private LPCMapping mudList = new LPCMapping();
 	private LPCMapping mudUpdate = new LPCMapping();
 	private Map<String, Integer> mudStateCounter = new ConcurrentHashMap<String, Integer>();
-	private int HBeat = 0;
 
 	public I3Mudlist() {
 	}
 
 	public void create() {
-		saveDefaultConfig();
+		this.config = new Config(Intermud3.instance, "mudlist.yml");
+		this.config.saveDefaultConfig();
 
 		try {
-			this.mudList.setLPCData(Utils.toObject(getMudlistConfig()
+			this.mudList.setLPCData(Utils.toObject(this.config.getConfig()
 					.getString("mudList")));
-			this.mudUpdate.setLPCData(Utils.toObject(getMudlistConfig()
+			this.mudUpdate.setLPCData(Utils.toObject(this.config.getConfig()
 					.getString("mudUpdate")));
 		} catch (I3Exception e) {
 			e.printStackTrace();
 		}
 
-		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
+		Intermud3.callout.addHeartBeat(this, hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -59,13 +58,6 @@ public class I3Mudlist extends ServiceTemplate {
 				+ StringUtils.join(this.mudList.keySet().iterator(), ", "));
 		Log.debug("I3Mudlist: mudUpdate:         "
 				+ StringUtils.join(this.mudUpdate.entrySet().iterator(), ", "));
-	}
-
-	public FileConfiguration getMudlistConfig() {
-		if (this.mudlistConfig == null)
-			reloadMudlistConfig();
-
-		return this.mudlistConfig;
 	}
 
 	public void heartBeat() {
@@ -100,11 +92,14 @@ public class I3Mudlist extends ServiceTemplate {
 			}
 		}
 
+		if (muds.isEmpty())
+			return;
+
 		if (muds.size() == 1) {
 			Log.debug("Removing mud '" + muds.get(0) + "' from the mudlist.");
 			this.removeMudFromList(new LPCString(muds.get(0)));
 			this.removeMudFromUpdate(new LPCString(muds.get(0)));
-		} else if (muds.size() > 1) {
+		} else {
 			Log.debug("Removing muds '"
 					+ StringUtils.join(muds.subList(0, muds.size() - 1), "', '")
 					+ "' and '" + muds.get(muds.size() - 1)
@@ -114,38 +109,45 @@ public class I3Mudlist extends ServiceTemplate {
 				this.removeMudFromList(new LPCString(mudname));
 				this.removeMudFromUpdate(new LPCString(mudname));
 			}
-		} else {
-			return;
 		}
 
-		saveMudlistConfig();
+		saveConfig();
 	}
 
-	public void reloadMudlistConfig() {
-		if (this.mudlistConfigFile == null)
-			this.mudlistConfigFile = new File(this.i3.getDataFolder(),
-					"mudlist.yml");
+	/**
+	 * Reload the mudlist config file and setup the local variables.
+	 */
+	public void reloadConfig() {
+		this.config.reloadConfig();
 
-		this.mudlistConfig = YamlConfiguration
-				.loadConfiguration(this.mudlistConfigFile);
-
-		// Look for defaults in the jar
-		InputStream defConfigStream = this.i3.getResource("mudlist.yml");
-
-		if (defConfigStream != null) {
-			YamlConfiguration defConfig = YamlConfiguration
-					.loadConfiguration(defConfigStream);
-			this.mudlistConfig.setDefaults(defConfig);
+		try {
+			this.mudList.setLPCData(Utils.toObject(this.config.getConfig()
+					.getString("mudList")));
+			this.mudUpdate.setLPCData(Utils.toObject(this.config.getConfig()
+					.getString("mudUpdate")));
+		} catch (I3Exception e) {
+			e.printStackTrace();
 		}
+
+		Log.info(this.config.getFile().getName() + " loaded.");
 	}
 
 	public void remove() {
 		Intermud3.callout.removeHeartBeat(this);
-		saveMudlistConfig();
+		saveConfig();
+		this.config.remove();
+		mudlistPayload.remove();
 
-		this.mudStateCounter.clear();
+		// Clear out all lists.
 		this.mudList.clear();
+		this.mudStateCounter.clear();
 		this.mudUpdate.clear();
+
+		// Remove references.
+		this.config = null;
+		this.mudList = null;
+		this.mudStateCounter = null;
+		this.mudUpdate = null;
 	}
 
 	private void removeMudFromList(Object mudname) {
@@ -165,15 +167,15 @@ public class I3Mudlist extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		if (packet.size() != 8) {
-			Log.error("We don't like mudlist packet size. Should be 8 but is "
-					+ packet.size());
+		if (packet.size() != mudlistPayload.size()) {
+			Log.error("We don't like mudlist packet size. Should be "
+					+ mudlistPayload.size() + " but is " + packet.size());
 			Log.error(packet.toMudMode());
 
 			return;
 		}
 
-		int oMud = BasePayload.O_MUD.getIndex();
+		int oMud = Payload.O_MUD;
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -183,19 +185,19 @@ public class I3Mudlist extends ServiceTemplate {
 			return;
 		}
 
-		LPCInt mudlistID = packet.getLPCInt(6);
+		LPCInt mudlistID = packet.getLPCInt(mudlistPayload.get("ML_ID"));
+		LPCMapping info = packet.getLPCMapping(mudlistPayload.get("ML_INFO"));
 
 		if (mudlistID.toInt() <= Intermud3.network.getMudlistID().toInt())
 			Log.debug("We don't like packet element 6 ("
 					+ mudlistID
 					+ ") for '"
-					+ packet.getLPCMapping(7).keySet().toString()
+					+ info.keySet().toString()
 					+ "'. It should be larger than the current one. Continuing anyway.");
 
 		Intermud3.network.setMudlistID(mudlistID);
-		this.i3.saveConfig();
+		Intermud3.instance.saveConfig();
 
-		LPCMapping info = packet.getLPCMapping(7);
 		int tm = (int) (System.currentTimeMillis() / 1000);
 
 		for (Object mudname : info.keySet()) {
@@ -308,7 +310,7 @@ public class I3Mudlist extends ServiceTemplate {
 				Log.debug(msg);
 		}
 
-		saveMudlistConfig();
+		saveConfig();
 	}
 
 	/*
@@ -322,43 +324,10 @@ public class I3Mudlist extends ServiceTemplate {
 	public void reqHandler(Packet packet) {
 	}
 
-	public void saveDefaultConfig() {
-		if (this.mudlistConfigFile == null)
-			this.mudlistConfigFile = new File(this.i3.getDataFolder(),
-					"mudlist.yml");
-
-		if (!this.mudlistConfigFile.exists())
-			this.i3.saveResource("mudlist.yml", false);
-	}
-
-	public void saveMudlistConfig() {
-		if (this.mudlistConfig == null || this.mudlistConfigFile == null)
-			return;
-
-		getMudlistConfig().set("mudList", Utils.toMudMode(this.mudList));
-		getMudlistConfig().set("mudUpdate", Utils.toMudMode(this.mudUpdate));
-
-		try {
-			getMudlistConfig().save(this.mudlistConfigFile);
-		} catch (IOException ioE) {
-			Log.error("Could not save config to " + this.mudlistConfigFile, ioE);
-		}
-	}
-
-	/**
-	 * Reload the mudlist config file and setup the local variables.
-	 */
-	public void updateConfig() {
-		reloadMudlistConfig();
-
-		try {
-			this.mudList.setLPCData(Utils.toObject(getMudlistConfig()
-					.getString("mudList")));
-			this.mudUpdate.setLPCData(Utils.toObject(getMudlistConfig()
-					.getString("mudUpdate")));
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
-
+	public void saveConfig() {
+		this.config.getConfig().set("mudList", Utils.toMudMode(this.mudList));
+		this.config.getConfig().set("mudUpdate",
+				Utils.toMudMode(this.mudUpdate));
+		this.config.saveConfig();
 	}
 }

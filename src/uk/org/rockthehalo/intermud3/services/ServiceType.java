@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public enum ServiceType {
 	I3CHANNEL("channel"), I3ERROR("error"), I3MUDLIST("mudlist"), I3PING("ping"), I3STARTUP(
-			"startup");
+			"startup"), I3UCACHE("ucache");
 
 	private static Map<String, ServiceType> nameToService = null;
 	private static Map<Object, String> serviceToName = null;
@@ -59,9 +59,11 @@ public enum ServiceType {
 		ServiceType.serviceToName = new ConcurrentHashMap<Object, String>(
 				ServiceType.values().length);
 
-		for (ServiceType service : ServiceType.values()) {
-			ServiceType.nameToService.put(service.name, service);
-			ServiceType.serviceToName.put(service.service, service.name);
+		for (ServiceType st : ServiceType.values()) {
+			ServiceType.nameToService.put(st.name, st);
+
+			if (st.service != null)
+				ServiceType.serviceToName.put(st.service, st.name);
 		}
 	}
 
@@ -94,5 +96,9 @@ public enum ServiceType {
 	 */
 	public void setVisibleOnRouter(boolean visibleOnRouter) {
 		this.visibleOnRouter = visibleOnRouter;
+	}
+
+	public static int size() {
+		return ServiceType.values().length;
 	}
 }

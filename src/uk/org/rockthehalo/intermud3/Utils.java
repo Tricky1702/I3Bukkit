@@ -1,7 +1,6 @@
 package uk.org.rockthehalo.intermud3;
 
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Set;
 import java.util.Vector;
 
@@ -47,6 +46,12 @@ public class Utils {
 
 	public static boolean isPlayer(Object player) {
 		return Player.class.isInstance(player);
+	}
+
+	public static String stripColor(String msg) {
+		msg = toChatColor(msg);
+
+		return ChatColor.stripColor(msg);
 	}
 
 	/**
@@ -131,7 +136,7 @@ public class Utils {
 				msg = msg.substring(i);
 			}
 
-			switch (msg.toLowerCase(Locale.ENGLISH).charAt(1)) {
+			switch (msg.toLowerCase().charAt(1)) {
 			case '0':
 				output += "%^BLACK%^";
 				break; // BLACK
@@ -597,7 +602,7 @@ public class Utils {
 				tmp = "";
 			}
 
-			while (!mudModeString.equals("")
+			while (!mudModeString.isEmpty()
 					&& (Character.isDigit(mudModeString.charAt(0)))) {
 				tmp += mudModeString.charAt(0);
 

@@ -1,18 +1,14 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import org.bukkit.ChatColor;
-
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Packet;
+import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
+import uk.org.rockthehalo.intermud3.Payload;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PingPayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 
 public class I3Ping extends ServiceTemplate {
-	private final Intermud3 i3 = Intermud3.instance;
 	private final int hBeatDelay = 60;
 	private final int baseDelay = 5;
 	private final int delay = 5;
@@ -63,6 +59,8 @@ public class I3Ping extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
+		Log.debug(packet.toMudMode());
+
 		this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 		Intermud3.network.setRouterConnected(true);
 
@@ -82,23 +80,20 @@ public class I3Ping extends ServiceTemplate {
 		Packet extra = new Packet();
 		String reply = "ping-reply";
 
-		Log.debug(packet.toMudMode());
-
-		if (packet.getLPCString(BasePayload.TYPE.getIndex()).toString()
-				.equals("ping"))
+		if (packet.getLPCString(Payload.TYPE).toString().equals("ping"))
 			reply = "pong";
 
 		replyType = PacketType.getNamedType(reply);
 
-		if (packet.size() >= PingPayload.size())
-			for (Object obj : packet.subList(BasePayload.size(), packet.size()))
+		if (packet.size() > Payload.HEADERSIZE)
+			for (Object obj : packet.subList(Payload.HEADERSIZE, packet.size()))
 				extra.add(obj);
 
-		int oMud = BasePayload.O_MUD.getIndex();
-		String oMudName = ChatColor.stripColor(packet.getLPCString(oMud)
-				.toString());
+		int oMud = Payload.O_MUD;
+		String oMudName = Utils
+				.stripColor(packet.getLPCString(oMud).toString());
 
-		if (!oMudName.equals(ChatColor.stripColor(this.i3.getServer()
+		if (!oMudName.equals(Utils.stripColor(Intermud3.instance.getServer()
 				.getServerName()))) {
 			this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 			Intermud3.network.setRouterConnected(true);
@@ -118,8 +113,13 @@ public class I3Ping extends ServiceTemplate {
 		Packet packet = new Packet();
 
 		packet.add(new LPCInt((int) (hash & 0x7fffffff)));
+		Intermud3.network
+				.sendToMud(PacketType.getNamedType("ping-req"), null, Utils
+						.stripColor(Intermud3.instance.getServer()
+								.getServerName()), packet);
 		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
-				ChatColor.stripColor(this.i3.getServer().getServerName()),
-				packet);
+				"Dead Souls", packet);
+		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
+				"Dead Souls Dev", packet);
 	}
 }

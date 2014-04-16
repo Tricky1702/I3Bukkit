@@ -1,6 +1,6 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import uk.org.rockthehalo.intermud3.LPC.Packet;
+import uk.org.rockthehalo.intermud3.Packet;
 
 public abstract class ServiceTemplate {
 	/**

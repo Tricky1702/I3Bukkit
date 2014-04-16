@@ -2,11 +2,10 @@ package uk.org.rockthehalo.intermud3.services;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Packet;
+import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
+import uk.org.rockthehalo.intermud3.Payload;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.ErrorPayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 
 public class I3Error extends ServiceTemplate {
 	public I3Error() {
@@ -21,8 +20,8 @@ public class I3Error extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		String errorCode = packet.getLPCString(ErrorPayload.CODE.getIndex())
-				.toString();
+		String errorCode = packet.getLPCString(
+				I3ErrorCodes.errorPayload.get("ERR_CODE")).toString();
 		I3ErrorCodes i3ErrorCode = I3ErrorCodes.getNamedErrorCode(errorCode);
 
 		if (i3ErrorCode != null) {
@@ -31,9 +30,9 @@ public class I3Error extends ServiceTemplate {
 			return;
 		}
 
-		LPCString errorMsg = packet
-				.getLPCString(ErrorPayload.MESSAGE.getIndex());
-		LPCString originator = packet.getLPCString(BasePayload.O_MUD.getIndex());
+		LPCString errorMsg = packet.getLPCString(I3ErrorCodes.errorPayload
+				.get("ERR_MESSAGE"));
+		LPCString originator = packet.getLPCString(Payload.O_MUD);
 
 		Log.error("Unhandled Error: " + originator + "/" + errorCode + "/"
 				+ errorMsg);

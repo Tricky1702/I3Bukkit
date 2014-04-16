@@ -1,71 +1,17 @@
-package uk.org.rockthehalo.intermud3.LPC;
+package uk.org.rockthehalo.intermud3;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import uk.org.rockthehalo.intermud3.Log;
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.I3Error;
 import uk.org.rockthehalo.intermud3.services.I3Mudlist;
 import uk.org.rockthehalo.intermud3.services.I3Ping;
 import uk.org.rockthehalo.intermud3.services.I3Startup;
+import uk.org.rockthehalo.intermud3.services.I3UCache;
 import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class PacketTypes {
-	public enum BasePayload {
-		TYPE(0), TTL(1), O_MUD(2), O_USER(3), T_MUD(4), T_USER(5);
-
-		private int index;
-
-		private BasePayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.values().length;
-		}
-	}
-
-	public enum ErrorPayload {
-		CODE(6), MESSAGE(7), PACKET(8);
-
-		private int index;
-
-		private ErrorPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ErrorPayload.values().length;
-		}
-	}
-
-	public enum PingPayload {
-		PAYLOAD(6);
-
-		private int index;
-
-		private PingPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + PingPayload.values().length;
-		}
-	}
-
 	public enum PacketType {
 		AUTH_MUD_REPLY("auth-mud-reply") {
 			@Override
@@ -271,7 +217,10 @@ public class PacketTypes {
 		UCACHE_UPDATE("ucache-update") {
 			@Override
 			public void handler(Packet data) {
-				Log.warn(this.toString() + ": " + data.toMudMode());
+				I3UCache service = ServiceType.I3UCACHE.getService();
+
+				if (service != null)
+					service.replyHandler(data);
 			}
 		},
 		WHO_REQ("who-req") {

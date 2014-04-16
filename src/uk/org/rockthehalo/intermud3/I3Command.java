@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.services.I3Channel;
 import uk.org.rockthehalo.intermud3.services.I3Mudlist;
+import uk.org.rockthehalo.intermud3.services.I3UCache;
 import uk.org.rockthehalo.intermud3.services.ServiceManager;
 import uk.org.rockthehalo.intermud3.services.ServiceType;
 
@@ -37,6 +38,9 @@ public class I3Command implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command,
 			String label, String[] args) {
+		if (!checkPerm(sender, "use"))
+			return false;
+
 		if (args.length < 1)
 			return !checkPerm(sender, "help") || usage(sender, command);
 
@@ -71,38 +75,39 @@ public class I3Command implements CommandExecutor {
 		Log.debug("args: " + StringUtils.join(args, ","));
 
 		if (subcmd.equals("connect")) {
-			if (!checkPerm(sender, "connect")) {
+			if (!checkPerm(sender, "admin.connect"))
 				return false;
-			}
 
 			ServiceManager.createServices();
 			Intermud3.network.connect();
 
 			return true;
 		} else if (subcmd.equals("disconnect")) {
-			if (!checkPerm(sender, "disconnect")) {
+			if (!checkPerm(sender, "admin.disconnect"))
 				return false;
-			}
 
 			Intermud3.network.shutdown(0);
 			ServiceManager.removeServices();
 
 			return true;
 		} else if (subcmd.equals("reload")) {
+			if (!checkPerm(sender, "admin.reload"))
+				return false;
+
 			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 			I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
-			if (i3Channel != null) {
-				i3Channel.updateConfig();
-				Log.info("chanlist.yml loaded.");
-			}
+			if (i3Channel != null)
+				i3Channel.reloadConfig();
 
-			if (i3Mudlist != null) {
-				i3Mudlist.updateConfig();
-				Log.info("mudlist.yml loaded.");
-			}
+			if (i3Mudlist != null)
+				i3Mudlist.reloadConfig();
 
-			Intermud3.network.updateConfig();
+			if (i3UCache != null)
+				i3UCache.reloadConfig();
+
+			Intermud3.network.reloadConfig();
 			Log.info("config.yml loaded.");
 
 			sender.sendMessage("Config files reload.");
@@ -115,7 +120,7 @@ public class I3Command implements CommandExecutor {
 				return true;
 			}
 
-			if (!checkPerm(sender, "emote"))
+			if (!checkPerm(sender, "channel"))
 				return false;
 
 			if (args.length < 2)
@@ -157,7 +162,7 @@ public class I3Command implements CommandExecutor {
 				return true;
 			}
 
-			if (!checkPerm(sender, "msg"))
+			if (!checkPerm(sender, "channel"))
 				return false;
 
 			if (args.length < 2)
@@ -193,7 +198,7 @@ public class I3Command implements CommandExecutor {
 
 			return true;
 		} else if (subcmd.equals("channels")) {
-			if (!checkPerm(sender, "channels"))
+			if (!checkPerm(sender, "admin.channels"))
 				return false;
 
 			I3Channel service = ServiceType.I3CHANNEL.getService();
@@ -213,7 +218,7 @@ public class I3Command implements CommandExecutor {
 					else if (input.equals("aliases"))
 						service.showChannelAliases(sender);
 					else if (input.equals("tunein")) {
-						if (!checkPerm(sender, "tune"))
+						if (!checkPerm(sender, "admin.tune"))
 							return false;
 
 						if (args.length < 2)
@@ -233,7 +238,7 @@ public class I3Command implements CommandExecutor {
 						sender.sendMessage("Tuned into I3 channel "
 								+ ChatColor.GREEN + input);
 					} else if (input.equals("tuneout")) {
-						if (!checkPerm(sender, "tune"))
+						if (!checkPerm(sender, "admin.tune"))
 							return false;
 
 						if (args.length < 2)
@@ -252,7 +257,7 @@ public class I3Command implements CommandExecutor {
 						sender.sendMessage("Tuned out of I3 channel "
 								+ ChatColor.GREEN + input);
 					} else if (input.equals("alias")) {
-						if (!checkPerm(sender, "alias"))
+						if (!checkPerm(sender, "admin.alias"))
 							return false;
 
 						if (args.length < 3)
@@ -273,7 +278,7 @@ public class I3Command implements CommandExecutor {
 								+ alias + ChatColor.RESET + " -> "
 								+ ChatColor.GREEN + chan);
 					} else if (input.equals("unalias")) {
-						if (!checkPerm(sender, "alias"))
+						if (!checkPerm(sender, "admin.alias"))
 							return false;
 
 						if (args.length < 2)
@@ -306,8 +311,35 @@ public class I3Command implements CommandExecutor {
 				return true;
 			}
 
-			Intermud3.callout.debugInfo();
-			ServiceManager.debugInfo();
+			if (args.length > 0
+					&& (args[0].equalsIgnoreCase("on")
+							|| args[0].equalsIgnoreCase("off") || args[0]
+								.equalsIgnoreCase("switch"))) {
+				if (!checkPerm(sender, "admin.debug"))
+					return false;
+
+				boolean oldDebug = Intermud3.instance.getConfig().getBoolean(
+						"debug", false);
+				boolean debug;
+
+				if (args[0].equalsIgnoreCase("on"))
+					debug = true;
+				else if (args[0].equalsIgnoreCase("off"))
+					debug = false;
+				else
+					debug = !oldDebug;
+
+				if (oldDebug && !debug)
+					Log.debug("Switching debug messages off.");
+
+				Intermud3.instance.getConfig().set("debug", debug);
+
+				if (!oldDebug && debug)
+					Log.debug("Switching debug messages on.");
+			} else {
+				Intermud3.callout.debugInfo();
+				ServiceManager.debugInfo();
+			}
 
 			return true;
 		} else {
@@ -326,10 +358,9 @@ public class I3Command implements CommandExecutor {
 	private boolean checkPerm(CommandSender sender, String subnode) {
 		boolean ok = sender.hasPermission("intermud3." + subnode);
 
-		if (!ok) {
+		if (!ok)
 			sender.sendMessage(ChatColor.RED
-					+ "You do not have permissions to do that.");
-		}
+					+ "You do not have permission to do that");
 
 		return ok;
 	}

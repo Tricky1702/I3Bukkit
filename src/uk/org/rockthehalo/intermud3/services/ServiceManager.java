@@ -32,12 +32,13 @@ public class ServiceManager {
 			Object service = s.getService();
 			Method method = null;
 
-			try {
-				method = service.getClass().getMethod("create");
-			} catch (NoSuchMethodException e) {
-			} catch (SecurityException e) {
-				Log.error("", e);
-			}
+			if (service != null)
+				try {
+					method = service.getClass().getMethod("create");
+				} catch (NoSuchMethodException e) {
+				} catch (SecurityException e) {
+					Log.error("", e);
+				}
 
 			if (method != null) {
 				try {
@@ -62,6 +63,7 @@ public class ServiceManager {
 		addService(ServiceType.I3MUDLIST, new I3Mudlist());
 		addService(ServiceType.I3CHANNEL, new I3Channel());
 		addService(ServiceType.I3PING, new I3Ping());
+		addService(ServiceType.I3UCACHE, new I3UCache());
 
 		create();
 	}
@@ -91,12 +93,13 @@ public class ServiceManager {
 			Object service = s.getService();
 			Method method = null;
 
-			try {
-				method = service.getClass().getMethod("debugInfo");
-			} catch (NoSuchMethodException e) {
-			} catch (SecurityException e) {
-				Log.error("", e);
-			}
+			if (service != null)
+				try {
+					method = service.getClass().getMethod("debugInfo");
+				} catch (NoSuchMethodException e) {
+				} catch (SecurityException e) {
+					Log.error("", e);
+				}
 
 			if (method != null) {
 				try {
@@ -116,7 +119,7 @@ public class ServiceManager {
 	 * @return the services registered for I3
 	 */
 	public static LPCMapping getRouterServices() {
-		LPCMapping mapping = new LPCMapping();
+		LPCMapping mapping = new LPCMapping(ServiceType.size());
 
 		for (ServiceType service : ServiceType.values())
 			if (service.isVisibleOnRouter())
@@ -143,12 +146,13 @@ public class ServiceManager {
 			Object service = s.getService();
 			Method method = null;
 
-			try {
-				method = service.getClass().getMethod("remove");
-			} catch (NoSuchMethodException e) {
-			} catch (SecurityException e) {
-				Log.error("", e);
-			}
+			if (service != null)
+				try {
+					method = service.getClass().getMethod("remove");
+				} catch (NoSuchMethodException e) {
+				} catch (SecurityException e) {
+					Log.error("", e);
+				}
 
 			if (method != null) {
 				try {
@@ -162,6 +166,7 @@ public class ServiceManager {
 				}
 			}
 
+			// Remove reference.
 			s.setService(null);
 		}
 	}

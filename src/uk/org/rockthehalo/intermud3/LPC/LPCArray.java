@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 import java.util.Vector;
 
 import uk.org.rockthehalo.intermud3.I3Exception;
@@ -21,9 +22,29 @@ public class LPCArray extends LPCVar implements List<Object> {
 		this.addAll(obj.getLPCData());
 	}
 
+	public LPCArray(int size) {
+		super.setType(LPCTypes.ARRAY);
+		this.lpcData = new Vector<Object>(size);
+
+		for (int i = 0; i < size; i++)
+			this.lpcData.add(null);
+	}
+
 	public LPCArray(Vector<Object> lpcData) {
 		super.setType(LPCTypes.ARRAY);
 		this.addAll(lpcData);
+	}
+
+	public LPCArray(Set<Object> lpcData) {
+		super.setType(LPCTypes.ARRAY);
+		this.addAll(lpcData);
+	}
+
+	public LPCArray(List<String> lpcData) {
+		super.setType(LPCTypes.ARRAY);
+
+		for (String s : lpcData)
+			this.add(new LPCString(s));
 	}
 
 	public boolean add(LPCArray arr) {

@@ -1,22 +1,22 @@
 package uk.org.rockthehalo.intermud3.services;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Packet;
+import uk.org.rockthehalo.intermud3.Payload;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.ErrorPayload;
 
 public enum I3ErrorCodes {
 	BAD_MOJO("bad-mojo") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Bad Mojo/" + errorMsg);
@@ -33,8 +33,8 @@ public enum I3ErrorCodes {
 	BAD_PKT("bad-pkt") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Bad Packet/" + errorMsg);
@@ -45,8 +45,8 @@ public enum I3ErrorCodes {
 	BAD_PROTO("bad-proto") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null
 					&& errorMsg.toString().contains("MUD already connected")) {
@@ -62,18 +62,18 @@ public enum I3ErrorCodes {
 	NOT_ALLOWED("not-allowed") {
 		@Override
 		public void handler(Packet packet) {
-			if (packet.size() > 8) {
-				LPCArray data = packet.getLPCArray(ErrorPayload.PACKET
-						.getIndex());
+			if (packet.size() > errorPayload.size() - 1) {
+				LPCArray data = packet.getLPCArray(errorPayload
+						.get("ERR_PACKET"));
 
 				if (data != null
-						&& data.getLPCString(BasePayload.TYPE.getIndex())
-								.toString().equals("channel-listen")) {
+						&& data.getLPCString(Payload.TYPE).toString()
+								.equals("channel-listen")) {
 					LPCString channel = data.getLPCString(6);
 
 					if (channel != null) {
-						LPCString errorMsg = packet
-								.getLPCString(ErrorPayload.MESSAGE.getIndex());
+						LPCString errorMsg = packet.getLPCString(errorPayload
+								.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
 							Log.error("Not Allowed/" + errorMsg);
@@ -92,8 +92,8 @@ public enum I3ErrorCodes {
 	NOT_IMP("not-imp") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Not Implemented/" + errorMsg);
@@ -104,18 +104,18 @@ public enum I3ErrorCodes {
 	UNK_CHANNEL("unk-channel") {
 		@Override
 		public void handler(Packet packet) {
-			if (packet.size() > 8) {
-				LPCArray data = packet.getLPCArray(ErrorPayload.PACKET
-						.getIndex());
+			if (packet.size() > errorPayload.size() - 1) {
+				LPCArray data = packet.getLPCArray(errorPayload
+						.get("ERR_PACKET"));
 
 				if (data != null
-						&& data.getLPCString(BasePayload.TYPE.getIndex())
-								.toString().equals("channel-listen")) {
+						&& data.getLPCString(Payload.TYPE).toString()
+								.equals("channel-listen")) {
 					LPCString channel = data.getLPCString(6);
 
 					if (channel != null) {
-						LPCString errorMsg = packet
-								.getLPCString(ErrorPayload.MESSAGE.getIndex());
+						LPCString errorMsg = packet.getLPCString(errorPayload
+								.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
 							Log.error("Unknown Channel/" + errorMsg);
@@ -134,9 +134,8 @@ public enum I3ErrorCodes {
 	UNK_DST("unk-dst") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
-
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 			if (errorMsg != null)
 				Log.error("Unknown Destination/" + errorMsg);
 			else
@@ -146,8 +145,8 @@ public enum I3ErrorCodes {
 	UNK_SRC("unk-src") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Unknown Source/" + errorMsg);
@@ -158,8 +157,8 @@ public enum I3ErrorCodes {
 	UNK_TYPE("unk-type") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Unknown Packet Type/" + errorMsg);
@@ -170,8 +169,8 @@ public enum I3ErrorCodes {
 	UNK_USER("unk-user") {
 		@Override
 		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(ErrorPayload.MESSAGE
-					.getIndex());
+			LPCString errorMsg = packet.getLPCString(errorPayload
+					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Unknown Target User/" + errorMsg);
@@ -183,6 +182,9 @@ public enum I3ErrorCodes {
 	private static Map<String, I3ErrorCodes> nameToErrorCode = null;
 	private String errorCodeName = null;
 
+	public static final Payload errorPayload = new Payload(Arrays.asList(
+			"ERR_CODE", "ERR_MESSAGE", "ERR_PACKET"));
+
 	private I3ErrorCodes(String errorCodeName) {
 		this.errorCodeName = errorCodeName;
 	}
@@ -192,9 +194,8 @@ public enum I3ErrorCodes {
 	}
 
 	public static I3ErrorCodes getNamedErrorCode(String errorCodeName) {
-		if (I3ErrorCodes.nameToErrorCode == null) {
+		if (I3ErrorCodes.nameToErrorCode == null)
 			I3ErrorCodes.initMapping();
-		}
 
 		return I3ErrorCodes.nameToErrorCode.get(errorCodeName);
 	}

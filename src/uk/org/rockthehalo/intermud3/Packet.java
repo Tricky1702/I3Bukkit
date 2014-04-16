@@ -1,6 +1,6 @@
-package uk.org.rockthehalo.intermud3.LPC;
+package uk.org.rockthehalo.intermud3;
 
-import uk.org.rockthehalo.intermud3.Utils;
+import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 
 public class Packet extends LPCArray {
 	public Packet() {

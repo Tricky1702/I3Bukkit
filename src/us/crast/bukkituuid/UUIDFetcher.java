@@ -34,6 +34,7 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
 		this.names = ImmutableList.copyOf(names);
 	}
 
+	@Override
 	public Map<String, UUID> call() throws Exception {
 		Map<String, UUID> uuidMap = new HashMap<String, UUID>();
 		String body = buildBody(names);

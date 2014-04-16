@@ -130,17 +130,22 @@ public class CallOut extends BukkitRunnable {
 		this.heartBeats.add(data);
 	}
 
+	public void remove() {
+		removeAllCallOuts();
+		removeAllHeartBeats();
+	}
+
 	/**
 	 * Remove all the callouts.
 	 */
-	public void removeAllCallOuts() {
+	private void removeAllCallOuts() {
 		this.callOuts.clear();
 	}
 
 	/**
 	 * Remove all the callouts.
 	 */
-	public void removeAllHeartBeats() {
+	private void removeAllHeartBeats() {
 		this.heartBeats.clear();
 	}
 
@@ -151,7 +156,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the callout ID
 	 */
 	public void removeCallOut(int id) {
-		if (id < 0 || this.callOuts.size() == 0)
+		if (id < 0 || this.callOuts.isEmpty())
 			return;
 
 		for (Map<String, Object> callout : this.callOuts)
@@ -161,7 +166,7 @@ public class CallOut extends BukkitRunnable {
 				break;
 			}
 
-		if (this.callOuts.size() == 0)
+		if (this.callOuts.isEmpty())
 			this.bukkitTask.cancel();
 	}
 
@@ -171,8 +176,8 @@ public class CallOut extends BukkitRunnable {
 	 * @param owner
 	 *            the class owner
 	 */
-	public void removeCallOut(Object owner) {
-		if (owner == null || this.callOuts.size() == 0)
+	public void removeCallOuts(Object owner) {
+		if (owner == null || this.callOuts.isEmpty())
 			return;
 
 		Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>();
@@ -192,7 +197,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the class owner
 	 */
 	public void removeHeartBeat(Object owner) {
-		if (owner == null || this.heartBeats.size() == 0)
+		if (owner == null || this.heartBeats.isEmpty())
 			return;
 
 		for (Map<String, Object> heartbeat : this.heartBeats) {
@@ -206,7 +211,7 @@ public class CallOut extends BukkitRunnable {
 
 	@Override
 	public void run() {
-		if (this.callOuts.size() > 0) {
+		if (!this.callOuts.isEmpty()) {
 			Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>();
 
 			for (Map<String, Object> callout : this.callOuts) {
@@ -254,7 +259,7 @@ public class CallOut extends BukkitRunnable {
 			}
 		}
 
-		if (this.heartBeats.size() > 0) {
+		if (!this.heartBeats.isEmpty()) {
 			Vector<Map<String, Object>> heartbeats = new Vector<Map<String, Object>>();
 
 			for (Map<String, Object> heartbeat : this.heartBeats) {

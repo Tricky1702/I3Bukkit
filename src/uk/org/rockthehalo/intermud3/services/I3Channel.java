@@ -1,9 +1,7 @@
 package uk.org.rockthehalo.intermud3.services;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,143 +12,46 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import uk.org.rockthehalo.intermud3.Config;
 import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Packet;
+import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
+import uk.org.rockthehalo.intermud3.Payload;
 import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
-import uk.org.rockthehalo.intermud3.LPC.Packet;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.BasePayload;
-import uk.org.rockthehalo.intermud3.LPC.PacketTypes.PacketType;
 
 public class I3Channel extends ServiceTemplate {
-	public enum ChanEmotePayload {
-		CHANNAME(6), VISNAME(7), EMOTE(8);
+	private static final Payload chanEmotePayload = new Payload(Arrays.asList(
+			"CHAN_CHANNAME", "CHAN_VISNAME", "CHAN_EMOTE"));
+	private static final Payload chanlistPayload = new Payload(Arrays.asList(
+			"CHAN_ID", "CHAN_LIST"));
+	private static final Payload chanMessagePayload = new Payload(
+			Arrays.asList("CHAN_CHANNAME", "CHAN_VISNAME", "CHAN_MESSAGE"));
+	private static final Payload chanTargetPayload = new Payload(Arrays.asList(
+			"CHAN_CHANNAME", "CHAN_T_MUD", "CHAN_T_USER", "CHAN_O_MSG",
+			"CHAN_T_MSG", "CHAN_O_VISNAME", "CHAN_T_VISNAME"));
+	private static final Payload chanUserReplyPayload = new Payload(
+			Arrays.asList("CHAN_USERNAME", "CHAN_VISNAME", "CHAN_GENDER"));
+	private static final Payload chanUserReqPayload = new Payload(
+			Arrays.asList("CHAN_USERNAME"));
 
-		private int index;
+	private static final int hBeatDelay = 60;
 
-		private ChanEmotePayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanEmotePayload.values().length;
-		}
-	}
-
-	public enum ChanlistPayload {
-		ID(6), LIST(7);
-
-		private int index;
-
-		private ChanlistPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanlistPayload.values().length;
-		}
-	}
-
-	public enum ChanMessagePayload {
-		CHANNAME(6), VISNAME(7), MESSAGE(8);
-
-		private int index;
-
-		private ChanMessagePayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanMessagePayload.values().length;
-		}
-	}
-
-	public enum ChanTargetPayload {
-		CHANNAME(6), T_MUD(7), T_USER(8), O_MSG(9), T_MSG(10), O_VISNAME(11), T_VISNAME(
-				12);
-
-		private int index;
-
-		private ChanTargetPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanTargetPayload.values().length;
-		}
-	}
-
-	public enum ChanUserReplyPayload {
-		USERNAME(6), VISNAME(7), GENDER(8);
-
-		private int index;
-
-		private ChanUserReplyPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanUserReplyPayload.values().length;
-		}
-	}
-
-	public enum ChanUserReqPayload {
-		USERNAME(6);
-
-		private int index;
-
-		private ChanUserReqPayload(int index) {
-			this.index = index;
-		}
-
-		public int getIndex() {
-			return this.index;
-		}
-
-		public static int size() {
-			return BasePayload.size() + ChanUserReqPayload.values().length;
-		}
-	}
-
-	private final int hBeatDelay = 60;
-
-	private List<String> configTunein = new ArrayList<String>();
-	private List<String> configAliases = new ArrayList<String>();
-	private Vector<String> tuneinChannels = new Vector<String>();
 	private Map<String, String> aliasToChannel = new ConcurrentHashMap<String, String>();
-	private Map<String, String> channelToAlias = new ConcurrentHashMap<String, String>();
-	private FileConfiguration chanlistConfig = null;
-	private File chanlistConfigFile = null;
 	private LPCMapping chanList = new LPCMapping();
+	private Map<String, String> channelToAlias = new ConcurrentHashMap<String, String>();
+	private Config config = null;
+	private List<String> configAliases = new ArrayList<String>();
+	private List<String> configTunein = new ArrayList<String>();
 	private LPCArray listening = new LPCArray();
+	private Vector<String> tuneinChannels = new Vector<String>();
 
 	public I3Channel() {
 	}
@@ -159,27 +60,40 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanEmoteHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(BasePayload.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(Payload.O_MUD);
 
 		if (oMudName == null)
 			return;
 
-		LPCString channel = packet.getLPCString(ChanEmotePayload.CHANNAME
-				.getIndex());
-		LPCString emote = packet
-				.getLPCString(ChanEmotePayload.EMOTE.getIndex());
+		LPCString channel = packet.getLPCString(chanEmotePayload
+				.get("CHAN_CHANNAME"));
+		LPCString emote = packet.getLPCString(chanEmotePayload
+				.get("CHAN_EMOTE"));
 
 		if (channel == null || emote == null)
 			return;
 
-		LPCString visName = packet.getLPCString(ChanEmotePayload.VISNAME
-				.getIndex());
+		I3UCache ucache = ServiceType.I3UCACHE.getService();
+		LPCString visName = packet.getLPCString(chanEmotePayload
+				.get("CHAN_VISNAME"));
+
+		if (ucache != null) {
+			LPCString userName = packet.getLPCString(Payload.O_USER);
+
+			ucache.checkUser(oMudName, userName, visName, true);
+
+			String tmp = ucache.getVisname(oMudName, userName);
+
+			if (tmp != null)
+				visName = new LPCString(tmp);
+		}
 
 		if (visName == null)
-			visName = packet.getLPCString(BasePayload.O_USER.getIndex());
+			visName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString().equals(
-				Intermud3.instance.getServer().getServerName()))
+		if (!oMudName.toString()
+				.equals(Utils.stripColor(Intermud3.instance.getServer()
+						.getServerName())))
 			visName = new LPCString(visName + "@" + oMudName);
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
@@ -192,7 +106,8 @@ public class I3Channel extends ServiceTemplate {
 		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)
-			if (player.hasPermission("intermud3.emote"))
+			if (player.hasPermission("intermud3.use")
+					&& player.hasPermission("intermud3.channel"))
 				player.sendMessage("[I3/" + channel + "] " + msg);
 	}
 
@@ -200,15 +115,15 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	public void chanListReply(Packet packet) {
-		if (packet.size() != ChanlistPayload.size()) {
+		if (packet.size() != chanlistPayload.size()) {
 			Log.error("We don't like chanlist packet size. Should be "
-					+ ChanlistPayload.size() + " but is " + packet.size());
+					+ chanlistPayload.size() + " but is " + packet.size());
 			Log.error(packet.toMudMode());
 
 			return;
 		}
 
-		int oMud = BasePayload.O_MUD.getIndex();
+		int oMud = Payload.O_MUD;
 		String oMudName = packet.getLPCString(oMud).toString();
 
 		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
@@ -218,7 +133,8 @@ public class I3Channel extends ServiceTemplate {
 			return;
 		}
 
-		LPCMapping list = packet.getLPCMapping(ChanlistPayload.LIST.getIndex());
+		LPCMapping list = packet
+				.getLPCMapping(chanlistPayload.get("CHAN_LIST"));
 
 		if (list != null) {
 			LPCArray listeningCopy = new LPCArray(this.listening);
@@ -230,7 +146,7 @@ public class I3Channel extends ServiceTemplate {
 				}
 		}
 
-		LPCInt chanlistID = packet.getLPCInt(ChanlistPayload.ID.getIndex());
+		LPCInt chanlistID = packet.getLPCInt(chanlistPayload.get("CHAN_ID"));
 
 		if (chanlistID.toInt() == Intermud3.network.getChanlistID().toInt())
 			return;
@@ -258,7 +174,7 @@ public class I3Channel extends ServiceTemplate {
 					if (this.tuneinChannels.contains(channel.toString()))
 						this.tuneinChannels.remove(channel.toString());
 				} else if (hostInfo != null) {
-					if (this.chanList.size() != 0) {
+					if (!this.chanList.isEmpty()) {
 						if (chanInfo != null
 								&& !chanInfo.toString().equals(
 										hostInfo.toString())) {
@@ -286,34 +202,47 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		Intermud3.instance.saveConfig();
-		saveChanlistConfig();
+		saveConfig();
 	}
 
 	/**
 	 * @param packet
 	 */
 	private void chanMessageHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(BasePayload.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(Payload.O_MUD);
 
 		if (oMudName == null)
 			return;
 
-		LPCString channel = packet.getLPCString(ChanMessagePayload.CHANNAME
-				.getIndex());
-		LPCString message = packet.getLPCString(ChanMessagePayload.MESSAGE
-				.getIndex());
+		LPCString channel = packet.getLPCString(chanMessagePayload
+				.get("CHAN_CHANNAME"));
+		LPCString message = packet.getLPCString(chanMessagePayload
+				.get("CHAN_MESSAGE"));
 
 		if (channel == null || message == null)
 			return;
 
-		LPCString visName = packet.getLPCString(ChanMessagePayload.VISNAME
-				.getIndex());
+		I3UCache ucache = ServiceType.I3UCACHE.getService();
+		LPCString visName = packet.getLPCString(chanMessagePayload
+				.get("CHAN_VISNAME"));
+
+		if (ucache != null) {
+			LPCString userName = packet.getLPCString(Payload.O_USER);
+
+			ucache.checkUser(oMudName, userName, visName, true);
+
+			String tmp = ucache.getVisname(oMudName, userName);
+
+			if (tmp != null)
+				visName = new LPCString(tmp);
+		}
 
 		if (visName == null)
-			visName = packet.getLPCString(BasePayload.O_USER.getIndex());
+			visName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString().equals(
-				Intermud3.instance.getServer().getServerName()))
+		if (!oMudName.toString()
+				.equals(Utils.stripColor(Intermud3.instance.getServer()
+						.getServerName())))
 			visName = new LPCString(visName + "@" + oMudName);
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
@@ -326,7 +255,8 @@ public class I3Channel extends ServiceTemplate {
 		msg = Utils.toChatColor(msg);
 
 		for (Player player : players)
-			if (player.hasPermission("intermud3.msg"))
+			if (player.hasPermission("intermud3.use")
+					&& player.hasPermission("intermud3.channel"))
 				player.sendMessage("[I3/" + chan + "] " + visName + ": " + msg);
 	}
 
@@ -334,40 +264,54 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanTargetHandler(Packet packet) {
-		LPCString oMudName = packet.getLPCString(BasePayload.O_MUD.getIndex());
+		LPCString oMudName = packet.getLPCString(Payload.O_MUD);
 
 		if (oMudName == null)
 			return;
 
-		LPCString channel = packet.getLPCString(ChanTargetPayload.CHANNAME
-				.getIndex());
+		LPCString channel = packet.getLPCString(chanTargetPayload
+				.get("CHAN_CHANNAME"));
 
 		if (channel == null)
 			return;
 
-		LPCString target = packet.getLPCString(ChanTargetPayload.T_VISNAME
-				.getIndex());
-		LPCString tMudName = packet.getLPCString(ChanTargetPayload.T_MUD
-				.getIndex());
-
-		if (!tMudName.toString().equals(
-				Intermud3.instance.getServer().getServerName()))
-			target = new LPCString(target + "@" + tMudName);
-
-		LPCString oMessage = packet.getLPCString(ChanTargetPayload.O_MSG
-				.getIndex());
+		LPCString oMessage = packet.getLPCString(chanTargetPayload
+				.get("CHAN_O_MSG"));
 
 		if (oMessage == null)
 			return;
 
-		LPCString oName = packet.getLPCString(ChanTargetPayload.O_VISNAME
-				.getIndex());
+		LPCString target = packet.getLPCString(chanTargetPayload
+				.get("CHAN_T_VISNAME"));
+		LPCString tMudName = packet.getLPCString(chanTargetPayload
+				.get("CHAN_T_MUD"));
+
+		if (!tMudName.toString()
+				.equals(Utils.stripColor(Intermud3.instance.getServer()
+						.getServerName())))
+			target = new LPCString(target + "@" + tMudName);
+
+		I3UCache ucache = ServiceType.I3UCACHE.getService();
+		LPCString oName = packet.getLPCString(chanTargetPayload
+				.get("CHAN_O_VISNAME"));
+
+		if (ucache != null) {
+			LPCString userName = packet.getLPCString(Payload.O_USER);
+
+			ucache.checkUser(oMudName, userName, oName, true);
+
+			String tmp = ucache.getVisname(oMudName, userName);
+
+			if (tmp != null)
+				oName = new LPCString(tmp);
+		}
 
 		if (oName == null)
-			oName = packet.getLPCString(BasePayload.O_USER.getIndex());
+			oName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString().equals(
-				Intermud3.instance.getServer().getServerName()))
+		if (!oMudName.toString()
+				.equals(Utils.stripColor(Intermud3.instance.getServer()
+						.getServerName())))
 			oName = new LPCString(oName + "@" + oMudName);
 
 		String chan = channel.toString();
@@ -375,8 +319,8 @@ public class I3Channel extends ServiceTemplate {
 		if (this.channelToAlias.containsKey(chan))
 			chan = this.channelToAlias.get(chan);
 
-		LPCString tMessage = packet.getLPCString(ChanTargetPayload.T_MSG
-				.getIndex());
+		LPCString tMessage = packet.getLPCString(chanTargetPayload
+				.get("CHAN_T_MSG"));
 
 		String tMsg = Utils.toChatColor(tMessage.toString());
 
@@ -393,8 +337,9 @@ public class I3Channel extends ServiceTemplate {
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
 
 		for (Player player : players)
-			if (player.hasPermission("intermud3.msg")) {
-				String listener = ChatColor.stripColor(player.getName())
+			if (player.hasPermission("intermud3.use")
+					&& player.hasPermission("intermud3.channel")) {
+				String listener = Utils.stripColor(player.getName())
 						.toLowerCase();
 
 				if (listener.equals(oName.toString().toLowerCase()))
@@ -411,15 +356,28 @@ public class I3Channel extends ServiceTemplate {
 	 * @param packet
 	 */
 	private void chanUserReply(Packet packet) {
+		I3UCache ucache = ServiceType.I3UCACHE.getService();
+
+		if (ucache != null) {
+			LPCString oMud = packet.getLPCString(Payload.O_MUD);
+			LPCString uName = packet.getLPCString(chanUserReplyPayload
+					.get("CHAN_USERNAME"));
+			LPCString vName = packet.getLPCString(chanUserReplyPayload
+					.get("CHAN_VISNAME"));
+			LPCInt gender = packet.getLPCInt(chanUserReplyPayload
+					.get("CHAN_GENDER"));
+
+			ucache.addUserCache(oMud, uName, vName, gender);
+		}
 	}
 
 	/**
 	 * @param packet
 	 */
 	private void chanUserReq(Packet packet) {
-		LPCString oMud = packet.getLPCString(BasePayload.O_MUD.getIndex());
-		LPCString uName = packet.getLPCString(ChanUserReqPayload.USERNAME
-				.getIndex());
+		LPCString oMud = packet.getLPCString(Payload.O_MUD);
+		LPCString uName = packet.getLPCString(chanUserReqPayload
+				.get("CHAN_USERNAME"));
 		OfflinePlayer player = Intermud3.instance.getServer().getOfflinePlayer(
 				uName.toString());
 
@@ -431,20 +389,20 @@ public class I3Channel extends ServiceTemplate {
 
 				errPacket.add(new LPCInt(0));
 				errPacket.add(oMud);
-				errPacket
-						.add(packet.getLPCString(BasePayload.O_USER.getIndex()));
+				errPacket.add(packet.getLPCString(Payload.O_USER));
 				errPacket.add(new LPCString("unk-user"));
 				errPacket.add(new LPCString(uName + "@"
-						+ packet.getLPCString(BasePayload.T_MUD.getIndex())
+						+ packet.getLPCString(Payload.T_MUD)
 						+ " was not found!"));
 				errPacket.add(packet);
+				error.send(errPacket);
 			}
 		}
 
 		Packet payload = new Packet();
 
 		payload.add(uName);
-		payload.add(ChatColor.stripColor(player.getName()));
+		payload.add(Utils.stripColor(player.getName()));
 		payload.add(new LPCInt(2));
 
 		Intermud3.network.sendToMud(PacketType.CHAN_USER_REPLY, null,
@@ -464,14 +422,16 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void create() {
-		saveDefaultConfig();
+		this.config = new Config(Intermud3.instance, "chanlist.yml");
+		this.config.saveDefaultConfig();
+
+		this.configTunein = new ArrayList<String>(this.config.getConfig()
+				.getStringList("tunein"));
+		this.configAliases = new ArrayList<String>(this.config.getConfig()
+				.getStringList("aliases"));
 
 		try {
-			this.configTunein = new ArrayList<String>(getChanlistConfig()
-					.getStringList("tunein"));
-			this.configAliases = new ArrayList<String>(getChanlistConfig()
-					.getStringList("aliases"));
-			this.chanList.setLPCData(Utils.toObject(getChanlistConfig()
+			this.chanList.setLPCData(Utils.toObject(this.config.getConfig()
 					.getString("chanList")));
 		} catch (I3Exception e) {
 			e.printStackTrace();
@@ -495,7 +455,7 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		ServiceType.I3CHANNEL.setVisibleOnRouter(true);
-		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
+		Intermud3.callout.addHeartBeat(this, hBeatDelay);
 	}
 
 	public void debugInfo() {
@@ -518,52 +478,105 @@ public class I3Channel extends ServiceTemplate {
 		return this.chanList.clone();
 	}
 
-	public FileConfiguration getChanlistConfig() {
-		if (this.chanlistConfig == null)
-			reloadChanlistConfig();
-
-		return this.chanlistConfig;
-	}
-
 	public LPCArray getListening() {
 		return this.listening.clone();
 	}
 
+	@SuppressWarnings("unchecked")
+	public Vector<String> getTunein() {
+		return (Vector<String>) this.tuneinChannels.clone();
+	}
+
 	public void heartBeat() {
-		if (this.listening.size() == 0)
+		if (this.listening.isEmpty())
 			requestChanList();
 	}
 
-	public void reloadChanlistConfig() {
-		if (this.chanlistConfigFile == null)
-			this.chanlistConfigFile = new File(
-					Intermud3.instance.getDataFolder(), "chanlist.yml");
+	/**
+	 * Reload the chanlist config file and setup the local variables.
+	 */
+	public void reloadConfig() {
+		this.config.reloadConfig();
 
-		this.chanlistConfig = YamlConfiguration
-				.loadConfiguration(this.chanlistConfigFile);
+		this.configTunein = new ArrayList<String>(this.config.getConfig()
+				.getStringList("tunein"));
+		this.configAliases = new ArrayList<String>(this.config.getConfig()
+				.getStringList("aliases"));
 
-		// Look for defaults in the jar
-		InputStream defConfigStream = Intermud3.instance
-				.getResource("chanlist.yml");
-
-		if (defConfigStream != null) {
-			YamlConfiguration defConfig = YamlConfiguration
-					.loadConfiguration(defConfigStream);
-			this.chanlistConfig.setDefaults(defConfig);
+		try {
+			this.chanList.setLPCData(Utils.toObject(this.config.getConfig()
+					.getString("chanList")));
+		} catch (I3Exception e) {
+			e.printStackTrace();
 		}
+
+		LPCArray listeningCopy = new LPCArray(this.listening);
+
+		for (Object obj : listeningCopy) {
+			String channel = obj.toString();
+
+			if (!this.configTunein.contains(channel))
+				sendChannelListen(channel, false);
+		}
+
+		this.tuneinChannels.clear();
+
+		for (String channel : this.configTunein) {
+			this.tuneinChannels.add(channel);
+
+			if (!this.listening.contains(channel))
+				sendChannelListen(channel, true);
+		}
+
+		this.aliasToChannel.clear();
+		this.channelToAlias.clear();
+
+		for (String s : this.configAliases) {
+			String[] parts = StringUtils.split(s, ":");
+			String alias = parts[0].trim();
+			String channel = parts[1].trim();
+
+			this.aliasToChannel.put(alias, channel);
+			this.channelToAlias.put(channel, alias);
+		}
+
+		Log.info(this.config.getFile().getName() + " loaded.");
 	}
 
 	public void remove() {
 		Intermud3.callout.removeHeartBeat(this);
-		saveChanlistConfig();
+		saveConfig();
+		this.config.remove();
+		chanEmotePayload.remove();
+		chanlistPayload.remove();
+		chanMessagePayload.remove();
+		chanTargetPayload.remove();
+		chanUserReplyPayload.remove();
+		chanUserReqPayload.remove();
 
 		LPCArray listeningCopy = this.listening.clone();
 
 		for (Object obj : listeningCopy)
 			sendChannelListen((LPCString) obj, false);
 
-		this.listening.clear();
+		// Clear out all lists.
+		this.aliasToChannel.clear();
 		this.chanList.clear();
+		this.channelToAlias.clear();
+		this.configAliases.clear();
+		this.configTunein.clear();
+		this.listening.clear();
+		this.tuneinChannels.clear();
+
+		// Remove references.
+		this.aliasToChannel = null;
+		this.chanList = null;
+		this.channelToAlias = null;
+		this.config = null;
+		this.configAliases = null;
+		this.configTunein = null;
+		this.listening = null;
+		this.tuneinChannels = null;
 	}
 
 	/*
@@ -575,8 +588,7 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(Packet packet) {
-		String namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
-				.toString();
+		String namedType = packet.getLPCString(Payload.TYPE).toString();
 		PacketType type = PacketType.getNamedType(namedType);
 
 		switch (type) {
@@ -626,8 +638,7 @@ public class I3Channel extends ServiceTemplate {
 	 */
 	@Override
 	public void reqHandler(Packet packet) {
-		String namedType = packet.getLPCString(BasePayload.TYPE.getIndex())
-				.toString();
+		String namedType = packet.getLPCString(Payload.TYPE).toString();
 		PacketType type = PacketType.getNamedType(namedType);
 
 		switch (type) {
@@ -659,29 +670,11 @@ public class I3Channel extends ServiceTemplate {
 		}
 	}
 
-	public void saveChanlistConfig() {
-		if (this.chanlistConfig == null || this.chanlistConfigFile == null)
-			return;
-
-		getChanlistConfig().set("tunein", this.configTunein);
-		getChanlistConfig().set("aliases", this.configAliases);
-		getChanlistConfig().set("chanList", Utils.toMudMode(this.chanList));
-
-		try {
-			getChanlistConfig().save(this.chanlistConfigFile);
-		} catch (IOException ioE) {
-			Log.error("Could not save config to " + this.chanlistConfigFile,
-					ioE);
-		}
-	}
-
-	public void saveDefaultConfig() {
-		if (this.chanlistConfigFile == null)
-			this.chanlistConfigFile = new File(
-					Intermud3.instance.getDataFolder(), "chanlist.yml");
-
-		if (!this.chanlistConfigFile.exists())
-			Intermud3.instance.saveResource("chanlist.yml", false);
+	public void saveConfig() {
+		this.config.getConfig().set("tunein", this.configTunein);
+		this.config.getConfig().set("aliases", this.configAliases);
+		this.config.getConfig().set("chanList", Utils.toMudMode(this.chanList));
+		this.config.saveConfig();
 	}
 
 	private void sendChannelListen(LPCString channel, boolean flag) {
@@ -705,6 +698,18 @@ public class I3Channel extends ServiceTemplate {
 		sendChannelListen(new LPCString(channel), flag);
 	}
 
+	/**
+	 * @param mudname
+	 * @param username
+	 */
+	public void sendChanUserReq(String mudname, String username) {
+		Packet payload = new Packet();
+
+		payload.add(new LPCString(username));
+		Intermud3.network.sendToMud(PacketType.CHAN_USER_REQ, null, mudname,
+				payload);
+	}
+
 	public void sendEmote(String chan, String plrName, String msg) {
 		Packet payload = new Packet();
 
@@ -712,7 +717,7 @@ public class I3Channel extends ServiceTemplate {
 				&& !this.aliasToChannel.containsValue(chan))
 			chan = this.aliasToChannel.get(chan);
 
-		plrName = ChatColor.stripColor(plrName);
+		plrName = Utils.stripColor(plrName);
 		msg = Utils.toPinkfish(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
@@ -727,7 +732,7 @@ public class I3Channel extends ServiceTemplate {
 				&& !this.aliasToChannel.containsValue(chan))
 			chan = this.aliasToChannel.get(chan);
 
-		plrName = ChatColor.stripColor(plrName);
+		plrName = Utils.stripColor(plrName);
 		msg = Utils.toPinkfish(msg);
 		payload.add(new LPCString(chan));
 		payload.add(new LPCString(plrName));
@@ -750,7 +755,7 @@ public class I3Channel extends ServiceTemplate {
 		for (String s : this.aliasToChannel.keySet())
 			this.configAliases.add(s + ": " + this.aliasToChannel.get(s));
 
-		saveChanlistConfig();
+		saveConfig();
 	}
 
 	public void showChannelsListening(CommandSender sender) {
@@ -821,7 +826,7 @@ public class I3Channel extends ServiceTemplate {
 			this.configTunein.add(channel);
 
 		sendChannelListen(channel, true);
-		saveChanlistConfig();
+		saveConfig();
 	}
 
 	public void tuneOut(String channel) {
@@ -829,54 +834,6 @@ public class I3Channel extends ServiceTemplate {
 			this.configTunein.remove(channel);
 
 		sendChannelListen(channel, false);
-		saveChanlistConfig();
-	}
-
-	/**
-	 * Reload the chanlist config file and setup the local variables.
-	 */
-	public void updateConfig() {
-		reloadChanlistConfig();
-
-		try {
-			this.configTunein = new ArrayList<String>(getChanlistConfig()
-					.getStringList("tunein"));
-			this.configAliases = new ArrayList<String>(getChanlistConfig()
-					.getStringList("aliases"));
-			this.chanList.setLPCData(Utils.toObject(getChanlistConfig()
-					.getString("chanList")));
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
-
-		LPCArray listeningCopy = new LPCArray(this.listening);
-
-		for (Object obj : listeningCopy) {
-			String channel = obj.toString();
-
-			if (!this.configTunein.contains(channel))
-				sendChannelListen(channel, false);
-		}
-
-		this.tuneinChannels.clear();
-
-		for (String channel : this.configTunein) {
-			this.tuneinChannels.add(channel);
-
-			if (!this.listening.contains(channel))
-				sendChannelListen(channel, true);
-		}
-
-		this.aliasToChannel.clear();
-		this.channelToAlias.clear();
-
-		for (String s : this.configAliases) {
-			String[] parts = StringUtils.split(s, ":");
-			String alias = parts[0].trim();
-			String channel = parts[1].trim();
-
-			this.aliasToChannel.put(alias, channel);
-			this.channelToAlias.put(channel, alias);
-		}
+		saveConfig();
 	}
 }

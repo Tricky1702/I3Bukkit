@@ -22,6 +22,12 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		this.putAll(Collections.synchronizedMap(obj.getLPCData()));
 	}
 
+	public LPCMapping(int size) {
+		super.setType(LPCTypes.MAPPING);
+		this.lpcData = Collections
+				.synchronizedMap(new LinkedHashMap<Object, Object>(size));
+	}
+
 	public LPCMapping(Map<Object, Object> lpcData) {
 		super.setType(LPCTypes.MAPPING);
 		this.putAll(Collections.synchronizedMap(lpcData));
