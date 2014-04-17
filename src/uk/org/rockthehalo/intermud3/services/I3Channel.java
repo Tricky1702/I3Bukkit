@@ -5,13 +5,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import uk.org.rockthehalo.intermud3.Config;
@@ -48,10 +50,8 @@ public class I3Channel extends ServiceTemplate {
 	private LPCMapping chanList = new LPCMapping();
 	private Map<String, String> channelToAlias = new ConcurrentHashMap<String, String>();
 	private Config config = null;
-	private List<String> configAliases = new ArrayList<String>();
-	private List<String> configTunein = new ArrayList<String>();
+	private List<String> tuneinChannels = new ArrayList<String>();
 	private LPCArray listening = new LPCArray();
-	private Vector<String> tuneinChannels = new Vector<String>();
 
 	public I3Channel() {
 	}
@@ -100,15 +100,32 @@ public class I3Channel extends ServiceTemplate {
 		String chan = channel.toString();
 		String msg = emote.toString().replace("$N", visName.toString());
 
-		if (this.channelToAlias.containsKey(chan))
-			chan = this.channelToAlias.get(chan);
-
 		msg = Utils.toChatColor(msg);
 
-		for (Player player : players)
+		for (Player player : players) {
+			String name = Utils.stripColor(player.getName());
+			UUID uuid = player.getUniqueId();
+			List<String> tunein = ucache.getTunein(name);
+
+			if (tunein == null)
+				tunein = ucache.getTunein(uuid);
+
+			if (tunein == null)
+				continue;
+
+			Map<String, String> revAliases = ucache.getReverseAliases(name);
+
+			if (revAliases == null)
+				revAliases = ucache.getReverseAliases(uuid);
+
+			if (revAliases != null && revAliases.containsKey(chan))
+				chan = revAliases.get(chan);
+
 			if (player.hasPermission("intermud3.use")
-					&& player.hasPermission("intermud3.channel"))
-				player.sendMessage("[I3/" + channel + "] " + msg);
+					&& player.hasPermission("intermud3.channel")
+					&& tunein.contains(channel.toString()))
+				player.sendMessage("[I3/" + chan + "] " + msg);
+		}
 	}
 
 	/**
@@ -191,8 +208,7 @@ public class I3Channel extends ServiceTemplate {
 
 					this.chanList.set(channel, hostInfo);
 
-					if (!this.listening.contains(channel)
-							&& this.tuneinChannels.contains(channel.toString()))
+					if (!this.listening.contains(channel))
 						sendChannelListen(channel, true);
 				}
 
@@ -249,15 +265,32 @@ public class I3Channel extends ServiceTemplate {
 		String chan = channel.toString();
 		String msg = message.toString();
 
-		if (this.channelToAlias.containsKey(chan))
-			chan = this.channelToAlias.get(chan);
-
 		msg = Utils.toChatColor(msg);
 
-		for (Player player : players)
+		for (Player player : players) {
+			String name = Utils.stripColor(player.getName());
+			UUID uuid = player.getUniqueId();
+			List<String> tunein = ucache.getTunein(name);
+
+			if (tunein == null)
+				tunein = ucache.getTunein(uuid);
+
+			if (tunein == null)
+				continue;
+
+			Map<String, String> revAliases = ucache.getReverseAliases(name);
+
+			if (revAliases == null)
+				revAliases = ucache.getReverseAliases(uuid);
+
+			if (revAliases != null && revAliases.containsKey(chan))
+				chan = revAliases.get(chan);
+
 			if (player.hasPermission("intermud3.use")
-					&& player.hasPermission("intermud3.channel"))
+					&& player.hasPermission("intermud3.channel")
+					&& tunein.contains(channel.toString()))
 				player.sendMessage("[I3/" + chan + "] " + visName + ": " + msg);
+		}
 	}
 
 	/**
@@ -314,42 +347,55 @@ public class I3Channel extends ServiceTemplate {
 						.getServerName())))
 			oName = new LPCString(oName + "@" + oMudName);
 
-		String chan = channel.toString();
-
-		if (this.channelToAlias.containsKey(chan))
-			chan = this.channelToAlias.get(chan);
-
 		LPCString tMessage = packet.getLPCString(chanTargetPayload
 				.get("CHAN_T_MSG"));
 
 		String tMsg = Utils.toChatColor(tMessage.toString());
 
-		tMsg = "[I3/" + chan + "] " + tMsg;
 		tMsg = tMsg.replace("$N", oName.toString());
 		tMsg = tMsg.replace("$O", target.toString());
 
 		String oMsg = Utils.toChatColor(oMessage.toString());
 
-		oMsg = "[I3/" + chan + "] " + oMsg;
 		oMsg = oMsg.replace("$N", oName.toString());
 		oMsg = oMsg.replace("$O", target.toString());
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
+		String chan = channel.toString();
 
-		for (Player player : players)
+		for (Player player : players) {
+			String name = Utils.stripColor(player.getName());
+			UUID uuid = player.getUniqueId();
+			List<String> tunein = ucache.getTunein(name);
+
+			if (tunein == null)
+				tunein = ucache.getTunein(uuid);
+
+			if (tunein == null)
+				continue;
+
+			Map<String, String> revAliases = ucache.getReverseAliases(name);
+
+			if (revAliases == null)
+				revAliases = ucache.getReverseAliases(uuid);
+
+			if (revAliases != null && revAliases.containsKey(chan))
+				chan = revAliases.get(chan);
+
 			if (player.hasPermission("intermud3.use")
-					&& player.hasPermission("intermud3.channel")) {
-				String listener = Utils.stripColor(player.getName())
-						.toLowerCase();
+					&& player.hasPermission("intermud3.channel")
+					&& tunein.contains(channel.toString())) {
+				String listener = name.toLowerCase();
 
 				if (listener.equals(oName.toString().toLowerCase()))
-					player.sendMessage(oMsg);
+					player.sendMessage("[I3/" + chan + "] " + oMsg);
 				else if (!target.toString().contains("@")
 						&& target.toString().toLowerCase().equals(listener))
-					player.sendMessage(tMsg);
+					player.sendMessage("[I3/" + chan + "] " + tMsg);
 				else
-					player.sendMessage(oMsg);
+					player.sendMessage("[I3/" + chan + "] " + oMsg);
 			}
+		}
 	}
 
 	/**
@@ -423,36 +469,29 @@ public class I3Channel extends ServiceTemplate {
 
 	public void create() {
 		this.config = new Config(Intermud3.instance, "chanlist.yml");
-		this.config.saveDefaultConfig();
 
-		this.configTunein = new ArrayList<String>(this.config.getConfig()
-				.getStringList("tunein"));
-		this.configAliases = new ArrayList<String>(this.config.getConfig()
-				.getStringList("aliases"));
+		if (!this.config.getFile().exists()) {
+			FileConfiguration root = this.config.getConfig();
+			ConfigurationSection def = root.createSection("default");
+			List<String> defTuneIn = new ArrayList<String>(Arrays.asList(
+					"dchat", "dead_souls", "dead_test4", "imud_code",
+					"minecraft"));
 
-		try {
-			this.chanList.setLPCData(Utils.toObject(this.config.getConfig()
-					.getString("chanList")));
-		} catch (I3Exception e) {
-			e.printStackTrace();
+			def.addDefault("tunein", defTuneIn);
+
+			ConfigurationSection aliases = def.createSection("aliases");
+
+			aliases.addDefault("dc", "dchat");
+			aliases.addDefault("ds", "dead_souls");
+			aliases.addDefault("dt", "dead_test4");
+			aliases.addDefault("ic", "imud_code");
+			aliases.addDefault("mc", "minecraft");
+
+			root.addDefault("chanList", "([])");
+			this.config.saveConfig();
 		}
 
-		this.tuneinChannels.clear();
-
-		for (String s : this.configTunein)
-			this.tuneinChannels.add(s);
-
-		this.aliasToChannel.clear();
-		this.channelToAlias.clear();
-
-		for (String s : this.configAliases) {
-			String[] parts = StringUtils.split(s, ":");
-			String alias = parts[0].trim();
-			String channel = parts[1].trim();
-
-			this.aliasToChannel.put(alias, channel);
-			this.channelToAlias.put(channel, alias);
-		}
+		reloadConfig(false);
 
 		ServiceType.I3CHANNEL.setVisibleOnRouter(true);
 		Intermud3.callout.addHeartBeat(this, hBeatDelay);
@@ -466,12 +505,7 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public Map<String, String> getAliases() {
-		Map<String, String> aliases = new ConcurrentHashMap<String, String>();
-
-		for (Object o : this.aliasToChannel.keySet())
-			aliases.put(o.toString(), this.aliasToChannel.get(o));
-
-		return aliases;
+		return this.aliasToChannel;
 	}
 
 	public LPCMapping getChanList() {
@@ -482,9 +516,8 @@ public class I3Channel extends ServiceTemplate {
 		return this.listening.clone();
 	}
 
-	@SuppressWarnings("unchecked")
-	public Vector<String> getTunein() {
-		return (Vector<String>) this.tuneinChannels.clone();
+	public List<String> getTunein() {
+		return this.tuneinChannels;
 	}
 
 	public void heartBeat() {
@@ -496,51 +529,67 @@ public class I3Channel extends ServiceTemplate {
 	 * Reload the chanlist config file and setup the local variables.
 	 */
 	public void reloadConfig() {
+		reloadConfig(true);
+	}
+
+	/**
+	 * Reload the chanlist config file and setup the local variables.
+	 */
+	public void reloadConfig(boolean flag) {
 		this.config.reloadConfig();
 
-		this.configTunein = new ArrayList<String>(this.config.getConfig()
-				.getStringList("tunein"));
-		this.configAliases = new ArrayList<String>(this.config.getConfig()
-				.getStringList("aliases"));
+		FileConfiguration root = this.config.getConfig();
 
-		try {
-			this.chanList.setLPCData(Utils.toObject(this.config.getConfig()
-					.getString("chanList")));
-		} catch (I3Exception e) {
-			e.printStackTrace();
-		}
-
-		LPCArray listeningCopy = new LPCArray(this.listening);
-
-		for (Object obj : listeningCopy) {
-			String channel = obj.toString();
-
-			if (!this.configTunein.contains(channel))
-				sendChannelListen(channel, false);
+		if (root.contains("chanList")) {
+			try {
+				this.chanList.setLPCData(Utils.toObject(root
+						.getString("chanList")));
+			} catch (I3Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		this.tuneinChannels.clear();
-
-		for (String channel : this.configTunein) {
-			this.tuneinChannels.add(channel);
-
-			if (!this.listening.contains(channel))
-				sendChannelListen(channel, true);
-		}
-
 		this.aliasToChannel.clear();
 		this.channelToAlias.clear();
 
-		for (String s : this.configAliases) {
-			String[] parts = StringUtils.split(s, ":");
-			String alias = parts[0].trim();
-			String channel = parts[1].trim();
+		if (!root.contains("default")) {
+			List<String> configAliases = new ArrayList<String>();
 
-			this.aliasToChannel.put(alias, channel);
-			this.channelToAlias.put(channel, alias);
+			this.tuneinChannels = new ArrayList<String>(
+					root.getStringList("tunein"));
+			configAliases = new ArrayList<String>(root.getStringList("aliases"));
+
+			for (String s : configAliases) {
+				String[] parts = StringUtils.split(s, ":");
+				String alias = parts[0].trim();
+				String channel = parts[1].trim();
+
+				this.aliasToChannel.put(alias, channel);
+				this.channelToAlias.put(channel, alias);
+			}
+
+			root.set("tunein", null);
+			root.set("aliases", null);
+		} else {
+			ConfigurationSection def = root.getConfigurationSection("default");
+
+			this.tuneinChannels = new ArrayList<String>(
+					def.getStringList("tunein"));
+
+			ConfigurationSection aliases = def
+					.getConfigurationSection("aliases");
+
+			for (String alias : aliases.getKeys(false)) {
+				String channel = aliases.getString(alias);
+
+				this.aliasToChannel.put(alias, channel);
+				this.channelToAlias.put(channel, alias);
+			}
 		}
 
-		Log.info(this.config.getFile().getName() + " loaded.");
+		if (flag)
+			Log.info(this.config.getFile().getName() + " loaded.");
 	}
 
 	public void remove() {
@@ -563,8 +612,6 @@ public class I3Channel extends ServiceTemplate {
 		this.aliasToChannel.clear();
 		this.chanList.clear();
 		this.channelToAlias.clear();
-		this.configAliases.clear();
-		this.configTunein.clear();
 		this.listening.clear();
 		this.tuneinChannels.clear();
 
@@ -573,8 +620,6 @@ public class I3Channel extends ServiceTemplate {
 		this.chanList = null;
 		this.channelToAlias = null;
 		this.config = null;
-		this.configAliases = null;
-		this.configTunein = null;
 		this.listening = null;
 		this.tuneinChannels = null;
 	}
@@ -671,13 +716,29 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void saveConfig() {
-		this.config.getConfig().set("tunein", this.configTunein);
-		this.config.getConfig().set("aliases", this.configAliases);
-		this.config.getConfig().set("chanList", Utils.toMudMode(this.chanList));
+		FileConfiguration root = this.config.getConfig();
+
+		if (root.contains("tunein"))
+			root.set("tunein", null);
+
+		if (root.contains("aliases"))
+			root.set("aliases", null);
+
+		ConfigurationSection def = root.createSection("default");
+
+		def.set("tunein", this.tuneinChannels);
+
+		ConfigurationSection aliases = def.createSection("aliases");
+
+		for (String alias : this.aliasToChannel.keySet())
+			aliases.set(alias, this.aliasToChannel.get(alias));
+
+		root.set("chanList", Utils.toMudMode(this.chanList));
+
 		this.config.saveConfig();
 	}
 
-	private void sendChannelListen(LPCString channel, boolean flag) {
+	public void sendChannelListen(LPCString channel, boolean flag) {
 		if (flag) {
 			if (!this.chanList.containsKey(channel))
 				return;
@@ -750,40 +811,82 @@ public class I3Channel extends ServiceTemplate {
 			this.channelToAlias.put(channel, alias);
 		}
 
-		this.configAliases.clear();
-
-		for (String s : this.aliasToChannel.keySet())
-			this.configAliases.add(s + ": " + this.aliasToChannel.get(s));
-
 		saveConfig();
 	}
 
 	public void showChannelsListening(CommandSender sender) {
-		String listeningChannels = null;
 		List<String> list = new ArrayList<String>();
 
-		for (Object obj : this.listening)
-			list.add(ChatColor.GREEN + obj.toString());
+		if (!Utils.isPlayer(sender)) {
+			for (Object obj : this.listening)
+				list.add(ChatColor.GREEN + obj.toString());
+		} else {
+			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
+
+			if (i3UCache != null) {
+				String name = Utils.stripColor(((Player) sender).getName());
+				List<Object> user = i3UCache.getLocalUser(name);
+
+				if (user != null) {
+					@SuppressWarnings("unchecked")
+					List<String> tunein = (List<String>) user
+							.get(I3UCache.TUNEIN);
+
+					for (String channel : tunein)
+						list.add(ChatColor.GREEN + channel);
+				}
+			}
+		}
 
 		Collections.sort(list);
-		listeningChannels = StringUtils.join(list, ChatColor.RESET + ", ");
+
+		String listeningChannels = StringUtils.join(list, ChatColor.RESET
+				+ ", ");
+
 		sender.sendMessage("Listening (" + list.size() + "): "
 				+ listeningChannels);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void showChannelsAvailable(CommandSender sender) {
-		String availableChannels = null;
+		I3UCache i3UCache = null;
+		List<Object> user = null;
+		List<String> tunein = null;
+		boolean isPlayer = Utils.isPlayer(sender);
+
+		if (isPlayer) {
+			i3UCache = ServiceType.I3UCACHE.getService();
+
+			if (i3UCache != null) {
+				String name = Utils.stripColor(((Player) sender).getName());
+				user = i3UCache.getLocalUser(name);
+
+				if (user != null)
+					tunein = (List<String>) user.get(I3UCache.TUNEIN);
+			}
+		}
+
 		List<String> list = new ArrayList<String>();
 
 		for (Object obj : this.chanList.keySet()) {
 			String key = obj.toString();
 
-			if (!this.listening.contains(key))
-				list.add(ChatColor.GREEN + key);
+			if (!isPlayer) {
+				if (!this.listening.contains(key))
+					list.add(ChatColor.GREEN + key);
+			} else {
+				if (tunein != null) {
+					if (!tunein.contains(key))
+						list.add(ChatColor.GREEN + key);
+				}
+			}
 		}
 
 		Collections.sort(list);
-		availableChannels = StringUtils.join(list, ChatColor.RESET + ", ");
+
+		String availableChannels = StringUtils.join(list, ChatColor.RESET
+				+ ", ");
+
 		sender.sendMessage("Available (" + list.size() + "): "
 				+ availableChannels);
 	}
@@ -791,18 +894,40 @@ public class I3Channel extends ServiceTemplate {
 	public void showChannelAliases(CommandSender sender) {
 		List<String> list = new ArrayList<String>();
 
-		for (String key : this.aliasToChannel.keySet()) {
-			String val = this.aliasToChannel.get(key);
+		if (!Utils.isPlayer(sender)) {
+			for (String key : this.aliasToChannel.keySet()) {
+				String val = this.aliasToChannel.get(key);
 
-			list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
-					+ ChatColor.GREEN + val);
+				list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
+						+ ChatColor.GREEN + val);
+			}
+		} else {
+			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
+
+			if (i3UCache != null) {
+				String name = Utils.stripColor(((Player) sender).getName());
+				List<Object> user = i3UCache.getLocalUser(name);
+
+				if (user != null) {
+					@SuppressWarnings("unchecked")
+					Map<String, String> aliases = (Map<String, String>) user
+							.get(I3UCache.ALIASES);
+
+					for (String key : aliases.keySet()) {
+						String val = aliases.get(key);
+
+						list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
+								+ ChatColor.GREEN + val);
+					}
+				}
+			}
 		}
 
 		Collections.sort(list);
 		sender.sendMessage("Aliases (" + list.size() + "):");
 
 		for (String line : list)
-			sender.sendMessage("- " + line);
+			sender.sendMessage("  " + line);
 	}
 
 	private void tuneChannel(LPCString channel, boolean flag) {
@@ -822,18 +947,16 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void tuneIn(String channel) {
-		if (!this.configTunein.contains(channel))
-			this.configTunein.add(channel);
+		if (!this.tuneinChannels.contains(channel))
+			this.tuneinChannels.add(channel);
 
-		sendChannelListen(channel, true);
 		saveConfig();
 	}
 
 	public void tuneOut(String channel) {
-		if (this.configTunein.contains(channel))
-			this.configTunein.remove(channel);
+		if (this.tuneinChannels.contains(channel))
+			this.tuneinChannels.remove(channel);
 
-		sendChannelListen(channel, false);
 		saveConfig();
 	}
 }

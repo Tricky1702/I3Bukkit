@@ -1,7 +1,7 @@
 router:
   preferred: '*dalet, 97.107.133.86 8787'
   list:
-    - '*dalet, 97.107.133.86 8787'
+  - '*dalet, 97.107.133.86 8787'
   password: 0
   mudlistID: 0
   chanlistID: 0

@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -89,13 +90,13 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 	private static final int hBeatDelay = 60;
 
-	private static final int VISNAME = 0;
-	private static final int GENDER = 1;
-	private static final int LASTUPDATE = 2;
-	private static final int LASTACTIVE = 3;
+	public static final int VISNAME = 0;
+	public static final int GENDER = 1;
+	public static final int LASTUPDATE = 2;
+	public static final int LASTACTIVE = 3;
 	// Extra fields for local users.
-	private static final int TUNEIN = 4;
-	private static final int ALIASES = 5;
+	public static final int TUNEIN = 4;
+	public static final int ALIASES = 5;
 
 	private static final int UCACHESIZE = 4;
 	private static final int USERSSIZE = 6;
@@ -222,8 +223,12 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			else {
 				if (i3Channel == null)
 					data.set(ALIASES, null);
-				else
-					data.set(ALIASES, i3Channel.getAliases());
+				else {
+					Map<String, String> aliases = new ConcurrentHashMap<String, String>(
+							i3Channel.getAliases());
+
+					data.set(ALIASES, aliases);
+				}
 			}
 
 			this.users.put(uuid, data);
@@ -334,8 +339,16 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	public void create() {
 		this.config = new Config(Intermud3.instance, "ucache.yml");
 
-		if (this.config.getFile().exists())
-			reloadConfig();
+		if (!this.config.getFile().exists()) {
+			FileConfiguration root = this.config.getConfig();
+
+			root.addDefault("users", "{}");
+			root.addDefault("ucache", "([])");
+
+			this.config.saveConfig();
+		}
+
+		reloadConfig(false);
 
 		Intermud3.instance.getServer().getPluginManager()
 				.registerEvents(this, Intermud3.instance);
@@ -343,40 +356,18 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		Intermud3.callout.addHeartBeat(this, hBeatDelay);
 	}
 
-	public String getVisname(String mudname, String username) {
-		username = Utils.stripColor(username);
-
-		if (shadows.contains(username))
-			return "A Shadow";
-
-		if (!mudname.equals(Utils.stripColor(Intermud3.instance.getServer()
-				.getServerName()))) {
-			LPCMapping usernames = this.i3UserCache
-					.getLPCMapping(new LPCString(mudname));
-
-			if (usernames == null)
-				return null;
-
-			LPCArray data = usernames.getLPCArray(new LPCString(username));
-
-			if (data == null)
-				return null;
-
-			return data.getLPCString(VISNAME).toString();
-		} else {
-			UUID uuid = Intermud3.uuid.getIdOptimistic(username);
-
-			if (uuid == null || !this.users.containsKey(uuid))
-				return null;
-
-			List<Object> data = this.users.get(uuid);
-
-			return (String) data.get(VISNAME);
-		}
+	public Map<String, String> getAliases(String name) {
+		return getAliases(Intermud3.uuid.getIdOptimistic(name));
 	}
 
-	public String getVisname(LPCString mudname, LPCString username) {
-		return getVisname(mudname.toString(), username.toString());
+	@SuppressWarnings("unchecked")
+	public Map<String, String> getAliases(UUID uuid) {
+		List<Object> user = this.users.get(uuid);
+
+		if (user == null)
+			return null;
+
+		return (Map<String, String>) user.get(ALIASES);
 	}
 
 	public int getGender(String mudname, String username) {
@@ -422,6 +413,85 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			return "other(" + gender + ")";
 
 		return g.getName();
+	}
+
+	public List<Object> getLocalUser(String name) {
+		return this.users.get(Intermud3.uuid.getIdOptimistic(name));
+	}
+
+	public List<Object> getLocalUser(UUID uuid) {
+		return this.users.get(uuid);
+	}
+
+	public Map<String, String> getReverseAliases(String name) {
+		return getReverseAliases(Intermud3.uuid.getIdOptimistic(name));
+	}
+
+	public Map<String, String> getReverseAliases(UUID uuid) {
+		List<Object> user = this.users.get(uuid);
+
+		if (user == null)
+			return null;
+
+		@SuppressWarnings("unchecked")
+		Map<String, String> aliases = (Map<String, String>) user.get(ALIASES);
+		Map<String, String> reverse = new ConcurrentHashMap<String, String>(
+				aliases.size());
+
+		for (String alias : aliases.keySet())
+			reverse.put(aliases.get(alias), alias);
+
+		return reverse;
+	}
+
+	public List<String> getTunein(String name) {
+		return getTunein(Intermud3.uuid.getIdOptimistic(name));
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getTunein(UUID uuid) {
+		List<Object> user = this.users.get(uuid);
+
+		if (user == null)
+			return null;
+
+		return (List<String>) user.get(TUNEIN);
+	}
+
+	public String getVisname(String mudname, String username) {
+		username = Utils.stripColor(username);
+
+		if (shadows.contains(username))
+			return "A Shadow";
+
+		if (!mudname.equals(Utils.stripColor(Intermud3.instance.getServer()
+				.getServerName()))) {
+			LPCMapping usernames = this.i3UserCache
+					.getLPCMapping(new LPCString(mudname));
+
+			if (usernames == null)
+				return null;
+
+			LPCArray data = usernames.getLPCArray(new LPCString(username));
+
+			if (data == null)
+				return null;
+
+			return data.getLPCString(VISNAME).toString();
+		} else {
+			UUID uuid = Intermud3.uuid.getIdOptimistic(username);
+
+			if (uuid == null || !this.users.containsKey(uuid))
+				return null;
+
+			List<Object> data = this.users.get(uuid);
+
+			return (String) data.get(VISNAME);
+		}
+	}
+
+	public String getVisname(LPCString mudname, LPCString username) {
+		return getVisname(mudname.toString(), username.toString());
 	}
 
 	public void heartBeat() {
@@ -528,29 +598,35 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	 * Reload the ucache config file and setup the local variables.
 	 */
 	public void reloadConfig() {
+		reloadConfig(true);
+	}
+
+	/**
+	 * Reload the ucache config file and setup the local variables.
+	 */
+	public void reloadConfig(boolean flag) {
 		this.config.reloadConfig();
 
-		FileConfiguration conf = this.config.getConfig();
+		FileConfiguration root = this.config.getConfig();
 
-		if (conf.contains("ucache")) {
+		if (root.contains("ucache")) {
 			this.i3UserCache.clear();
 
 			try {
-				this.i3UserCache.setLPCData(Utils.toObject(conf
+				this.i3UserCache.setLPCData(Utils.toObject(root
 						.getString("ucache")));
 			} catch (I3Exception i3E) {
 				i3E.printStackTrace();
 			}
 		}
 
-		if (conf.contains("users")) {
+		if (root.contains("users")) {
 			this.users.clear();
 
-			ConfigurationSection usersSection = conf
+			ConfigurationSection usersSection = root
 					.getConfigurationSection("users");
-			Set<String> users = usersSection.getKeys(false);
 
-			for (String user : users) {
+			for (String user : usersSection.getKeys(false)) {
 				UUID uuid;
 
 				try {
@@ -588,7 +664,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			}
 		}
 
-		Log.info(this.config.getFile().getName() + " loaded.");
+		if (flag)
+			Log.info(this.config.getFile().getName() + " loaded.");
 	}
 
 	public void remove() {
@@ -733,12 +810,37 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			Map<String, String> aliases = (ConcurrentHashMap<String, String>) user
 					.get(ALIASES);
 
-			for (Object o : aliases.keySet())
-				aliasesSection.set(o.toString(), aliases.get(o).toString());
+			for (String alias : aliases.keySet())
+				aliasesSection.set(alias, aliases.get(alias));
 		}
 
 		conf.set("ucache", Utils.toMudMode(this.i3UserCache));
 		this.config.saveConfig();
+	}
+
+	public void setAlias(Player player, String alias, String channel) {
+		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
+				.getName()));
+		List<Object> user = this.users.get(uuid);
+
+		if (uuid != null && user != null) {
+			@SuppressWarnings("unchecked")
+			Map<String, String> aliases = (Map<String, String>) user
+					.get(ALIASES);
+
+			if (aliases == null)
+				aliases = new ConcurrentHashMap<String, String>();
+
+			if (channel == null)
+				aliases.remove(alias);
+			else
+				aliases.put(alias, channel);
+
+			user.set(ALIASES, aliases);
+			this.users.put(uuid, user);
+
+			saveConfig();
+		}
 	}
 
 	/**
@@ -761,5 +863,48 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		payload.add(new LPCInt(Gender.NEUTER.getGender()));
 
 		Intermud3.network.sendToAll(PacketType.UCACHE_UPDATE, null, payload);
+	}
+
+	public void tuneIn(Player player, String channel) {
+		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
+				.getName()));
+		List<Object> user = this.users.get(uuid);
+
+		if (uuid != null && user != null) {
+			@SuppressWarnings("unchecked")
+			List<String> tunein = (List<String>) user.get(TUNEIN);
+
+			if (tunein == null)
+				tunein = new ArrayList<String>();
+
+			if (!tunein.contains(channel))
+				tunein.add(channel);
+
+			user.set(TUNEIN, tunein);
+			this.users.put(uuid, user);
+
+			saveConfig();
+		}
+	}
+
+	public void tuneOut(Player player, String channel) {
+		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
+				.getName()));
+		List<Object> user = this.users.get(uuid);
+
+		if (uuid != null && user != null) {
+			@SuppressWarnings("unchecked")
+			List<String> tunein = (List<String>) user.get(TUNEIN);
+
+			if (tunein == null)
+				tunein = new ArrayList<String>();
+
+			tunein.remove(channel);
+
+			user.set(TUNEIN, tunein);
+			this.users.put(uuid, user);
+
+			saveConfig();
+		}
 	}
 }

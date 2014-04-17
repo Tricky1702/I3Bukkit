@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import uk.org.rockthehalo.intermud3.Config;
 import uk.org.rockthehalo.intermud3.I3Exception;
@@ -37,16 +38,17 @@ public class I3Mudlist extends ServiceTemplate {
 
 	public void create() {
 		this.config = new Config(Intermud3.instance, "mudlist.yml");
-		this.config.saveDefaultConfig();
 
-		try {
-			this.mudList.setLPCData(Utils.toObject(this.config.getConfig()
-					.getString("mudList")));
-			this.mudUpdate.setLPCData(Utils.toObject(this.config.getConfig()
-					.getString("mudUpdate")));
-		} catch (I3Exception e) {
-			e.printStackTrace();
+		if (!this.config.getFile().exists()) {
+			FileConfiguration root = this.config.getConfig();
+
+			root.addDefault("mudList", "([])");
+			root.addDefault("mudUpdate", "([])");
+
+			this.config.saveConfig();
 		}
+
+		reloadConfig(false);
 
 		Intermud3.callout.addHeartBeat(this, hBeatDelay);
 	}
@@ -118,6 +120,13 @@ public class I3Mudlist extends ServiceTemplate {
 	 * Reload the mudlist config file and setup the local variables.
 	 */
 	public void reloadConfig() {
+		reloadConfig(true);
+	}
+
+	/**
+	 * Reload the mudlist config file and setup the local variables.
+	 */
+	public void reloadConfig(boolean flag) {
 		this.config.reloadConfig();
 
 		try {
@@ -129,7 +138,8 @@ public class I3Mudlist extends ServiceTemplate {
 			e.printStackTrace();
 		}
 
-		Log.info(this.config.getFile().getName() + " loaded.");
+		if (flag)
+			Log.info(this.config.getFile().getName() + " loaded.");
 	}
 
 	public void remove() {

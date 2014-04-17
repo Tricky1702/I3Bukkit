@@ -1,7 +1,7 @@
 # Plugin meta-data.
 name: Intermud3
 main: uk.org.rockthehalo.intermud3.Intermud3
-version: 1.3-b1
+version: 1.3
 description: Intermud3 client for Bukkit servers
 author: Tricky1702
 
@@ -9,21 +9,30 @@ author: Tricky1702
 commands:
   intermud3:
     aliases: [ i3 ]
-    description: A bridge connecting Minecraft to Intermud3
+    description: Regular Intermud3 commands
     usage: |
+        /<command> emote <channel|.> <emote> - sends an emote to an I3 channel, use '.' for the last channel used
+        /<command> msg <channel|.> <message> - sends a message to an I3 channel, use '.' for the last channel used
+        /<command> tunein|tuneout <channel> - tunein or tuneout of an I3 channel
+        /<command> alias <alias> <channel> - alias an I3 channel
+        /<command> unalias <alias> - remove an I3 channel alias
+        /<command> list - list I3 channels you are listening to
+        /<command> available - list available I3 channels
+        /<command> aliases - list your aliases
+  i3admin:
+    aliases: [ i3a ]
+    description: Admin Intermud3 commands
+    usage: |
+        /<command> channels - list I3 channels being listened to
+        /<command> channels aliases - list I3 channel aliases
+        /<command> channels tunein|tuneout <channel> - set default I3 channels
+        /<command> channels alias <alias> <channel> - set default aliases for I3 channels
+        /<command> channels unalias <alias> - remove a default alias
+        /<command> connect - connect to the preferred router
         /<command> debug - output debug information
         /<command> debug <on|off|switch> - turn on, off or switch debug state
-        /<command> connect - connect to the preferred router
         /<command> disconnect - disconnect from the router
         /<command> reload - reload all configuration files
-        /<command> channels - list I3 channels being listened to
-        /<command> channels available - list available I3 channels
-        /<command> channels aliases - list I3 channel aliases
-        /<command> channels tunein|tuneout <channel> - tune into or out of an I3 channel
-        /<command> channels alias <alias> <channel> - add an alias to an I3 channel
-        /<command> channels unalias <alias> - remove the alias
-        /<command> msg <channel|.> <message> - sends a message to an I3 channel, use '.' for the last channel used
-        /<command> emote <channel|.> <emote> - sends an emote to an I3 channel, use '.' for the last channel used
 
 # Intermud3 permissions.        
 permissions:
@@ -74,4 +83,3 @@ permissions:
     description: Allows the use of /intermud3 help
   intermud3.use:
     description: Allows the use of /intermud3
-    

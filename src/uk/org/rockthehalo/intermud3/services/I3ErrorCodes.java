@@ -82,8 +82,10 @@ public enum I3ErrorCodes {
 
 						I3Channel service = ServiceType.I3CHANNEL.getService();
 
-						if (service != null)
+						if (service != null) {
+							service.sendChannelListen(channel, false);
 							service.tuneOut(channel.toString());
+						}
 					}
 				}
 			}
@@ -124,8 +126,10 @@ public enum I3ErrorCodes {
 
 						I3Channel service = ServiceType.I3CHANNEL.getService();
 
-						if (service != null)
+						if (service != null) {
+							service.sendChannelListen(channel, false);
 							service.tuneOut(channel.toString());
+						}
 					}
 				}
 			}

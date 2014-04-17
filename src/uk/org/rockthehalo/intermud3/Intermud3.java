@@ -1,5 +1,6 @@
 package uk.org.rockthehalo.intermud3;
 
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import uk.org.rockthehalo.intermud3.LPC.CallOut;
@@ -57,7 +58,11 @@ public class Intermud3 extends JavaPlugin {
 		network = new Network();
 
 		callout.addHeartBeat(this, this.hBeatDelay);
-		getCommand("intermud3").setExecutor(new I3Command());
+
+		CommandExecutor cmd = new I3Command();
+
+		getCommand("intermud3").setExecutor(cmd);
+		getCommand("i3admin").setExecutor(cmd);
 	}
 
 	@Override
