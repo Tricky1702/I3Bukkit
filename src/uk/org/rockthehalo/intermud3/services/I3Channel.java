@@ -98,7 +98,8 @@ public class I3Channel extends ServiceTemplate {
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
 		String chan = channel.toString();
-		String msg = emote.toString().replace("$N", visName.toString());
+		String msg = emote.toString().replace("$N",
+				"%^DARKYELLOW%^" + visName.toString() + "%^RESET%^");
 
 		msg = Utils.toChatColor(msg);
 
@@ -289,7 +290,8 @@ public class I3Channel extends ServiceTemplate {
 			if (player.hasPermission("intermud3.use")
 					&& player.hasPermission("intermud3.channel")
 					&& tunein.contains(channel.toString()))
-				player.sendMessage("[I3/" + chan + "] " + visName + ": " + msg);
+				player.sendMessage("[I3/" + chan + "] " + ChatColor.GOLD
+						+ visName + ChatColor.RESET + ": " + msg);
 		}
 	}
 
@@ -350,15 +352,21 @@ public class I3Channel extends ServiceTemplate {
 		LPCString tMessage = packet.getLPCString(chanTargetPayload
 				.get("CHAN_T_MSG"));
 
-		String tMsg = Utils.toChatColor(tMessage.toString());
+		String tMsg = tMessage.toString();
 
-		tMsg = tMsg.replace("$N", oName.toString());
-		tMsg = tMsg.replace("$O", target.toString());
+		tMsg = tMsg.replace("$N", "%^DARKYELLOW%^" + oName.toString()
+				+ "%^RESET%^");
+		tMsg = tMsg.replace("$O", "%^YELLOW%^" + target.toString()
+				+ "%^RESET%^");
+		tMsg = Utils.toChatColor(tMsg);
 
-		String oMsg = Utils.toChatColor(oMessage.toString());
+		String oMsg = oMessage.toString();
 
-		oMsg = oMsg.replace("$N", oName.toString());
-		oMsg = oMsg.replace("$O", target.toString());
+		oMsg = oMsg.replace("$N", "%^DARKYELLOW%^" + oName.toString()
+				+ "%^RESET%^");
+		oMsg = oMsg.replace("$O", "%^YELLOW%^" + target.toString()
+				+ "%^RESET%^");
+		oMsg = Utils.toChatColor(oMsg);
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
 		String chan = channel.toString();
@@ -818,7 +826,7 @@ public class I3Channel extends ServiceTemplate {
 		List<String> list = new ArrayList<String>();
 
 		if (!Utils.isPlayer(sender)) {
-			for (Object obj : this.listening)
+			for (Object obj : this.tuneinChannels)
 				list.add(ChatColor.GREEN + obj.toString());
 		} else {
 			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
