@@ -11,12 +11,12 @@ public class LPCInt extends LPCVar {
 	}
 
 	public LPCInt(LPCInt obj) {
-		super.setType(LPCTypes.INT);
+		this();
 		this.lpcData = new Integer(obj.getLPCData());
 	}
 
 	public LPCInt(Integer lpcData) {
-		super.setType(LPCTypes.INT);
+		this();
 		this.lpcData = new Integer(lpcData);
 	}
 

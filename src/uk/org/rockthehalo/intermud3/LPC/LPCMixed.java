@@ -15,12 +15,12 @@ public class LPCMixed extends LPCVar {
 	}
 
 	public LPCMixed(LPCMixed obj) {
-		super.setType(LPCTypes.MIXED);
+		this();
 		this.lpcData = obj.getLPCData();
 	}
 
 	public LPCMixed(Object lpcData) {
-		super.setType(LPCTypes.MIXED);
+		this();
 		this.lpcData = lpcData;
 	}
 

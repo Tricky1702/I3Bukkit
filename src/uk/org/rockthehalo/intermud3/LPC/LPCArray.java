@@ -18,12 +18,12 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	public LPCArray(LPCArray obj) {
-		super.setType(LPCTypes.ARRAY);
+		this();
 		this.addAll(obj.getLPCData());
 	}
 
 	public LPCArray(int size) {
-		super.setType(LPCTypes.ARRAY);
+		this();
 		this.lpcData = new Vector<Object>(size);
 
 		for (int i = 0; i < size; i++)
@@ -31,17 +31,17 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	public LPCArray(Vector<Object> lpcData) {
-		super.setType(LPCTypes.ARRAY);
+		this();
 		this.addAll(lpcData);
 	}
 
 	public LPCArray(Set<Object> lpcData) {
-		super.setType(LPCTypes.ARRAY);
+		this();
 		this.addAll(lpcData);
 	}
 
 	public LPCArray(List<String> lpcData) {
-		super.setType(LPCTypes.ARRAY);
+		this();
 
 		for (String s : lpcData)
 			this.add(new LPCString(s));

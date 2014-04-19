@@ -11,12 +11,12 @@ public class LPCString extends LPCVar {
 	}
 
 	public LPCString(LPCString obj) {
-		super.setType(LPCTypes.STRING);
+		this();
 		this.lpcData = new String(obj.getLPCData());
 	}
 
 	public LPCString(String lpcData) {
-		super.setType(LPCTypes.STRING);
+		this();
 		this.lpcData = new String(lpcData);
 	}
 
