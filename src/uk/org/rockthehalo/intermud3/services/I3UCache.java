@@ -159,7 +159,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		if (username == null || username.isEmpty())
 			return;
 		else
-			username = Utils.stripColor(Utils.toChatColor(username));
+			username = Utils.stripColor(username);
 
 		if (visname == null || visname.isEmpty())
 			return;
@@ -174,8 +174,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		if (newuser)
 			lastUpdate = -time;
 
-		if (!mudname.equals(Utils.stripColor(Intermud3.instance.getServer()
-				.getServerName()))) {
+		if (!mudname.equals(Utils.getServerName())) {
 			LPCArray data = new LPCArray(UCACHESIZE);
 
 			data.set(VISNAME, new LPCString(visname));
@@ -241,8 +240,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			boolean stamp) {
 		I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 		int gender;
-		boolean local = mudname.equals(Utils.stripColor(Intermud3.instance
-				.getServer().getServerName()));
+		boolean local = mudname.equals(Utils.getServerName());
 
 		username = Utils.stripColor(username);
 
@@ -376,8 +374,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		if (shadows.contains(username))
 			return Gender.NEUTER.getGender();
 
-		if (!mudname.equals(Utils.stripColor(Intermud3.instance.getServer()
-				.getServerName()))) {
+		if (!mudname.equals(Utils.getServerName())) {
 			LPCMapping usernames = this.i3UserCache
 					.getLPCMapping(new LPCString(mudname));
 
@@ -464,8 +461,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		if (shadows.contains(username))
 			return "A Shadow";
 
-		if (!mudname.equals(Utils.stripColor(Intermud3.instance.getServer()
-				.getServerName()))) {
+		if (!mudname.equals(Utils.getServerName())) {
 			LPCMapping usernames = this.i3UserCache
 					.getLPCMapping(new LPCString(mudname));
 

@@ -19,6 +19,10 @@ public class Utils {
 	private Utils() {
 	}
 
+	public static String getServerName() {
+		return stripColor(Intermud3.instance.getServer().getServerName());
+	}
+
 	public static boolean isLPCArray(Object obj) {
 		return LPCArray.class.isInstance(obj);
 	}
@@ -46,6 +50,14 @@ public class Utils {
 
 	public static boolean isPlayer(Object player) {
 		return Player.class.isInstance(player);
+	}
+
+	public static int rnd(int range) {
+		return (int) (Math.random() * range);
+	}
+
+	public static long rnd(long range) {
+		return (long) (Math.random() * range);
 	}
 
 	public static String stripColor(String msg) {
@@ -112,6 +124,82 @@ public class Utils {
 		msg.replaceAll("%^[A-Z0-9_]%^", "");
 
 		return msg.replace("%^", "");
+	}
+
+	public static String toMudMode(Object obj) {
+		if (obj == null)
+			return "0";
+
+		switch (LPCVar.getType(obj)) {
+		case ARRAY: {
+			Iterator<Object> itr = ((LPCArray) obj).iterator();
+			Vector<String> list = new Vector<String>();
+
+			while (itr.hasNext()) {
+				Object next = itr.next();
+
+				list.add(toMudMode(next));
+			}
+
+			if (list.isEmpty())
+				return "({})";
+			else
+				return "({" + StringUtils.join(list, ",") + ",})";
+		}
+		case INT:
+			return ((LPCInt) obj).toString();
+		case MAPPING: {
+			Set<?> keySet = ((LPCMapping) obj).keySet();
+			Vector<String> list = new Vector<String>();
+
+			for (Object key : keySet)
+				list.add(toMudMode(key) + ":"
+						+ toMudMode(((LPCMapping) obj).get(key)));
+
+			if (list.isEmpty())
+				return "([])";
+			else
+				return "([" + StringUtils.join(list, ",") + ",])";
+		}
+		case STRING: {
+			String str = ((LPCString) obj).toString();
+
+			str = str.replace("\"", "\\\"");
+			str = "\"" + str + "\"";
+			str = str.replace("\\", "\\\\");
+			str = str.replace("\\\"", "\"");
+			str = str.replace("\n", "\\n");
+			str = str.replace("\r", "");
+			str = str.replace("\t", "\\t");
+			str = str.replace("\b", "\\b");
+			str = str.replace("\u00A0", " ");
+
+			return str;
+		}
+		default:
+			return obj.toString();
+		}
+	}
+
+	/**
+	 * Converts a MudMode string into a LPC variable.
+	 * 
+	 * @param mudModeString
+	 *            the MudMode string to convert
+	 */
+	public static Object toObject(String mudModeString) {
+		mudModeString = replaceAndIngnoreInStrings(mudModeString, ",})", "})");
+		mudModeString = replaceAndIngnoreInStrings(mudModeString, ",])", "])");
+
+		Object obj = null;
+
+		try {
+			obj = p_fromMudMode(mudModeString);
+		} catch (I3Exception i3E) {
+			Log.error("", i3E);
+		}
+
+		return obj;
 	}
 
 	/**
@@ -213,146 +301,6 @@ public class Utils {
 		return output + "%^RESET%^";
 	}
 
-	public static int rnd(int range) {
-		return (int) (Math.random() * range);
-	}
-
-	public static long rnd(long range) {
-		return (long) (Math.random() * range);
-	}
-
-	public static String toMudMode(Object obj) {
-		if (obj == null)
-			return "0";
-
-		switch (LPCVar.getType(obj)) {
-		case ARRAY: {
-			Iterator<Object> itr = ((LPCArray) obj).iterator();
-			Vector<String> list = new Vector<String>();
-
-			while (itr.hasNext()) {
-				Object next = itr.next();
-
-				list.add(toMudMode(next));
-			}
-
-			if (list.isEmpty())
-				return "({})";
-			else
-				return "({" + StringUtils.join(list, ",") + ",})";
-		}
-		case INT:
-			return ((LPCInt) obj).toString();
-		case MAPPING: {
-			Set<?> keySet = ((LPCMapping) obj).keySet();
-			Vector<String> list = new Vector<String>();
-
-			for (Object key : keySet)
-				list.add(toMudMode(key) + ":"
-						+ toMudMode(((LPCMapping) obj).get(key)));
-
-			if (list.isEmpty())
-				return "([])";
-			else
-				return "([" + StringUtils.join(list, ",") + ",])";
-		}
-		case STRING: {
-			String str = ((LPCString) obj).toString();
-
-			str = str.replace("\"", "\\\"");
-			str = "\"" + str + "\"";
-			str = str.replace("\\", "\\\\");
-			str = str.replace("\\\"", "\"");
-			str = str.replace("\n", "\\n");
-			str = str.replace("\r", "");
-			str = str.replace("\t", "\\t");
-			str = str.replace("\b", "\\b");
-			str = str.replace("\u00A0", " ");
-
-			return str;
-		}
-		default:
-			return obj.toString();
-		}
-	}
-
-	/**
-	 * Converts a MudMode string into a LPC variable.
-	 * 
-	 * @param mudModeString
-	 *            the MudMode string to convert
-	 */
-	public static Object toObject(String mudModeString) {
-		mudModeString = replaceAndIngnoreInStrings(mudModeString, ",})", "})");
-		mudModeString = replaceAndIngnoreInStrings(mudModeString, ",])", "])");
-
-		Object obj = null;
-
-		try {
-			obj = p_fromMudMode(mudModeString);
-		} catch (I3Exception i3E) {
-			Log.error("", i3E);
-		}
-
-		return obj;
-	}
-
-	private static String replaceAndIngnoreInStrings(String str, String target,
-			String replacement) {
-		StringBuffer in = new StringBuffer("");
-		int x = 0;
-
-		if (!str.contains("\""))
-			return str.replace(target, replacement);
-
-		while (x < str.length()) {
-			char c = str.charAt(x);
-
-			if (c == '\\') {
-				if (x + 1 < str.length()) {
-					in.append("\\");
-					c = str.charAt(++x);
-				}
-
-				in.append(c);
-				x++;
-			} else if (c == '"') {
-				x++;
-
-				if (x == str.length()) {
-					in.append(c);
-				} else {
-					StringBuffer tmp = new StringBuffer("\"");
-
-					while (x < str.length()) {
-						c = str.charAt(x++);
-						tmp.append(c);
-
-						if (c == '"')
-							break;
-					}
-
-					in.append(tmp);
-				}
-			} else {
-				if (x + target.length() <= str.length()) {
-					if (str.substring(x, x + target.length()).equals(target)) {
-						in.append(replacement);
-						x += target.length();
-					} else {
-						in.append(c);
-						x++;
-					}
-				} else {
-					in.append(c);
-					x++;
-				}
-			}
-		}
-
-		return in.toString();
-	}
-
 	private static String blankFromStrings(String str, String target) {
 		StringBuffer in = new StringBuffer("");
 		int x = 0;
@@ -422,23 +370,6 @@ public class Utils {
 			str = blankFromStrings(str, target);
 
 		return str;
-	}
-
-	private static int scanForward(String str, String leftTarget,
-			String rightTarget) {
-		int left = 0, right = str.indexOf(rightTarget);
-
-		while (left < right) {
-			left = str.indexOf(leftTarget, left + leftTarget.length());
-
-			if (left == -1)
-				break;
-
-			if (left < right)
-				right = str.indexOf(rightTarget, right + rightTarget.length());
-		}
-
-		return right;
 	}
 
 	private static Object p_fromMudMode(String mudModeString)
@@ -623,5 +554,78 @@ public class Utils {
 		}
 
 		throw new I3Exception("Invalid MudMode string: " + mudModeString);
+	}
+
+	private static String replaceAndIngnoreInStrings(String str, String target,
+			String replacement) {
+		StringBuffer in = new StringBuffer("");
+		int x = 0;
+
+		if (!str.contains("\""))
+			return str.replace(target, replacement);
+
+		while (x < str.length()) {
+			char c = str.charAt(x);
+
+			if (c == '\\') {
+				if (x + 1 < str.length()) {
+					in.append("\\");
+					c = str.charAt(++x);
+				}
+
+				in.append(c);
+				x++;
+			} else if (c == '"') {
+				x++;
+
+				if (x == str.length()) {
+					in.append(c);
+				} else {
+					StringBuffer tmp = new StringBuffer("\"");
+
+					while (x < str.length()) {
+						c = str.charAt(x++);
+						tmp.append(c);
+
+						if (c == '"')
+							break;
+					}
+
+					in.append(tmp);
+				}
+			} else {
+				if (x + target.length() <= str.length()) {
+					if (str.substring(x, x + target.length()).equals(target)) {
+						in.append(replacement);
+						x += target.length();
+					} else {
+						in.append(c);
+						x++;
+					}
+				} else {
+					in.append(c);
+					x++;
+				}
+			}
+		}
+
+		return in.toString();
+	}
+
+	private static int scanForward(String str, String leftTarget,
+			String rightTarget) {
+		int left = 0, right = str.indexOf(rightTarget);
+
+		while (left < right) {
+			left = str.indexOf(leftTarget, left + leftTarget.length());
+
+			if (left == -1)
+				break;
+
+			if (left < right)
+				right = str.indexOf(rightTarget, right + rightTarget.length());
+		}
+
+		return right;
 	}
 }

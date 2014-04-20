@@ -91,9 +91,7 @@ public class I3Channel extends ServiceTemplate {
 		if (visName == null)
 			visName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString()
-				.equals(Utils.stripColor(Intermud3.instance.getServer()
-						.getServerName())))
+		if (!oMudName.toString().equals(Utils.getServerName()))
 			visName = new LPCString(visName + "@" + oMudName);
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
@@ -257,9 +255,7 @@ public class I3Channel extends ServiceTemplate {
 		if (visName == null)
 			visName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString()
-				.equals(Utils.stripColor(Intermud3.instance.getServer()
-						.getServerName())))
+		if (!oMudName.toString().equals(Utils.getServerName()))
 			visName = new LPCString(visName + "@" + oMudName);
 
 		Player[] players = Intermud3.instance.getServer().getOnlinePlayers();
@@ -316,55 +312,51 @@ public class I3Channel extends ServiceTemplate {
 		if (oMessage == null)
 			return;
 
-		LPCString target = packet.getLPCString(chanTargetPayload
+		LPCString tVisName = packet.getLPCString(chanTargetPayload
 				.get("CHAN_T_VISNAME"));
 		LPCString tMudName = packet.getLPCString(chanTargetPayload
 				.get("CHAN_T_MUD"));
 
-		if (!tMudName.toString()
-				.equals(Utils.stripColor(Intermud3.instance.getServer()
-						.getServerName())))
-			target = new LPCString(target + "@" + tMudName);
+		if (!tMudName.toString().equals(Utils.getServerName()))
+			tVisName = new LPCString(tVisName + "@" + tMudName);
 
 		I3UCache ucache = ServiceType.I3UCACHE.getService();
-		LPCString oName = packet.getLPCString(chanTargetPayload
+		LPCString oVisName = packet.getLPCString(chanTargetPayload
 				.get("CHAN_O_VISNAME"));
 
 		if (ucache != null) {
 			LPCString userName = packet.getLPCString(Payload.O_USER);
 
-			ucache.checkUser(oMudName, userName, oName, true);
+			ucache.checkUser(oMudName, userName, oVisName, true);
 
 			String tmp = ucache.getVisname(oMudName, userName);
 
 			if (tmp != null)
-				oName = new LPCString(tmp);
+				oVisName = new LPCString(tmp);
 		}
 
-		if (oName == null)
-			oName = packet.getLPCString(Payload.O_USER);
+		if (oVisName == null)
+			oVisName = packet.getLPCString(Payload.O_USER);
 
-		if (!oMudName.toString()
-				.equals(Utils.stripColor(Intermud3.instance.getServer()
-						.getServerName())))
-			oName = new LPCString(oName + "@" + oMudName);
+		if (!oMudName.toString().equals(Utils.getServerName()))
+			oVisName = new LPCString(oVisName + "@" + oMudName);
 
 		LPCString tMessage = packet.getLPCString(chanTargetPayload
 				.get("CHAN_T_MSG"));
 
 		String tMsg = tMessage.toString();
 
-		tMsg = tMsg.replace("$N", "%^DARKYELLOW%^" + oName.toString()
+		tMsg = tMsg.replace("$N", "%^DARKYELLOW%^" + oVisName.toString()
 				+ "%^RESET%^");
-		tMsg = tMsg.replace("$O", "%^YELLOW%^" + target.toString()
+		tMsg = tMsg.replace("$O", "%^YELLOW%^" + tVisName.toString()
 				+ "%^RESET%^");
 		tMsg = Utils.toChatColor(tMsg);
 
 		String oMsg = oMessage.toString();
 
-		oMsg = oMsg.replace("$N", "%^DARKYELLOW%^" + oName.toString()
+		oMsg = oMsg.replace("$N", "%^DARKYELLOW%^" + oVisName.toString()
 				+ "%^RESET%^");
-		oMsg = oMsg.replace("$O", "%^YELLOW%^" + target.toString()
+		oMsg = oMsg.replace("$O", "%^YELLOW%^" + tVisName.toString()
 				+ "%^RESET%^");
 		oMsg = Utils.toChatColor(oMsg);
 
@@ -395,10 +387,10 @@ public class I3Channel extends ServiceTemplate {
 					&& tunein.contains(channel.toString())) {
 				String listener = name.toLowerCase();
 
-				if (listener.equals(oName.toString().toLowerCase()))
+				if (listener.equals(oVisName.toString().toLowerCase()))
 					player.sendMessage("[I3/" + chan + "] " + oMsg);
-				else if (!target.toString().contains("@")
-						&& target.toString().toLowerCase().equals(listener))
+				else if (!tVisName.toString().contains("@")
+						&& tVisName.toString().toLowerCase().equals(listener))
 					player.sendMessage("[I3/" + chan + "] " + tMsg);
 				else
 					player.sendMessage("[I3/" + chan + "] " + oMsg);

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.ChatColor;
 
 import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
@@ -475,17 +474,12 @@ public class Network implements Runnable {
 				tuser = packet.getLPCString(Payload.T_USER);
 
 				if (tmud != null
-						&& !tmud.toString().equals(
-								Utils.stripColor(Intermud3.instance.getServer()
-										.getServerName()))) {
+						&& !tmud.toString().equals(Utils.getServerName())) {
 					if (namedType.equals("mudlist")) {
 						Log.warn("Wrong destination (" + tmud
 								+ ") for mudlist packet.");
-						packet.set(
-								Payload.T_MUD,
-								new LPCString(ChatColor
-										.stripColor(Intermud3.instance
-												.getServer().getServerName())));
+						packet.set(Payload.T_MUD,
+								new LPCString(Utils.getServerName()));
 					} else {
 						err = "wrong destination mud (" + tmud + ")";
 					}
@@ -583,26 +577,22 @@ public class Network implements Runnable {
 
 		packet.add(new LPCString(i3Type));
 		packet.add(new LPCInt(5));
-		packet.add(new LPCString(Utils.stripColor(Intermud3.instance
-				.getServer().getServerName())));
+		packet.add(new LPCString(Utils.getServerName()));
 
-		if (origUser == null) {
+		if (origUser == null)
 			packet.add(new LPCInt(0));
-		} else {
+		else
 			packet.add(new LPCString(Utils.stripColor(origUser).toLowerCase()));
-		}
 
-		if (targMud == null) {
+		if (targMud == null)
 			packet.add(new LPCInt(0));
-		} else {
+		else
 			packet.add(new LPCString(Utils.stripColor(targMud)));
-		}
 
-		if (targUser == null) {
+		if (targUser == null)
 			packet.add(new LPCInt(0));
-		} else {
+		else
 			packet.add(new LPCString(Utils.stripColor(targUser).toLowerCase()));
-		}
 
 		if (payload == null)
 			packet.add(new LPCInt(0));

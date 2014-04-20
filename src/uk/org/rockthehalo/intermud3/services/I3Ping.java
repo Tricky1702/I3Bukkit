@@ -93,8 +93,7 @@ public class I3Ping extends ServiceTemplate {
 		String oMudName = Utils
 				.stripColor(packet.getLPCString(oMud).toString());
 
-		if (!oMudName.equals(Utils.stripColor(Intermud3.instance.getServer()
-				.getServerName()))) {
+		if (!oMudName.equals(Utils.getServerName())) {
 			this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 			Intermud3.network.setRouterConnected(true);
 		}
@@ -113,10 +112,8 @@ public class I3Ping extends ServiceTemplate {
 		Packet packet = new Packet();
 
 		packet.add(new LPCInt((int) (hash & 0x7fffffff)));
-		Intermud3.network
-				.sendToMud(PacketType.getNamedType("ping-req"), null, Utils
-						.stripColor(Intermud3.instance.getServer()
-								.getServerName()), packet);
+		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
+				Utils.getServerName(), packet);
 		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
 				"Dead Souls", packet);
 		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
