@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -83,12 +84,11 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		}
 	}
 
-	private static final Payload ucachePayload = new Payload(Arrays.asList(
-			"UC_USERNAME", "UC_VISNAME", "UC_GENDER"));
+	private static final int hBeatDelay = 60;
 	private static final LPCArray shadows = new LPCArray(Arrays.asList(
 			"apresence", "ashadow", "aninvisibleimmortal", "someone"));
-
-	private static final int hBeatDelay = 60;
+	private static final Payload ucachePayload = new Payload(Arrays.asList(
+			"UC_USERNAME", "UC_VISNAME", "UC_GENDER"));
 
 	public static final int VISNAME = 0;
 	public static final int GENDER = 1;
@@ -98,12 +98,15 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	public static final int TUNEIN = 4;
 	public static final int ALIASES = 5;
 
-	private static final int UCACHESIZE = 4;
-	private static final int USERSSIZE = 6;
+	public static final int UCACHESIZE = 4;
+	public static final int USERSSIZE = 6;
 
 	private Config config = null;
 	private LPCMapping i3UserCache = new LPCMapping();
+	private Map<String, UUID> localUUIDs = new ConcurrentHashMap<String, UUID>();
 	private Map<UUID, List<Object>> users = new ConcurrentHashMap<UUID, List<Object>>();
+	private final UUID zUuid = UUID
+			.fromString("00000000-0000-0000-0000-000000000000");
 
 	public I3UCache() {
 	}
@@ -191,7 +194,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			usernames.set(new LPCString(username), data);
 			this.i3UserCache.set(new LPCString(mudname), usernames);
 		} else {
-			UUID uuid = Intermud3.uuid.getIdOptimistic(visname);
+			UUID uuid = this.localUUIDs.get(username);
 			List<Object> data = new ArrayList<Object>(USERSSIZE);
 
 			for (int i = 0; i < USERSSIZE; i++)
@@ -254,7 +257,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		UUID uuid = null;
 
 		if (local)
-			uuid = Intermud3.uuid.getIdOptimistic(username);
+			uuid = this.localUUIDs.get(username.toLowerCase());
 
 		if ((visname != null && visname.isEmpty()) || gender == -1) {
 			if (visname.isEmpty()) {
@@ -355,7 +358,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public Map<String, String> getAliases(String name) {
-		return getAliases(Intermud3.uuid.getIdOptimistic(name));
+		return getAliases(this.localUUIDs.get(name.toLowerCase()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -388,7 +391,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 			return data.getLPCInt(GENDER).toInt();
 		} else {
-			UUID uuid = Intermud3.uuid.getIdOptimistic(username);
+			UUID uuid = this.localUUIDs.get(username.toLowerCase());
 
 			if (uuid == null || !this.users.containsKey(uuid))
 				return -1;
@@ -413,7 +416,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public List<Object> getLocalUser(String name) {
-		return this.users.get(Intermud3.uuid.getIdOptimistic(name));
+		return this.users.get(this.localUUIDs.get(name.toLowerCase()));
 	}
 
 	public List<Object> getLocalUser(UUID uuid) {
@@ -421,7 +424,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public Map<String, String> getReverseAliases(String name) {
-		return getReverseAliases(Intermud3.uuid.getIdOptimistic(name));
+		return getReverseAliases(this.localUUIDs.get(name.toLowerCase()));
 	}
 
 	public Map<String, String> getReverseAliases(UUID uuid) {
@@ -442,7 +445,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public List<String> getTunein(String name) {
-		return getTunein(Intermud3.uuid.getIdOptimistic(name));
+		return getTunein(this.localUUIDs.get(name.toLowerCase()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -475,7 +478,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 			return data.getLPCString(VISNAME).toString();
 		} else {
-			UUID uuid = Intermud3.uuid.getIdOptimistic(username);
+			UUID uuid = this.localUUIDs.get(username.toLowerCase());
 
 			if (uuid == null || !this.users.containsKey(uuid))
 				return null;
@@ -536,14 +539,12 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			}
 		}
 
-		UUID zUuid = UUID.fromString("00000000-0000-0000-0000-000000000000");
-
-		if (this.users.keySet().contains(zUuid)) {
-			List<Object> data = this.users.get(zUuid);
+		if (this.users.keySet().contains(this.zUuid)) {
+			List<Object> data = this.users.get(this.zUuid);
 			String visname = (String) data.get(VISNAME);
 
-			this.users.remove(zUuid);
-			this.users.put(Intermud3.uuid.getIdOptimistic(visname), data);
+			this.users.remove(this.zUuid);
+			this.users.put(this.localUUIDs.get(visname.toLowerCase()), data);
 		}
 
 		Map<UUID, List<Object>> uCopy = new ConcurrentHashMap<UUID, List<Object>>(
@@ -582,7 +583,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 					public void run() {
 						sendUCacheUpdate(tmpName, false);
 					}
-				}, 10 * 20);
+				}, 2 * 20);
 	}
 
 	@EventHandler
@@ -775,7 +776,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	 * @param name
 	 */
 	public void resetUCacheUpdate(String name) {
-		UUID uuid = Intermud3.uuid.getIdOptimistic(name);
+		UUID uuid = this.localUUIDs.get(name.toLowerCase());
 
 		this.users.remove(uuid);
 		saveConfig();
@@ -815,8 +816,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public void setAlias(Player player, String alias, String channel) {
-		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
-				.getName()));
+		UUID uuid = this.localUUIDs.get(player.getName().toLowerCase());
 		List<Object> user = this.users.get(uuid);
 
 		if (uuid != null && user != null) {
@@ -841,9 +841,32 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 	/**
 	 * @param name
+	 * @param update
 	 */
 	public void sendUCacheUpdate(String name, boolean update) {
-		UUID uuid = Intermud3.uuid.getIdOptimistic(name);
+		UUID localUUID = Bukkit.getPlayer(name).getUniqueId();
+		String lname = name.toLowerCase();
+
+		if (!update && this.localUUIDs.containsKey(lname)
+				&& this.localUUIDs.get(lname) == localUUID)
+			return;
+
+		this.localUUIDs.put(lname, localUUID);
+
+		UUID uuid = localUUID;
+
+		if (!this.users.containsKey(localUUID)
+				|| !this.users.get(localUUID).get(VISNAME).toString()
+						.equals(name)) {
+			update = true;
+			uuid = Intermud3.uuid.getIdOptimistic(name);
+
+			if (uuid == null || uuid.equals(this.zUuid))
+				uuid = localUUID;
+
+			if (uuid != null && !localUUID.equals(uuid))
+				this.localUUIDs.put(lname, uuid);
+		}
 
 		if (this.users.containsKey(uuid)) {
 			if (update)
@@ -854,7 +877,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 		Packet payload = new Packet();
 
-		payload.add(new LPCString(name.toLowerCase()));
+		payload.add(new LPCString(lname));
 		payload.add(new LPCString(name));
 		payload.add(new LPCInt(Gender.NEUTER.getGender()));
 
@@ -862,8 +885,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public void tuneIn(Player player, String channel) {
-		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
-				.getName()));
+		UUID uuid = this.localUUIDs.get(player.getName().toLowerCase());
 		List<Object> user = this.users.get(uuid);
 
 		if (uuid != null && user != null) {
@@ -884,8 +906,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public void tuneOut(Player player, String channel) {
-		UUID uuid = Intermud3.uuid.getIdOptimistic(Utils.stripColor(player
-				.getName()));
+		UUID uuid = this.localUUIDs.get(player.getName().toLowerCase());
 		List<Object> user = this.users.get(uuid);
 
 		if (uuid != null && user != null) {
