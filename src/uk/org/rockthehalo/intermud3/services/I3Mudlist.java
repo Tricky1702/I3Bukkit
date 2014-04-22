@@ -3,6 +3,7 @@ package uk.org.rockthehalo.intermud3.services;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -89,9 +90,8 @@ public class I3Mudlist extends ServiceTemplate {
 			int timestamp = this.mudUpdate.getLPCInt(mudname).toInt();
 
 			if (mudData != null && mudData.getLPCInt(0).toInt() != -1
-					&& tm - timestamp > 7 * 24 * 60 * 60) {
+					&& tm - timestamp > 7 * 24 * 60 * 60)
 				muds.add(mudname.toString());
-			}
 		}
 
 		if (muds.isEmpty())
@@ -99,8 +99,8 @@ public class I3Mudlist extends ServiceTemplate {
 
 		if (muds.size() == 1) {
 			Log.debug("Removing mud '" + muds.get(0) + "' from the mudlist.");
-			this.removeMudFromList(new LPCString(muds.get(0)));
-			this.removeMudFromUpdate(new LPCString(muds.get(0)));
+			removeMudFromList(new LPCString(muds.get(0)));
+			removeMudFromUpdate(new LPCString(muds.get(0)));
 		} else {
 			Log.debug("Removing muds '"
 					+ StringUtils.join(muds.subList(0, muds.size() - 1), "', '")
@@ -108,8 +108,8 @@ public class I3Mudlist extends ServiceTemplate {
 					+ "' from the mudlist.");
 
 			for (String mudname : muds) {
-				this.removeMudFromList(new LPCString(mudname));
-				this.removeMudFromUpdate(new LPCString(mudname));
+				removeMudFromList(new LPCString(mudname));
+				removeMudFromUpdate(new LPCString(mudname));
 			}
 		}
 
@@ -198,20 +198,26 @@ public class I3Mudlist extends ServiceTemplate {
 		LPCInt mudlistID = packet.getLPCInt(mudlistPayload.get("ML_ID"));
 		LPCMapping info = packet.getLPCMapping(mudlistPayload.get("ML_INFO"));
 
-		if (mudlistID.toInt() <= Intermud3.network.getMudlistID().toInt())
-			Log.debug("We don't like packet element 6 ("
-					+ mudlistID
-					+ ") for '"
-					+ info.keySet().toString()
-					+ "'. It should be larger than the current one. Continuing anyway.");
-
-		Intermud3.network.setMudlistID(mudlistID);
-		Intermud3.instance.saveConfig();
+		if (mudlistID.toInt() < Intermud3.network.getMudlistID().toInt())
+			Log.debug("We don't like packet element 6 (" + mudlistID
+					+ ") for '" + StringUtils.join(info.keySet(), ", ")
+					+ "'. It should be larger than the current one ("
+					+ Intermud3.network.getMudlistID()
+					+ "). Continuing anyway.");
+		else {
+			Intermud3.network.setMudlistID(mudlistID);
+			Intermud3.instance.saveConfig();
+		}
 
 		int tm = (int) (System.currentTimeMillis() / 1000);
 
-		for (Object mudname : info.keySet()) {
-			LPCArray infoData = info.getLPCArray(mudname);
+		for (Entry<Object, Object> mud : info.entrySet()) {
+			LPCString mudname = (LPCString) mud.getKey();
+			Object value = mud.getValue();
+			LPCArray infoData = null;
+
+			if (Utils.isLPCArray(value))
+				infoData = (LPCArray) value;
 
 			if (infoData == null || infoData.isEmpty()
 					|| infoData.getLPCInt(0) == null) {
@@ -233,8 +239,7 @@ public class I3Mudlist extends ServiceTemplate {
 			if (this.mudStateCounter.containsKey(mudname.toString()))
 				stateCounter = this.mudStateCounter.get(mudname.toString());
 
-			stateCounter++;
-			this.mudStateCounter.put(mudname.toString(), stateCounter);
+			this.mudStateCounter.put(mudname.toString(), ++stateCounter);
 
 			Integer state = infoData.getLPCInt(0).toInt();
 

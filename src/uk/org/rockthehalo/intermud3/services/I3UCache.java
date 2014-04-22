@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,24 +90,26 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			"apresence", "ashadow", "aninvisibleimmortal", "someone"));
 	private static final Payload ucachePayload = new Payload(Arrays.asList(
 			"UC_USERNAME", "UC_VISNAME", "UC_GENDER"));
+	private static final UUID zUuid = UUID
+			.fromString("00000000-0000-0000-0000-000000000000");
 
 	public static final int VISNAME = 0;
 	public static final int GENDER = 1;
 	public static final int LASTUPDATE = 2;
 	public static final int LASTACTIVE = 3;
+
+	public static final int UCACHESIZE = 4;
+
 	// Extra fields for local users.
 	public static final int TUNEIN = 4;
 	public static final int ALIASES = 5;
 
-	public static final int UCACHESIZE = 4;
 	public static final int USERSSIZE = 6;
 
 	private Config config = null;
 	private LPCMapping i3UserCache = new LPCMapping();
 	private Map<String, UUID> localUUIDs = new ConcurrentHashMap<String, UUID>();
 	private Map<UUID, List<Object>> users = new ConcurrentHashMap<UUID, List<Object>>();
-	private final UUID zUuid = UUID
-			.fromString("00000000-0000-0000-0000-000000000000");
 
 	public I3UCache() {
 	}
@@ -241,10 +244,9 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 	public void checkUser(String mudname, String username, String visname,
 			boolean stamp) {
-		I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 		int gender;
-		boolean local = mudname.equals(Utils.getServerName());
 
+		mudname = Utils.stripColor(mudname);
 		username = Utils.stripColor(username);
 
 		if (shadows.contains(username)) {
@@ -255,11 +257,14 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			gender = getGender(mudname, username);
 
 		UUID uuid = null;
+		boolean local = mudname.equals(Utils.getServerName());
 
 		if (local)
 			uuid = this.localUUIDs.get(username.toLowerCase());
 
 		if ((visname != null && visname.isEmpty()) || gender == -1) {
+			Log.debug("Adding user '" + username + "@" + mudname + "'");
+
 			if (visname.isEmpty()) {
 				if (!local)
 					visname = StringUtils.capitalize(username);
@@ -274,6 +279,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 			gender = Gender.NEUTER.getGender();
 			addUserCache(mudname, username, visname, gender, true);
+
+			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 
 			if (i3Channel != null)
 				i3Channel.sendChanUserReq(mudname, username);
@@ -290,6 +297,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 						.getLPCInt(LASTUPDATE).toInt();
 
 			if (time - lastUpdate > 28 * 24 * 60 * 60) {
+				Log.debug("Resetting user '" + username + "@" + mudname + "'");
+
 				if (visname == null || visname.isEmpty()) {
 					if (!local)
 						visname = StringUtils.capitalize(username);
@@ -304,6 +313,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 				gender = Gender.NEUTER.getGender();
 				addUserCache(mudname, username, visname, gender);
+
+				I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 
 				if (i3Channel != null)
 					i3Channel.sendChanUserReq(mudname, username);
@@ -324,9 +335,6 @@ public class I3UCache extends ServiceTemplate implements Listener {
 				}
 			}
 		}
-
-		Log.debug("Checked '" + username + "@" + mudname + "' [" + visname
-				+ "/" + getGenderString(gender) + "]");
 
 		saveConfig();
 	}
@@ -438,8 +446,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		Map<String, String> reverse = new ConcurrentHashMap<String, String>(
 				aliases.size());
 
-		for (String alias : aliases.keySet())
-			reverse.put(aliases.get(alias), alias);
+		for (Entry<String, String> alias : aliases.entrySet())
+			reverse.put(alias.getValue(), alias.getKey());
 
 		return reverse;
 	}
@@ -497,33 +505,34 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		LPCMapping ucCopy = this.i3UserCache.clone();
 		int time = (int) (System.currentTimeMillis() / 1000);
 
-		for (Object o : ucCopy.keySet()) {
-			String mudname = o.toString();
+		for (Entry<Object, Object> mud : ucCopy.entrySet()) {
+			LPCString mudname = (LPCString) mud.getKey();
 
-			if (mudname.startsWith("Dead_Souls_")
-					|| mudname.startsWith("Unnamed_CoffeeMUD#")) {
-				removeUserCache(new LPCString(mudname));
+			if (mudname.toString().startsWith("Dead_Souls_")
+					|| mudname.toString().startsWith("Unnamed_CoffeeMUD#")) {
+				removeUserCache(mudname);
 
 				continue;
 			}
 
-			LPCMapping usernames = ucCopy.getLPCMapping(new LPCString(mudname));
-			LPCMapping usercopy = usernames.clone();
+			LPCMapping usernames = ucCopy.getLPCMapping(mudname);
 
-			for (Object p : usercopy.keySet()) {
-				String username = p.toString();
-				LPCArray data = usercopy.getLPCArray(new LPCString(username));
+			for (Entry<Object, Object> user : usernames.entrySet()) {
+				LPCString username = (LPCString) user.getKey();
+				LPCArray data = (LPCArray) user.getValue();
 				LPCString visname = data.getLPCString(VISNAME);
-				int lastActive = data.getLPCInt(LASTACTIVE).toInt();
-				int lastUpdate = data.getLPCInt(LASTUPDATE).toInt();
-				int lastActiveDiff = time - lastActive;
-				int lastUpdateDiff = time - lastUpdate;
+				long lastActive = data.getLPCInt(LASTACTIVE).toInt();
+				long lastUpdate = data.getLPCInt(LASTUPDATE).toInt();
+				long lastActiveDiff = time - lastActive;
+				long lastUpdateDiff = time - lastUpdate;
 
-				if (shadows.get(username) != null)
+				if (shadows.get(username.toString()) != null)
 					removeUserCache(mudname, username);
 				else if (shadows.get(visname.toString().toLowerCase()) != null) {
-					data.set(VISNAME,
-							new LPCString(StringUtils.capitalize(username)));
+					data.set(
+							VISNAME,
+							new LPCString(StringUtils.capitalize(username
+									.toString())));
 					usernames.put(new LPCString(username), data);
 					this.i3UserCache.put(new LPCString(mudname), usernames);
 				} else if (lastActive != 0 && lastActiveDiff > 7 * 24 * 60 * 60)
@@ -539,29 +548,30 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			}
 		}
 
-		if (this.users.keySet().contains(this.zUuid)) {
-			List<Object> data = this.users.get(this.zUuid);
+		if (this.users.keySet().contains(zUuid)) {
+			List<Object> data = this.users.get(zUuid);
 			String visname = (String) data.get(VISNAME);
 
-			this.users.remove(this.zUuid);
+			this.users.remove(zUuid);
 			this.users.put(this.localUUIDs.get(visname.toLowerCase()), data);
 		}
 
 		Map<UUID, List<Object>> uCopy = new ConcurrentHashMap<UUID, List<Object>>(
 				this.users);
 
-		for (UUID uuid : uCopy.keySet()) {
-			List<Object> data = uCopy.get(uuid);
-			String visname = (String) data.get(VISNAME);
-
-			int lastActive = (Integer) data.get(LASTACTIVE);
-			int lastUpdate = (Integer) data.get(LASTUPDATE);
-			int lastActiveDiff = time - lastActive;
-			int lastUpdateDiff = time - lastUpdate;
+		for (Entry<UUID, List<Object>> user : uCopy.entrySet()) {
+			UUID uuid = user.getKey();
+			List<Object> data = user.getValue();
+			long lastActive = (Long) data.get(LASTACTIVE);
+			long lastUpdate = (Long) data.get(LASTUPDATE);
+			long lastActiveDiff = (long) time - lastActive;
+			long lastUpdateDiff = (long) time - lastUpdate;
 
 			if (lastActive != 0 && lastActiveDiff > 7 * 24 * 60 * 60)
 				this.users.remove(uuid);
 			else if (lastUpdateDiff > 28 * 24 * 60 * 60) {
+				String visname = (String) data.get(VISNAME);
+
 				Log.debug("heartBeat: Reseting local user '" + visname + "'");
 				data.set(GENDER, -1);
 				data.set(LASTUPDATE, time);
@@ -672,15 +682,18 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		saveConfig();
 		this.config.remove();
 		ucachePayload.remove();
+		Intermud3.uuid.shutdown();
 
 		// Clear out all lists.
 		shadows.clear();
 		this.i3UserCache.clear();
+		this.localUUIDs.clear();
 		this.users.clear();
 
 		// Remove references.
 		this.config = null;
 		this.i3UserCache = null;
+		this.localUUIDs = null;
 		this.users = null;
 	}
 
@@ -706,16 +719,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	 * @param mudname
 	 */
 	public void removeUserCache(LPCString mudname) {
-		LPCArray muds = new LPCArray();
-
-		muds.add(mudname);
-
-		for (Object obj : muds) {
-			LPCString mud = (LPCString) obj;
-
-			Log.debug("removeUserCache: Deleting mud '" + mud + "'");
-			this.i3UserCache.remove(mud);
-		}
+		Log.debug("removeUserCache: Deleting mud '" + mudname + "'");
+		this.i3UserCache.remove(mudname);
 	}
 
 	/**
@@ -786,29 +791,26 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		FileConfiguration conf = this.config.getConfig();
 		ConfigurationSection usersSection = conf.createSection("users");
 
-		Map<UUID, List<Object>> uCopy = new ConcurrentHashMap<UUID, List<Object>>(
-				this.users);
+		for (Entry<UUID, List<Object>> user : this.users.entrySet()) {
+			ConfigurationSection uuidSection = usersSection.createSection(user
+					.getKey().toString());
+			List<Object> data = user.getValue();
 
-		for (UUID uuid : uCopy.keySet()) {
-			ConfigurationSection uuidSection = usersSection.createSection(uuid
-					.toString());
-			List<Object> user = uCopy.get(uuid);
-
-			uuidSection.set("visname", user.get(VISNAME));
+			uuidSection.set("visname", data.get(VISNAME));
 			uuidSection.set("gender",
-					Gender.getNumGender((Integer) user.get(GENDER)).getName());
-			uuidSection.set("lastupdate", user.get(LASTUPDATE));
-			uuidSection.set("lastactive", user.get(LASTACTIVE));
-			uuidSection.set("tunein", user.get(TUNEIN));
+					Gender.getNumGender((Integer) data.get(GENDER)).getName());
+			uuidSection.set("lastupdate", data.get(LASTUPDATE));
+			uuidSection.set("lastactive", data.get(LASTACTIVE));
+			uuidSection.set("tunein", data.get(TUNEIN));
 
 			ConfigurationSection aliasesSection = uuidSection
 					.createSection("aliases");
 			@SuppressWarnings("unchecked")
-			Map<String, String> aliases = (ConcurrentHashMap<String, String>) user
+			Map<String, String> aliases = (ConcurrentHashMap<String, String>) data
 					.get(ALIASES);
 
-			for (String alias : aliases.keySet())
-				aliasesSection.set(alias, aliases.get(alias));
+			for (Entry<String, String> alias : aliases.entrySet())
+				aliasesSection.set(alias.getKey(), alias.getValue());
 		}
 
 		conf.set("ucache", Utils.toMudMode(this.i3UserCache));
@@ -861,7 +863,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			update = true;
 			uuid = Intermud3.uuid.getIdOptimistic(name);
 
-			if (uuid == null || uuid.equals(this.zUuid))
+			if (uuid == null || uuid.equals(zUuid))
 				uuid = localUUID;
 
 			if (uuid != null && !localUUID.equals(uuid))

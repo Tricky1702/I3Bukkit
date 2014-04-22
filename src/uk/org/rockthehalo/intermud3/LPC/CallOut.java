@@ -131,8 +131,17 @@ public class CallOut extends BukkitRunnable {
 	}
 
 	public void remove() {
+		// Stop the task timer.
+		this.bukkitTask.cancel();
+
+		// Clear out all lists.
 		removeAllCallOuts();
 		removeAllHeartBeats();
+
+		// Remove references.
+		this.callOuts = null;
+		this.heartBeats = null;
+		this.bukkitTask = null;
 	}
 
 	/**
@@ -156,7 +165,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the callout ID
 	 */
 	public void removeCallOut(int id) {
-		if (id < 0 || this.callOuts.isEmpty())
+		if (id < 0 || this.callOuts == null || this.callOuts.isEmpty())
 			return;
 
 		for (Map<String, Object> callout : this.callOuts)
@@ -165,9 +174,6 @@ public class CallOut extends BukkitRunnable {
 
 				break;
 			}
-
-		if (this.callOuts.isEmpty())
-			this.bukkitTask.cancel();
 	}
 
 	/**
@@ -177,7 +183,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the class owner
 	 */
 	public void removeCallOuts(Object owner) {
-		if (owner == null || this.callOuts.isEmpty())
+		if (owner == null || this.callOuts == null || this.callOuts.isEmpty())
 			return;
 
 		Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>();
@@ -197,7 +203,8 @@ public class CallOut extends BukkitRunnable {
 	 *            the class owner
 	 */
 	public void removeHeartBeat(Object owner) {
-		if (owner == null || this.heartBeats.isEmpty())
+		if (owner == null || this.heartBeats == null
+				|| this.heartBeats.isEmpty())
 			return;
 
 		for (Map<String, Object> heartbeat : this.heartBeats) {

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -172,43 +173,48 @@ public class I3Channel extends ServiceTemplate {
 		if (list != null) {
 			String msg = new String();
 
-			for (Object obj : list.keySet()) {
-				LPCString channel = new LPCString(obj.toString());
-				LPCArray hostInfo = list.getLPCArray(channel);
-				LPCArray chanInfo = this.chanList.getLPCArray(channel);
+			for (Entry<Object, Object> channel : list.entrySet()) {
+				LPCString channame = (LPCString) channel.getKey();
+				Object value = channel.getValue();
+				LPCArray hostInfo = null;
 
-				if (channel.isEmpty()) {
+				if (Utils.isLPCArray(value))
+					hostInfo = (LPCArray) value;
+
+				LPCArray chanInfo = this.chanList.getLPCArray(channame);
+
+				if (channame.isEmpty()) {
 					msg = "Empty channel name. Ignoring.";
 				} else if (hostInfo == null && chanInfo != null) {
-					msg = "Deleting channel '" + channel
+					msg = "Deleting channel '" + channame
 							+ "' from the chanlist.";
-					this.chanList.remove(channel);
+					this.chanList.remove(channame);
 
-					if (this.listening.contains(channel))
-						sendChannelListen(channel, false);
+					if (this.listening.contains(channame))
+						sendChannelListen(channame, false);
 
-					if (this.tuneinChannels.contains(channel.toString()))
-						this.tuneinChannels.remove(channel.toString());
+					if (this.tuneinChannels.contains(channame.toString()))
+						this.tuneinChannels.remove(channame.toString());
 				} else if (hostInfo != null) {
 					if (!this.chanList.isEmpty()) {
 						if (chanInfo != null
 								&& !chanInfo.toString().equals(
 										hostInfo.toString())) {
-							msg = "Updating data for channel '" + channel
+							msg = "Updating data for channel '" + channame
 									+ "' in the chanlist.";
 						} else if (chanInfo == null) {
-							msg = "Adding channel '" + channel
+							msg = "Adding channel '" + channame
 									+ "' to the chanlist.";
 						}
 					} else {
-						msg = "Creating chanlist. Adding channel '" + channel
+						msg = "Creating chanlist. Adding channel '" + channame
 								+ "' to the chanlist.";
 					}
 
-					this.chanList.set(channel, hostInfo);
+					this.chanList.set(channame, hostInfo);
 
-					if (!this.listening.contains(channel))
-						sendChannelListen(channel, true);
+					if (!this.listening.contains(channame))
+						sendChannelListen(channame, true);
 				}
 
 				if (!msg.isEmpty())
@@ -730,8 +736,8 @@ public class I3Channel extends ServiceTemplate {
 
 		ConfigurationSection aliases = def.createSection("aliases");
 
-		for (String alias : this.aliasToChannel.keySet())
-			aliases.set(alias, this.aliasToChannel.get(alias));
+		for (Entry<String, String> alias : this.aliasToChannel.entrySet())
+			aliases.set(alias.getKey(), alias.getValue());
 
 		root.set("chanList", Utils.toMudMode(this.chanList));
 
@@ -818,7 +824,7 @@ public class I3Channel extends ServiceTemplate {
 		List<String> list = new ArrayList<String>();
 
 		if (!Utils.isPlayer(sender)) {
-			for (Object obj : this.tuneinChannels)
+			for (Object obj : this.listening)
 				list.add(ChatColor.GREEN + obj.toString());
 		} else {
 			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
@@ -849,17 +855,15 @@ public class I3Channel extends ServiceTemplate {
 
 	@SuppressWarnings("unchecked")
 	public void showChannelsAvailable(CommandSender sender) {
-		I3UCache i3UCache = null;
-		List<Object> user = null;
 		List<String> tunein = null;
 		boolean isPlayer = Utils.isPlayer(sender);
 
 		if (isPlayer) {
-			i3UCache = ServiceType.I3UCACHE.getService();
+			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 			if (i3UCache != null) {
 				String name = Utils.stripColor(((Player) sender).getName());
-				user = i3UCache.getLocalUser(name);
+				List<Object> user = i3UCache.getLocalUser(name);
 
 				if (user != null)
 					tunein = (List<String>) user.get(I3UCache.TUNEIN);
@@ -868,16 +872,16 @@ public class I3Channel extends ServiceTemplate {
 
 		List<String> list = new ArrayList<String>();
 
-		for (Object obj : this.chanList.keySet()) {
-			String key = obj.toString();
+		for (Object key : this.chanList.keySet()) {
+			LPCString channel = (LPCString) key;
 
 			if (!isPlayer) {
-				if (!this.listening.contains(key))
-					list.add(ChatColor.GREEN + key);
+				if (!this.listening.contains(channel))
+					list.add(ChatColor.GREEN + channel.toString());
 			} else {
 				if (tunein != null) {
-					if (!tunein.contains(key))
-						list.add(ChatColor.GREEN + key);
+					if (!tunein.contains(channel.toString()))
+						list.add(ChatColor.GREEN + channel.toString());
 				}
 			}
 		}
@@ -895,8 +899,9 @@ public class I3Channel extends ServiceTemplate {
 		List<String> list = new ArrayList<String>();
 
 		if (!Utils.isPlayer(sender)) {
-			for (String key : this.aliasToChannel.keySet()) {
-				String val = this.aliasToChannel.get(key);
+			for (Entry<String, String> a2c : this.aliasToChannel.entrySet()) {
+				String key = a2c.getKey();
+				String val = a2c.getValue();
 
 				list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
 						+ ChatColor.GREEN + val);
@@ -913,8 +918,9 @@ public class I3Channel extends ServiceTemplate {
 					Map<String, String> aliases = (Map<String, String>) user
 							.get(I3UCache.ALIASES);
 
-					for (String key : aliases.keySet()) {
-						String val = aliases.get(key);
+					for (Entry<String, String> alias : aliases.entrySet()) {
+						String key = alias.getKey();
+						String val = alias.getValue();
 
 						list.add(ChatColor.GREEN + key + ChatColor.RESET + ": "
 								+ ChatColor.GREEN + val);

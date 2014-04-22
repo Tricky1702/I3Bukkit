@@ -1,7 +1,7 @@
 package uk.org.rockthehalo.intermud3;
 
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map.Entry;
 import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
@@ -149,12 +149,11 @@ public class Utils {
 		case INT:
 			return ((LPCInt) obj).toString();
 		case MAPPING: {
-			Set<?> keySet = ((LPCMapping) obj).keySet();
 			Vector<String> list = new Vector<String>();
 
-			for (Object key : keySet)
-				list.add(toMudMode(key) + ":"
-						+ toMudMode(((LPCMapping) obj).get(key)));
+			for (Entry<Object, Object> mapping : ((LPCMapping) obj).entrySet())
+				list.add(toMudMode(mapping.getKey()) + ":"
+						+ toMudMode(mapping.getValue()));
 
 			if (list.isEmpty())
 				return "([])";

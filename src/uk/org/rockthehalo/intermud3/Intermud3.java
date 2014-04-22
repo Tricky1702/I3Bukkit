@@ -36,13 +36,20 @@ public class Intermud3 extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// Shut the network down if connected.
 		if (network != null && network.isConnected())
 			network.shutdown(0);
 
+		// Remove all Intermud3 services.
 		ServiceManager.removeServices();
-		callout.remove();
-		uuid.shutdown();
 
+		// Save the configuration data.
+		saveConfig();
+
+		// Remove all remaining callouts and heartbeats.
+		callout.remove();
+
+		// Remove references.
 		instance = null;
 		callout = null;
 		network = null;
