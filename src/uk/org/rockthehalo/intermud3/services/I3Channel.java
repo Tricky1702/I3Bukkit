@@ -49,6 +49,7 @@ public class I3Channel extends ServiceTemplate {
 
 	private Map<String, String> aliasToChannel = new ConcurrentHashMap<String, String>();
 	private LPCMapping chanList = new LPCMapping();
+	private LPCInt chanlistID = new LPCInt();
 	private Map<String, String> channelToAlias = new ConcurrentHashMap<String, String>();
 	private Config config = null;
 	private List<String> tuneinChannels = new ArrayList<String>();
@@ -165,10 +166,10 @@ public class I3Channel extends ServiceTemplate {
 
 		LPCInt chanlistID = packet.getLPCInt(chanlistPayload.get("CHAN_ID"));
 
-		if (chanlistID.toInt() == Intermud3.network.getChanlistID().toInt())
+		if (chanlistID.toInt() == this.chanlistID.toInt())
 			return;
 
-		Intermud3.network.setChanlistID(chanlistID);
+		setChanlistID(chanlistID);
 
 		if (list != null) {
 			String msg = new String();
@@ -222,7 +223,6 @@ public class I3Channel extends ServiceTemplate {
 			}
 		}
 
-		Intermud3.instance.saveConfig();
 		saveConfig();
 	}
 
@@ -493,6 +493,7 @@ public class I3Channel extends ServiceTemplate {
 			aliases.addDefault("ic", "imud_code");
 			aliases.addDefault("mc", "minecraft");
 
+			root.addDefault("chanlistID", 0);
 			root.addDefault("chanList", "([])");
 			this.config.saveConfig();
 		}
@@ -516,6 +517,13 @@ public class I3Channel extends ServiceTemplate {
 
 	public LPCMapping getChanList() {
 		return this.chanList.clone();
+	}
+
+	/**
+	 * @return the chanlistID
+	 */
+	public LPCInt getChanlistID() {
+		return this.chanlistID;
 	}
 
 	public LPCArray getListening() {
@@ -545,6 +553,9 @@ public class I3Channel extends ServiceTemplate {
 		this.config.reloadConfig();
 
 		FileConfiguration root = this.config.getConfig();
+
+		if (root.contains("chanlistID"))
+			this.chanlistID = new LPCInt(root.getInt("chanlistID"));
 
 		if (root.contains("chanList")) {
 			try {
@@ -624,6 +635,7 @@ public class I3Channel extends ServiceTemplate {
 		// Remove references.
 		this.aliasToChannel = null;
 		this.chanList = null;
+		this.chanlistID = null;
 		this.channelToAlias = null;
 		this.config = null;
 		this.listening = null;
@@ -716,7 +728,7 @@ public class I3Channel extends ServiceTemplate {
 
 	public void requestChanList() {
 		if (Intermud3.network.isRouterConnected()) {
-			Intermud3.network.setChanlistID(0);
+			setChanlistID(0);
 			Intermud3.network.sendToRouter("chanlist-req", null, null);
 		}
 	}
@@ -818,6 +830,23 @@ public class I3Channel extends ServiceTemplate {
 		}
 
 		saveConfig();
+	}
+
+	/**
+	 * @param chanlistID
+	 *            the chanlistID to set
+	 */
+	public void setChanlistID(int chanlistID) {
+		setChanlistID(new LPCInt(chanlistID));
+	}
+
+	/**
+	 * @param chanlistID
+	 *            the chanlistID to set
+	 */
+	public void setChanlistID(LPCInt chanlistID) {
+		this.chanlistID = new LPCInt(chanlistID);
+		this.config.getConfig().set("chanlistID", chanlistID.toInt());
 	}
 
 	public void showChannelsListening(CommandSender sender) {

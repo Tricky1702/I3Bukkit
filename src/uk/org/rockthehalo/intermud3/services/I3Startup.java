@@ -139,11 +139,22 @@ public class I3Startup extends ServiceTemplate {
 		if (Intermud3.network.isRouterConnected())
 			return;
 
+		I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+		I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
 		Packet payload = new Packet();
 
 		payload.add(Intermud3.network.getRouterPassword());
-		payload.add(Intermud3.network.getMudlistID());
-		payload.add(Intermud3.network.getChanlistID());
+
+		if (i3Mudlist == null)
+			payload.add(new LPCInt(0));
+		else
+			payload.add(i3Mudlist.getMudlistID());
+
+		if (i3Channel == null)
+			payload.add(new LPCInt(0));
+		else
+			payload.add(i3Channel.getChanlistID());
+
 		payload.add(new LPCInt(Intermud3.instance.getServer().getPort()));
 		payload.add(new LPCInt(0));
 		payload.add(new LPCInt(0));

@@ -31,6 +31,7 @@ public class I3Mudlist extends ServiceTemplate {
 	private Config config = null;
 	private int HBeat = 0;
 	private LPCMapping mudList = new LPCMapping();
+	private LPCInt mudlistID = new LPCInt();
 	private LPCMapping mudUpdate = new LPCMapping();
 	private Map<String, Integer> mudStateCounter = new ConcurrentHashMap<String, Integer>();
 
@@ -43,6 +44,7 @@ public class I3Mudlist extends ServiceTemplate {
 		if (!this.config.getFile().exists()) {
 			FileConfiguration root = this.config.getConfig();
 
+			root.addDefault("mudlistID", 0);
 			root.addDefault("mudList", "([])");
 			root.addDefault("mudUpdate", "([])");
 
@@ -61,6 +63,13 @@ public class I3Mudlist extends ServiceTemplate {
 				+ StringUtils.join(this.mudList.keySet().iterator(), ", "));
 		Log.debug("I3Mudlist: mudUpdate:         "
 				+ StringUtils.join(this.mudUpdate.entrySet().iterator(), ", "));
+	}
+
+	/**
+	 * @return the mudlistID
+	 */
+	public LPCInt getMudlistID() {
+		return this.mudlistID;
 	}
 
 	public void heartBeat() {
@@ -129,6 +138,8 @@ public class I3Mudlist extends ServiceTemplate {
 	public void reloadConfig(boolean flag) {
 		this.config.reloadConfig();
 
+		this.mudlistID = new LPCInt(this.config.getConfig().getInt("mudlistID"));
+
 		try {
 			this.mudList.setLPCData(Utils.toObject(this.config.getConfig()
 					.getString("mudList")));
@@ -156,6 +167,7 @@ public class I3Mudlist extends ServiceTemplate {
 		// Remove references.
 		this.config = null;
 		this.mudList = null;
+		this.mudlistID = null;
 		this.mudStateCounter = null;
 		this.mudUpdate = null;
 	}
@@ -198,16 +210,13 @@ public class I3Mudlist extends ServiceTemplate {
 		LPCInt mudlistID = packet.getLPCInt(mudlistPayload.get("ML_ID"));
 		LPCMapping info = packet.getLPCMapping(mudlistPayload.get("ML_INFO"));
 
-		if (mudlistID.toInt() < Intermud3.network.getMudlistID().toInt())
+		if (mudlistID.toInt() < this.mudlistID.toInt())
 			Log.debug("We don't like packet element 6 (" + mudlistID
 					+ ") for '" + StringUtils.join(info.keySet(), ", ")
 					+ "'. It should be larger than the current one ("
-					+ Intermud3.network.getMudlistID()
-					+ "). Continuing anyway.");
-		else {
-			Intermud3.network.setMudlistID(mudlistID);
-			Intermud3.instance.saveConfig();
-		}
+					+ this.mudlistID + "). Continuing anyway.");
+
+		setMudlistID(mudlistID);
 
 		int tm = (int) (System.currentTimeMillis() / 1000);
 
@@ -340,9 +349,27 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void saveConfig() {
+		this.config.getConfig().set("mudlistID", this.mudlistID.toInt());
 		this.config.getConfig().set("mudList", Utils.toMudMode(this.mudList));
 		this.config.getConfig().set("mudUpdate",
 				Utils.toMudMode(this.mudUpdate));
 		this.config.saveConfig();
+	}
+
+	/**
+	 * @param mudlistID
+	 *            the mudlistID to set
+	 */
+	public void setMudlistID(int mudlistID) {
+		setMudlistID(new LPCInt(mudlistID));
+	}
+
+	/**
+	 * @param mudlistID
+	 *            the mudlistID to set
+	 */
+	public void setMudlistID(LPCInt mudlistID) {
+		this.mudlistID = new LPCInt(mudlistID);
+		this.config.getConfig().set("mudlistID", mudlistID.toInt());
 	}
 }

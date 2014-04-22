@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
 import uk.org.rockthehalo.intermud3.LPC.LPCArray;
@@ -33,14 +34,12 @@ public class Network implements Runnable {
 
 	private LPCString adminEmail = new LPCString();
 	private boolean autoConnect = false;
-	private LPCInt chanlistID = new LPCInt();
 	private List<String> configRouterList = new ArrayList<String>();
 	private LPCString defRouterIP = new LPCString();
 	private LPCString defRouterName = new LPCString();
 	private LPCInt defRouterPort = new LPCInt();
 	private LPCString hostName = new LPCString();
 	private long idleTimeout = 0;
-	private LPCInt mudlistID = new LPCInt();
 	private LPCArray preferredRouter = new LPCArray();
 	private long reconnectWait = this.minRetryTime;
 	private boolean routerConnected = false;
@@ -129,23 +128,21 @@ public class Network implements Runnable {
 	}
 
 	public void create() {
-		this.adminEmail = new LPCString(Utils.stripColor(Intermud3.instance
-				.getConfig().getString("adminEmail")));
-		this.autoConnect = Intermud3.instance.getConfig().getBoolean(
-				"autoConnect", false);
-		this.chanlistID = new LPCInt(Intermud3.instance.getConfig().getInt(
-				"router.chanlistID"));
-		this.configRouterList = new ArrayList<String>(Intermud3.instance
-				.getConfig().getStringList("router.list"));
-		this.hostName = new LPCString(Utils.stripColor(Intermud3.instance
-				.getConfig().getString("hostName", "")));
-		this.mudlistID = new LPCInt(Intermud3.instance.getConfig().getInt(
-				"router.mudlistID"));
-		this.routerPassword = new LPCInt(Intermud3.instance.getConfig().getInt(
-				"router.password"));
+		FileConfiguration root = Intermud3.instance.getConfig();
 
-		String preferredRouter = Intermud3.instance.getConfig().getString(
-				"router.preferred");
+		root.set("router.chanlistID", null);
+		root.set("router.mudlistID", null);
+
+		this.adminEmail = new LPCString(Utils.stripColor(root
+				.getString("adminEmail")));
+		this.autoConnect = root.getBoolean("autoConnect", false);
+		this.configRouterList = new ArrayList<String>(
+				root.getStringList("router.list"));
+		this.hostName = new LPCString(Utils.stripColor(root.getString(
+				"hostName", "")));
+		this.routerPassword = new LPCInt(root.getInt("router.password"));
+
+		String preferredRouter = root.getString("router.preferred");
 		String[] parts, ipport;
 
 		parts = StringUtils.split(preferredRouter, ",");
@@ -177,6 +174,8 @@ public class Network implements Runnable {
 
 			addRouter(otherRouterName, otherRouterIP, otherRouterPort);
 		}
+
+		Intermud3.instance.saveConfig();
 	}
 
 	/**
@@ -184,13 +183,6 @@ public class Network implements Runnable {
 	 */
 	public LPCString getAdminEmail() {
 		return this.adminEmail;
-	}
-
-	/**
-	 * @return the chanlistID
-	 */
-	public LPCInt getChanlistID() {
-		return this.chanlistID;
 	}
 
 	/**
@@ -212,13 +204,6 @@ public class Network implements Runnable {
 	 */
 	public long getIdleTimeout() {
 		return this.idleTimeout;
-	}
-
-	/**
-	 * @return the mudlistID
-	 */
-	public LPCInt getMudlistID() {
-		return this.mudlistID;
 	}
 
 	/**
@@ -323,13 +308,11 @@ public class Network implements Runnable {
 
 		// Remove references.
 		this.adminEmail = null;
-		this.chanlistID = null;
 		this.configRouterList = null;
 		this.defRouterIP = null;
 		this.defRouterName = null;
 		this.defRouterPort = null;
 		this.hostName = null;
-		this.mudlistID = null;
 		this.preferredRouter = null;
 		this.routerIP = null;
 		this.routerList = null;
@@ -657,24 +640,6 @@ public class Network implements Runnable {
 	}
 
 	/**
-	 * @param chanlistID
-	 *            the chanlistID to set
-	 */
-	public void setChanlistID(int chanlistID) {
-		setChanlistID(new LPCInt(chanlistID));
-	}
-
-	/**
-	 * @param chanlistID
-	 *            the chanlistID to set
-	 */
-	public void setChanlistID(LPCInt chanlistID) {
-		this.chanlistID = new LPCInt(chanlistID);
-		Intermud3.instance.getConfig().set("router.chanlistID",
-				chanlistID.toInt());
-	}
-
-	/**
 	 * @param configRouterList
 	 *            the configRouterList to set
 	 */
@@ -704,24 +669,6 @@ public class Network implements Runnable {
 	 */
 	public void setIdleTimeout(long idleTimeout) {
 		this.idleTimeout = idleTimeout;
-	}
-
-	/**
-	 * @param mudlistID
-	 *            the mudlistID to set
-	 */
-	public void setMudlistID(int mudlistID) {
-		setMudlistID(new LPCInt(mudlistID));
-	}
-
-	/**
-	 * @param mudlistID
-	 *            the mudlistID to set
-	 */
-	public void setMudlistID(LPCInt mudlistID) {
-		this.mudlistID = new LPCInt(mudlistID);
-		Intermud3.instance.getConfig().set("router.mudlistID",
-				mudlistID.toInt());
 	}
 
 	/**

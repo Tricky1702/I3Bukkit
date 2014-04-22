@@ -291,14 +291,18 @@ public class I3Command implements CommandExecutor {
 			if (!checkPerm(sender, "admin.connect"))
 				return false;
 
-			ServiceManager.createServices();
-			Intermud3.network.connect();
+			if (!Intermud3.network.isConnected()) {
+				ServiceManager.createServices();
+				Intermud3.network.connect();
+			}
 		} else if (subcmd.equals("disconnect")) {
 			if (!checkPerm(sender, "admin.disconnect"))
 				return false;
 
-			Intermud3.network.shutdown(0);
-			ServiceManager.removeServices();
+			if (Intermud3.network.isConnected()) {
+				Intermud3.network.shutdown(0);
+				ServiceManager.removeServices();
+			}
 		} else if (subcmd.equals("reload")) {
 			if (!checkPerm(sender, "admin.reload"))
 				return false;
