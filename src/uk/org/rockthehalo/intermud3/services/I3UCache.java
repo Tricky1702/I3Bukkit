@@ -194,7 +194,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				usernames = new LPCMapping();
 
-			usernames.set(new LPCString(username), data);
+			usernames.set(new LPCString(username.replace(".", "")), data);
 			this.i3UserCache.set(new LPCString(mudname), usernames);
 		} else {
 			UUID uuid = this.localUUIDs.get(username);
@@ -293,7 +293,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			else
 				lastUpdate = this.i3UserCache
 						.getLPCMapping(new LPCString(mudname))
-						.getLPCArray(new LPCString(username))
+						.getLPCArray(new LPCString(username.replace(".", "")))
 						.getLPCInt(LASTUPDATE).toInt();
 
 			if (time - lastUpdate > 28 * 24 * 60 * 60) {
@@ -325,6 +325,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 					data.set(LASTACTIVE, time);
 					this.users.put(uuid, data);
 				} else {
+					username = username.replace(".", "");
+
 					LPCArray data = this.i3UserCache.getLPCMapping(
 							new LPCString(mudname)).getLPCArray(
 							new LPCString(username));
@@ -352,7 +354,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			FileConfiguration root = this.config.getConfig();
 
 			root.addDefault("users", "{}");
-			root.addDefault("ucache", "([])");
+			root.addDefault("i3users", "{}");
 
 			this.config.saveConfig();
 		}
@@ -392,7 +394,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				return -1;
 
-			LPCArray data = usernames.getLPCArray(new LPCString(username));
+			LPCArray data = usernames.getLPCArray(new LPCString(username
+					.replace(".", "")));
 
 			if (data == null)
 				return -1;
@@ -479,7 +482,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				return null;
 
-			LPCArray data = usernames.getLPCArray(new LPCString(username));
+			LPCArray data = usernames.getLPCArray(new LPCString(username
+					.replace(".", "")));
 
 			if (data == null)
 				return null;
@@ -671,6 +675,44 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			}
 		}
 
+		if (root.contains("i3users")) {
+			this.i3UserCache.clear();
+
+			ConfigurationSection i3UsersSection = root
+					.getConfigurationSection("i3users");
+
+			for (String mudname : i3UsersSection.getKeys(false)) {
+				ConfigurationSection mudSection = i3UsersSection
+						.getConfigurationSection(mudname);
+				LPCMapping users = new LPCMapping();
+
+				for (String user : mudSection.getKeys(false)) {
+					ConfigurationSection userSection = mudSection
+							.getConfigurationSection(user);
+					LPCArray data = new LPCArray();
+
+					for (int i = 0; i < UCACHESIZE; i++)
+						data.add(null);
+
+					data.set(VISNAME,
+							new LPCString(userSection.getString("visname")));
+					data.set(
+							GENDER,
+							new LPCInt(Gender.getNamedGender(
+									userSection.getString("gender"))
+									.getGender()));
+					data.set(LASTUPDATE,
+							new LPCInt(userSection.getInt("lastupdate")));
+					data.set(LASTACTIVE,
+							new LPCInt(userSection.getInt("lastactive")));
+
+					users.set(new LPCString(user), data);
+				}
+
+				this.i3UserCache.set(new LPCString(mudname), users);
+			}
+		}
+
 		if (flag)
 			Log.info(this.config.getFile().getName() + " loaded.");
 	}
@@ -749,7 +791,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			LPCMapping users = new LPCMapping(
 					this.i3UserCache.getLPCMapping(mudname));
 
-			users.remove(username);
+			users.remove(new LPCString(username.toString().replace(".", "")));
 			this.i3UserCache.put(mudname, users);
 
 			if (users.isEmpty())
@@ -787,9 +829,12 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		saveConfig();
 	}
 
-	private void saveConfig() {
-		FileConfiguration conf = this.config.getConfig();
-		ConfigurationSection usersSection = conf.createSection("users");
+	public void saveConfig() {
+		FileConfiguration root = this.config.getConfig();
+		root.set("users", "{}");
+		root.set("i3users", "{}");
+
+		ConfigurationSection usersSection = root.createSection("users");
 
 		for (Entry<UUID, List<Object>> user : this.users.entrySet()) {
 			ConfigurationSection uuidSection = usersSection.createSection(user
@@ -813,7 +858,33 @@ public class I3UCache extends ServiceTemplate implements Listener {
 				aliasesSection.set(alias.getKey(), alias.getValue());
 		}
 
-		conf.set("ucache", Utils.toMudMode(this.i3UserCache));
+		ConfigurationSection i3UsersSection = root.createSection("i3users");
+
+		for (Entry<Object, Object> mud : this.i3UserCache.entrySet()) {
+			ConfigurationSection mudSection = i3UsersSection.createSection(mud
+					.getKey().toString());
+			LPCMapping users = (LPCMapping) mud.getValue();
+
+			for (Entry<Object, Object> user : users.entrySet()) {
+				ConfigurationSection userSection = mudSection
+						.createSection(user.getKey().toString()
+								.replace(".", ""));
+				LPCArray data = (LPCArray) user.getValue();
+
+				userSection.set("visname", data.get(VISNAME).toString());
+				userSection
+						.set("gender",
+								Gender.getNumGender(
+										((LPCInt) data.get(GENDER)).toInt())
+										.getName());
+				userSection.set("lastupdate",
+						((LPCInt) data.get(LASTUPDATE)).toInt());
+				userSection.set("lastactive",
+						((LPCInt) data.get(LASTACTIVE)).toInt());
+			}
+		}
+
+		root.set("ucache", null);
 		this.config.saveConfig();
 	}
 

@@ -294,6 +294,21 @@ public class Network implements Runnable {
 		Intermud3.callout.addCallOut(this, "reconnect", reconnectWait);
 	}
 
+	/**
+	 * Reload the main config file and setup the local variables.
+	 */
+	public void reloadConfig() {
+		this.routerList.clear();
+		Intermud3.instance.reloadConfig();
+		create();
+
+		if (this.autoConnect && !isConnected()) {
+			ServiceManager.removeServices();
+			ServiceManager.createServices();
+			connect();
+		}
+	}
+
 	public void remove() {
 		remove(0);
 	}
@@ -806,21 +821,6 @@ public class Network implements Runnable {
 
 			this.inputThread = null;
 			moribund.interrupt();
-		}
-	}
-
-	/**
-	 * Reload the main config file and setup the local variables.
-	 */
-	public void reloadConfig() {
-		this.routerList.clear();
-		Intermud3.instance.reloadConfig();
-		create();
-
-		if (this.autoConnect && !isConnected()) {
-			ServiceManager.removeServices();
-			ServiceManager.createServices();
-			connect();
 		}
 	}
 }

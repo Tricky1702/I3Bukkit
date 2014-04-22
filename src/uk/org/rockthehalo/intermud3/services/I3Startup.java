@@ -195,7 +195,12 @@ public class I3Startup extends ServiceTemplate {
 			otherInfo.set(new LPCString("host"),
 					Intermud3.network.getHostName());
 
-		otherInfo.set(new LPCString("architecture"), new LPCString("Java"));
+		otherInfo.set(
+				new LPCString("architecture"),
+				new LPCString(System.getProperty("os.name") + " "
+						+ System.getProperty("os.arch")));
+		otherInfo.set(new LPCString("java"),
+				new LPCString(System.getProperty("java.version")));
 
 		payload.add(otherInfo);
 		Log.debug("I3Startup packet: " + payload.toMudMode());

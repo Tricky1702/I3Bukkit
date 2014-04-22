@@ -324,6 +324,26 @@ public class I3Command implements CommandExecutor {
 			Log.info("config.yml loaded.");
 
 			sender.sendMessage("Config files reload.");
+		} else if (subcmd.equals("save")) {
+			if (!checkPerm(sender, "admin.save"))
+				return false;
+
+			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
+
+			if (i3Channel != null)
+				i3Channel.saveConfig();
+
+			if (i3Mudlist != null)
+				i3Mudlist.saveConfig();
+
+			if (i3UCache != null)
+				i3UCache.saveConfig();
+
+			Intermud3.instance.saveConfig();
+
+			sender.sendMessage("Config files saved.");
 		} else if (subcmd.equals("channels")) {
 			if (!checkPerm(sender, "admin.channels"))
 				return false;
