@@ -147,13 +147,17 @@ public class I3Startup extends ServiceTemplate {
 
 		if (i3Mudlist == null)
 			payload.add(new LPCInt(0));
-		else
+		else {
 			payload.add(i3Mudlist.getMudlistID());
+			i3Mudlist.setMudlistID(0);
+		}
 
 		if (i3Channel == null)
 			payload.add(new LPCInt(0));
-		else
+		else {
 			payload.add(i3Channel.getChanlistID());
+			i3Channel.setChanlistID(0);
+		}
 
 		payload.add(new LPCInt(Intermud3.instance.getServer().getPort()));
 		payload.add(new LPCInt(0));

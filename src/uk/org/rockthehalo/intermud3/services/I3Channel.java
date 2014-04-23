@@ -31,21 +31,23 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
 public class I3Channel extends ServiceTemplate {
-	private static final Payload chanEmotePayload = new Payload(Arrays.asList(
+	private static final int hBeatDelay = 60;
+
+	public static final Payload chanEmotePayload = new Payload(Arrays.asList(
 			"CHAN_CHANNAME", "CHAN_VISNAME", "CHAN_EMOTE"));
-	private static final Payload chanlistPayload = new Payload(Arrays.asList(
+	public static final Payload chanlistPayload = new Payload(Arrays.asList(
 			"CHAN_ID", "CHAN_LIST"));
-	private static final Payload chanMessagePayload = new Payload(
-			Arrays.asList("CHAN_CHANNAME", "CHAN_VISNAME", "CHAN_MESSAGE"));
-	private static final Payload chanTargetPayload = new Payload(Arrays.asList(
+	public static final Payload chanListenPayload = new Payload(Arrays.asList(
+			"CHAN_CHANNAME", "CHAN_STATE"));
+	public static final Payload chanMessagePayload = new Payload(Arrays.asList(
+			"CHAN_CHANNAME", "CHAN_VISNAME", "CHAN_MESSAGE"));
+	public static final Payload chanTargetPayload = new Payload(Arrays.asList(
 			"CHAN_CHANNAME", "CHAN_T_MUD", "CHAN_T_USER", "CHAN_O_MSG",
 			"CHAN_T_MSG", "CHAN_O_VISNAME", "CHAN_T_VISNAME"));
-	private static final Payload chanUserReplyPayload = new Payload(
+	public static final Payload chanUserReplyPayload = new Payload(
 			Arrays.asList("CHAN_USERNAME", "CHAN_VISNAME", "CHAN_GENDER"));
-	private static final Payload chanUserReqPayload = new Payload(
+	public static final Payload chanUserReqPayload = new Payload(
 			Arrays.asList("CHAN_USERNAME"));
-
-	private static final int hBeatDelay = 60;
 
 	private Map<String, String> aliasToChannel = new ConcurrentHashMap<String, String>();
 	private LPCMapping chanList = new LPCMapping();
@@ -151,6 +153,13 @@ public class I3Channel extends ServiceTemplate {
 			return;
 		}
 
+		LPCInt chanlistID = packet.getLPCInt(chanlistPayload.get("CHAN_ID"));
+
+		if (chanlistID.toInt().equals(this.chanlistID.toInt()))
+			return;
+
+		setChanlistID(chanlistID);
+
 		LPCMapping list = packet
 				.getLPCMapping(chanlistPayload.get("CHAN_LIST"));
 
@@ -163,13 +172,6 @@ public class I3Channel extends ServiceTemplate {
 					this.tuneinChannels.remove(channel.toString());
 				}
 		}
-
-		LPCInt chanlistID = packet.getLPCInt(chanlistPayload.get("CHAN_ID"));
-
-		if (chanlistID.toInt() == this.chanlistID.toInt())
-			return;
-
-		setChanlistID(chanlistID);
 
 		if (list != null) {
 			String msg = new String();
@@ -640,6 +642,15 @@ public class I3Channel extends ServiceTemplate {
 		this.config = null;
 		this.listening = null;
 		this.tuneinChannels = null;
+	}
+
+	public void removeAvailableChannel(LPCString channel) {
+		if (this.chanList.containsKey(channel))
+			this.chanList.remove(channel);
+	}
+
+	public void removeAvailableChannel(String channel) {
+		removeAvailableChannel(new LPCString(channel));
 	}
 
 	/*

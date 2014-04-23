@@ -19,7 +19,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Bad Mojo/" + errorMsg);
+				Log.error("Bad Mojo::" + errorMsg);
 			else
 				Log.error("Bad Mojo");
 
@@ -37,7 +37,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Bad Packet/" + errorMsg);
+				Log.error("Bad Packet::" + errorMsg);
 			else
 				Log.error("Bad Packet");
 		}
@@ -50,7 +50,7 @@ public enum I3ErrorCodes {
 
 			if (errorMsg != null
 					&& errorMsg.toString().contains("MUD already connected")) {
-				Log.error("Bad Proto/" + errorMsg);
+				Log.error("Bad Proto::" + errorMsg);
 				Log.error("Reconnecting in 5 minutes.");
 				Intermud3.network.setReconnectWait(Intermud3.network
 						.getReconnectWait() - 10);
@@ -69,14 +69,16 @@ public enum I3ErrorCodes {
 				if (data != null
 						&& data.getLPCString(Payload.TYPE).toString()
 								.equals("channel-listen")) {
-					LPCString channel = data.getLPCString(6);
+					LPCString channel = data
+							.getLPCString(I3Channel.chanListenPayload
+									.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
 						LPCString errorMsg = packet.getLPCString(errorPayload
 								.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
-							Log.error("Not Allowed/" + errorMsg);
+							Log.error("Not Allowed::" + errorMsg);
 						else
 							Log.error("Not Allowed");
 
@@ -85,6 +87,7 @@ public enum I3ErrorCodes {
 						if (service != null) {
 							service.sendChannelListen(channel, false);
 							service.tuneOut(channel.toString());
+							service.removeAvailableChannel(channel);
 						}
 					}
 				}
@@ -98,7 +101,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Not Implemented/" + errorMsg);
+				Log.error("Not Implemented::" + errorMsg);
 			else
 				Log.error("Not Implemented");
 		}
@@ -120,7 +123,7 @@ public enum I3ErrorCodes {
 								.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
-							Log.error("Unknown Channel/" + errorMsg);
+							Log.error("Unknown Channel::" + errorMsg);
 						else
 							Log.error("Unknown Channel");
 
@@ -129,6 +132,7 @@ public enum I3ErrorCodes {
 						if (service != null) {
 							service.sendChannelListen(channel, false);
 							service.tuneOut(channel.toString());
+							service.removeAvailableChannel(channel);
 						}
 					}
 				}
@@ -141,7 +145,7 @@ public enum I3ErrorCodes {
 			LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 			if (errorMsg != null)
-				Log.error("Unknown Destination/" + errorMsg);
+				Log.error("Unknown Destination::" + errorMsg);
 			else
 				Log.error("Unknown Destination");
 		}
@@ -153,7 +157,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Source/" + errorMsg);
+				Log.error("Unknown Source::" + errorMsg);
 			else
 				Log.error("Unknown Source");
 		}
@@ -165,7 +169,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Packet Type/" + errorMsg);
+				Log.error("Unknown Packet Type::" + errorMsg);
 			else
 				Log.error("Unknown Packet Type");
 		}
@@ -177,7 +181,7 @@ public enum I3ErrorCodes {
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Target User/" + errorMsg);
+				Log.error("Unknown Target User::" + errorMsg);
 			else
 				Log.error("Unknown Target User");
 		}
