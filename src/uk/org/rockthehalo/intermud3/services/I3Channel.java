@@ -500,7 +500,7 @@ public class I3Channel extends ServiceTemplate {
 			this.config.saveConfig();
 		}
 
-		reloadConfig(false);
+		reloadConfig();
 
 		ServiceType.I3CHANNEL.setVisibleOnRouter(true);
 		Intermud3.callout.addHeartBeat(this, hBeatDelay);
@@ -545,7 +545,7 @@ public class I3Channel extends ServiceTemplate {
 	 * Reload the chanlist config file and setup the local variables.
 	 */
 	public void reloadConfig() {
-		reloadConfig(true);
+		reloadConfig(false);
 	}
 
 	/**
@@ -745,14 +745,14 @@ public class I3Channel extends ServiceTemplate {
 	}
 
 	public void saveConfig() {
+		saveConfig(false);
+	}
+
+	public void saveConfig(boolean flag) {
+		// Clear the configuration.
+		this.config.clearConfig();
+
 		FileConfiguration root = this.config.getConfig();
-
-		if (root.contains("tunein"))
-			root.set("tunein", null);
-
-		if (root.contains("aliases"))
-			root.set("aliases", null);
-
 		ConfigurationSection def = root.createSection("default");
 
 		def.set("tunein", this.tuneinChannels);
@@ -762,9 +762,13 @@ public class I3Channel extends ServiceTemplate {
 		for (Entry<String, String> alias : this.aliasToChannel.entrySet())
 			aliases.set(alias.getKey(), alias.getValue());
 
+		root.set("chanlistID", this.chanlistID.toInt());
 		root.set("chanList", Utils.toMudMode(this.chanList));
 
 		this.config.saveConfig();
+
+		if (flag)
+			Log.info(this.config.getFile().getName() + " saved.");
 	}
 
 	public void sendChannelListen(LPCString channel, boolean flag) {

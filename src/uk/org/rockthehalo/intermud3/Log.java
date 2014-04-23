@@ -10,7 +10,7 @@ public class Log {
 	 * @param msg
 	 */
 	public static void debug(String msg) {
-		if (Intermud3.instance.getConfig().getBoolean("debug", false))
+		if (Intermud3.instance.getDebugFlag())
 			log("Debug: " + msg, Level.INFO);
 	}
 
@@ -18,7 +18,7 @@ public class Log {
 	 * @param msg
 	 */
 	public static void debug(String msg, Throwable thrown) {
-		if (Intermud3.instance.getConfig().getBoolean("debug", false))
+		if (Intermud3.instance.getDebugFlag())
 			log("Debug: " + msg, Level.INFO, thrown);
 	}
 

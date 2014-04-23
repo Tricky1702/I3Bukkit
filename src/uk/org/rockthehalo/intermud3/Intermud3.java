@@ -13,6 +13,7 @@ public class Intermud3 extends JavaPlugin {
 
 	public static Intermud3 instance = null;
 	public static CallOut callout = null;
+	public static Config config = null;
 	public static Network network = null;
 	public static UUIDCache uuid = null;
 
@@ -30,8 +31,15 @@ public class Intermud3 extends JavaPlugin {
 		return bootTime;
 	}
 
+	public boolean getDebugFlag() {
+		return config.getConfig().getBoolean("debug", false);
+	}
+
+	/**
+	 * Force a config file save.
+	 */
 	public void heartBeat() {
-		saveConfig();
+		config.saveConfig();
 	}
 
 	@Override
@@ -44,7 +52,7 @@ public class Intermud3 extends JavaPlugin {
 		ServiceManager.removeServices();
 
 		// Save the configuration data.
-		saveConfig();
+		config.saveConfig();
 
 		// Remove all remaining callouts and heartbeats.
 		callout.remove();
@@ -52,18 +60,21 @@ public class Intermud3 extends JavaPlugin {
 		// Remove references.
 		instance = null;
 		callout = null;
+		config = null;
 		network = null;
 		uuid = null;
 	}
 
 	@Override
 	public void onEnable() {
-		saveDefaultConfig();
+		config = new Config(this, "config.yml");
+		config.saveDefaultConfig();
 
 		uuid = new UUIDCache(this);
 		callout = new CallOut();
 		network = new Network();
 
+		// Call heartBeat() every 15 minutes.
 		callout.addHeartBeat(this, this.hBeatDelay);
 
 		CommandExecutor cmd = new I3Command();
@@ -75,5 +86,9 @@ public class Intermud3 extends JavaPlugin {
 	@Override
 	public void onLoad() {
 		bootTime = System.currentTimeMillis();
+	}
+
+	public void setDebugFlag(boolean flag) {
+		config.getConfig().set("debug", flag);
 	}
 }

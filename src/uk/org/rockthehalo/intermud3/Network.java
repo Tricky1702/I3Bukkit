@@ -128,7 +128,7 @@ public class Network implements Runnable {
 	}
 
 	public void create() {
-		FileConfiguration root = Intermud3.instance.getConfig();
+		FileConfiguration root = Intermud3.config.getConfig();
 
 		root.set("router.chanlistID", null);
 		root.set("router.mudlistID", null);
@@ -175,7 +175,7 @@ public class Network implements Runnable {
 			addRouter(otherRouterName, otherRouterIP, otherRouterPort);
 		}
 
-		Intermud3.instance.saveConfig();
+		saveConfig();
 	}
 
 	/**
@@ -280,14 +280,14 @@ public class Network implements Runnable {
 		if (isConnected()) {
 			shutdown(0);
 			this.reconnectWait -= this.retryTimeStep;
-			Intermud3.instance.saveConfig();
+			saveConfig();
 			reconnect(5);
 
 			return;
 		}
 
 		Intermud3.callout.addCallOut(this, "connect", 3);
-		Intermud3.instance.saveConfig();
+		saveConfig();
 	}
 
 	public void reconnect(long reconnectWait) {
@@ -298,9 +298,19 @@ public class Network implements Runnable {
 	 * Reload the main config file and setup the local variables.
 	 */
 	public void reloadConfig() {
+		reloadConfig(false);
+	}
+
+	/**
+	 * Reload the main config file and setup the local variables.
+	 */
+	public void reloadConfig(boolean flag) {
 		this.routerList.clear();
-		Intermud3.instance.reloadConfig();
+		Intermud3.config.reloadConfig();
 		create();
+
+		if (flag)
+			Log.info(Intermud3.config.getFile().getName() + " loaded.");
 
 		if (this.autoConnect && !isConnected()) {
 			ServiceManager.removeServices();
@@ -358,7 +368,7 @@ public class Network implements Runnable {
 			String str, err = null, namedType = "";
 
 			try {
-				Thread.sleep(200);
+				Thread.sleep(100);
 			} catch (InterruptedException iE) {
 				if (!isConnected()) {
 					Log.warn("Shutdown!!!");
@@ -514,6 +524,17 @@ public class Network implements Runnable {
 			else
 				type.handler(packet);
 		}
+	}
+
+	public void saveConfig() {
+		saveConfig(false);
+	}
+
+	public void saveConfig(boolean flag) {
+		Intermud3.config.saveConfig();
+
+		if (flag)
+			Log.info(Intermud3.config.getFile().getName() + " saved.");
 	}
 
 	/**

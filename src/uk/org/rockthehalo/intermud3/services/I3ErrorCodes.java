@@ -116,7 +116,9 @@ public enum I3ErrorCodes {
 				if (data != null
 						&& data.getLPCString(Payload.TYPE).toString()
 								.equals("channel-listen")) {
-					LPCString channel = data.getLPCString(6);
+					LPCString channel = data
+							.getLPCString(I3Channel.chanListenPayload
+									.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
 						LPCString errorMsg = packet.getLPCString(errorPayload

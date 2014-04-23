@@ -312,16 +312,15 @@ public class I3Command implements CommandExecutor {
 			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 			if (i3Channel != null)
-				i3Channel.reloadConfig();
+				i3Channel.reloadConfig(true);
 
 			if (i3Mudlist != null)
-				i3Mudlist.reloadConfig();
+				i3Mudlist.reloadConfig(true);
 
 			if (i3UCache != null)
-				i3UCache.reloadConfig();
+				i3UCache.reloadConfig(true);
 
-			Intermud3.network.reloadConfig();
-			Log.info("config.yml loaded.");
+			Intermud3.network.reloadConfig(true);
 
 			sender.sendMessage("Config files reload.");
 		} else if (subcmd.equals("save")) {
@@ -333,15 +332,15 @@ public class I3Command implements CommandExecutor {
 			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 			if (i3Channel != null)
-				i3Channel.saveConfig();
+				i3Channel.saveConfig(true);
 
 			if (i3Mudlist != null)
-				i3Mudlist.saveConfig();
+				i3Mudlist.saveConfig(true);
 
 			if (i3UCache != null)
-				i3UCache.saveConfig();
+				i3UCache.saveConfig(true);
 
-			Intermud3.instance.saveConfig();
+			Intermud3.network.saveConfig(true);
 
 			sender.sendMessage("Config files saved.");
 		} else if (subcmd.equals("channels")) {
@@ -465,8 +464,7 @@ public class I3Command implements CommandExecutor {
 				if (!checkPerm(sender, "admin.debug"))
 					return false;
 
-				boolean oldDebug = Intermud3.instance.getConfig().getBoolean(
-						"debug", false);
+				boolean oldDebug = Intermud3.instance.getDebugFlag();
 				boolean debug;
 
 				if (args[0].equalsIgnoreCase("on"))
@@ -481,7 +479,7 @@ public class I3Command implements CommandExecutor {
 				else
 					Log.info("Switching debug messages on.");
 
-				Intermud3.instance.getConfig().set("debug", debug);
+				Intermud3.instance.setDebugFlag(debug);
 			} else {
 				Intermud3.callout.debugInfo();
 				ServiceManager.debugInfo();

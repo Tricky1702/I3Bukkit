@@ -27,6 +27,11 @@ public class Config {
 		this.configFile = new File(plugin.getDataFolder(), fileName);
 	}
 
+	public void clearConfig() {
+		for (String key : this.config.getKeys(false))
+			this.config.set(key, null);
+	}
+
 	public FileConfiguration getConfig() {
 		if (this.config == null)
 			reloadConfig();

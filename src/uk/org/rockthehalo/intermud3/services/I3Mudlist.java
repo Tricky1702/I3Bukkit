@@ -51,7 +51,7 @@ public class I3Mudlist extends ServiceTemplate {
 			this.config.saveConfig();
 		}
 
-		reloadConfig(false);
+		reloadConfig();
 
 		Intermud3.callout.addHeartBeat(this, hBeatDelay);
 	}
@@ -129,7 +129,7 @@ public class I3Mudlist extends ServiceTemplate {
 	 * Reload the mudlist config file and setup the local variables.
 	 */
 	public void reloadConfig() {
-		reloadConfig(true);
+		reloadConfig(false);
 	}
 
 	/**
@@ -349,11 +349,23 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void saveConfig() {
-		this.config.getConfig().set("mudlistID", this.mudlistID.toInt());
-		this.config.getConfig().set("mudList", Utils.toMudMode(this.mudList));
-		this.config.getConfig().set("mudUpdate",
-				Utils.toMudMode(this.mudUpdate));
+		saveConfig(false);
+	}
+
+	public void saveConfig(boolean flag) {
+		// Clear the configuration.
+		this.config.clearConfig();
+
+		FileConfiguration root = this.config.getConfig();
+
+		root.set("mudlistID", this.mudlistID.toInt());
+		root.set("mudList", Utils.toMudMode(this.mudList));
+		root.set("mudUpdate", Utils.toMudMode(this.mudUpdate));
+
 		this.config.saveConfig();
+
+		if (flag)
+			Log.info(this.config.getFile().getName() + " saved.");
 	}
 
 	/**

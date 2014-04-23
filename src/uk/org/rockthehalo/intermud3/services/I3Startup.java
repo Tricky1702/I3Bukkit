@@ -72,7 +72,7 @@ public class I3Startup extends ServiceTemplate {
 			configRouterList.add(((LPCArray) obj).getLPCString(0) + ", "
 					+ ((LPCArray) obj).getLPCString(1));
 
-		Intermud3.instance.getConfig().set("router.list", configRouterList);
+		Intermud3.config.getConfig().set("router.list", configRouterList);
 
 		LPCArray preferredRouter = new LPCArray(routerList.getLPCArray(0));
 		LPCString preferredName = preferredRouter.getLPCString(0);
@@ -81,7 +81,7 @@ public class I3Startup extends ServiceTemplate {
 		LPCString preferredIP = new LPCString(router[0].trim());
 		LPCInt preferredPort = new LPCInt(Integer.parseInt(router[1].trim()));
 
-		Intermud3.instance.getConfig().set("router.preferred",
+		Intermud3.config.getConfig().set("router.preferred",
 				preferredName + ", " + preferredAddr);
 		Intermud3.network.setRouterName(preferredName);
 		Intermud3.network.setRouterIP(preferredIP);
@@ -97,8 +97,7 @@ public class I3Startup extends ServiceTemplate {
 			LPCInt i = packet.getLPCInt(7);
 
 			if (i != null) {
-				Intermud3.instance.getConfig()
-						.set("router.password", i.toInt());
+				Intermud3.config.getConfig().set("router.password", i.toInt());
 				Intermud3.network.setRouterPassword(i);
 			}
 		} else {
@@ -107,10 +106,10 @@ public class I3Startup extends ServiceTemplate {
 			Log.info("Changing router details to "
 					+ Utils.toMudMode(preferredRouter));
 
-			Intermud3.instance.getConfig().set("router.password", 0);
-			Intermud3.instance.getConfig().set("router.chanlistID", 0);
-			Intermud3.instance.getConfig().set("router.mudlistID", 0);
-			Intermud3.instance.saveConfig();
+			Intermud3.config.getConfig().set("router.password", 0);
+			Intermud3.config.getConfig().set("router.chanlistID", 0);
+			Intermud3.config.getConfig().set("router.mudlistID", 0);
+			Intermud3.network.saveConfig();
 			Intermud3.network.setPreferredRouter(preferredRouter);
 			Intermud3.network.shutdown(0);
 			Intermud3.callout.addCallOut(Intermud3.network, "connect", 1);
@@ -118,7 +117,7 @@ public class I3Startup extends ServiceTemplate {
 			return;
 		}
 
-		Intermud3.instance.saveConfig();
+		Intermud3.network.saveConfig();
 
 		Log.info("Connection established to I3 router " + preferredName
 				+ " at " + preferredAddr);

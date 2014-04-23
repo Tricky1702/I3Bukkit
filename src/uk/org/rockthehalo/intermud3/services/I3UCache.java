@@ -194,7 +194,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				usernames = new LPCMapping();
 
-			usernames.set(new LPCString(username.replace(".", "")), data);
+			usernames.set(new LPCString(Utils.safeUsername(username)), data);
 			this.i3UserCache.set(new LPCString(mudname), usernames);
 		} else {
 			UUID uuid = this.localUUIDs.get(username);
@@ -293,7 +293,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			else
 				lastUpdate = this.i3UserCache
 						.getLPCMapping(new LPCString(mudname))
-						.getLPCArray(new LPCString(username.replace(".", "")))
+						.getLPCArray(
+								new LPCString(Utils.safeUsername(username)))
 						.getLPCInt(LASTUPDATE).toInt();
 
 			if (time - lastUpdate > 28 * 24 * 60 * 60) {
@@ -325,7 +326,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 					data.set(LASTACTIVE, time);
 					this.users.put(uuid, data);
 				} else {
-					username = username.replace(".", "");
+					username = Utils.safeUsername(username);
 
 					LPCArray data = this.i3UserCache.getLPCMapping(
 							new LPCString(mudname)).getLPCArray(
@@ -359,7 +360,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			this.config.saveConfig();
 		}
 
-		reloadConfig(false);
+		reloadConfig();
 
 		Intermud3.instance.getServer().getPluginManager()
 				.registerEvents(this, Intermud3.instance);
@@ -394,8 +395,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				return -1;
 
-			LPCArray data = usernames.getLPCArray(new LPCString(username
-					.replace(".", "")));
+			LPCArray data = usernames.getLPCArray(new LPCString(Utils
+					.safeUsername(username)));
 
 			if (data == null)
 				return -1;
@@ -482,8 +483,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				return null;
 
-			LPCArray data = usernames.getLPCArray(new LPCString(username
-					.replace(".", "")));
+			LPCArray data = usernames.getLPCArray(new LPCString(Utils
+					.safeUsername(username)));
 
 			if (data == null)
 				return null;
@@ -595,7 +596,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 				.runTaskLaterAsynchronously(Intermud3.instance, new Runnable() {
 					@Override
 					public void run() {
-						sendUCacheUpdate(tmpName, false);
+						sendUCacheUpdate(I3UCache.this.tmpName, false);
 					}
 				}, 2 * 20);
 	}
@@ -609,7 +610,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	 * Reload the ucache config file and setup the local variables.
 	 */
 	public void reloadConfig() {
-		reloadConfig(true);
+		reloadConfig(false);
 	}
 
 	/**
@@ -791,7 +792,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			LPCMapping users = new LPCMapping(
 					this.i3UserCache.getLPCMapping(mudname));
 
-			users.remove(new LPCString(username.toString().replace(".", "")));
+			users.remove(new LPCString(Utils.safeUsername(username.toString())));
 			this.i3UserCache.put(mudname, users);
 
 			if (users.isEmpty())
@@ -830,10 +831,14 @@ public class I3UCache extends ServiceTemplate implements Listener {
 	}
 
 	public void saveConfig() {
-		FileConfiguration root = this.config.getConfig();
-		root.set("users", "{}");
-		root.set("i3users", "{}");
+		saveConfig(false);
+	}
 
+	public void saveConfig(boolean flag) {
+		// Clear the configuration.
+		this.config.clearConfig();
+
+		FileConfiguration root = this.config.getConfig();
 		ConfigurationSection usersSection = root.createSection("users");
 
 		for (Entry<UUID, List<Object>> user : this.users.entrySet()) {
@@ -867,8 +872,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 			for (Entry<Object, Object> user : users.entrySet()) {
 				ConfigurationSection userSection = mudSection
-						.createSection(user.getKey().toString()
-								.replace(".", ""));
+						.createSection(Utils.safeUsername(user.getKey()
+								.toString()));
 				LPCArray data = (LPCArray) user.getValue();
 
 				userSection.set("visname", data.get(VISNAME).toString());
@@ -884,8 +889,10 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			}
 		}
 
-		root.set("ucache", null);
 		this.config.saveConfig();
+
+		if (flag)
+			Log.info(this.config.getFile().getName() + " saved.");
 	}
 
 	public void setAlias(Player player, String alias, String channel) {
