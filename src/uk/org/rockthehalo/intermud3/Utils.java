@@ -1,7 +1,6 @@
 package uk.org.rockthehalo.intermud3;
 
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -19,7 +18,7 @@ import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 
 public class Utils {
 	private static final Pattern INVALIDPATHCHARS = Pattern
-			.compile("[^a-z0-9'-]");
+			.compile("[^A-Za-z0-9#': -]");
 
 	private Utils() {
 	}
@@ -65,9 +64,10 @@ public class Utils {
 		return (long) (Math.random() * range);
 	}
 
-	public static String safeUsername(String username) {
-		return INVALIDPATHCHARS.matcher(username.toLowerCase(Locale.ENGLISH))
-				.replaceAll("_");
+	public static String safePath(String path) {
+		path = stripColor(path);
+
+		return INVALIDPATHCHARS.matcher(path).replaceAll("_");
 	}
 
 	public static String stripColor(String msg) {

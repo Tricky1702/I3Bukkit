@@ -194,8 +194,9 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			if (usernames == null)
 				usernames = new LPCMapping();
 
-			usernames.set(new LPCString(Utils.safeUsername(username)), data);
-			this.i3UserCache.set(new LPCString(mudname), usernames);
+			usernames.set(new LPCString(Utils.safePath(username)), data);
+			this.i3UserCache.set(new LPCString(Utils.safePath(mudname)),
+					usernames);
 		} else {
 			UUID uuid = this.localUUIDs.get(username);
 			List<Object> data = new ArrayList<Object>(USERSSIZE);
@@ -292,9 +293,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 				lastUpdate = (Integer) this.users.get(uuid).get(LASTUPDATE);
 			else
 				lastUpdate = this.i3UserCache
-						.getLPCMapping(new LPCString(mudname))
-						.getLPCArray(
-								new LPCString(Utils.safeUsername(username)))
+						.getLPCMapping(new LPCString(Utils.safePath(mudname)))
+						.getLPCArray(new LPCString(Utils.safePath(username)))
 						.getLPCInt(LASTUPDATE).toInt();
 
 			if (time - lastUpdate > 28 * 24 * 60 * 60) {
@@ -326,7 +326,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 					data.set(LASTACTIVE, time);
 					this.users.put(uuid, data);
 				} else {
-					username = Utils.safeUsername(username);
+					mudname = Utils.safePath(mudname);
+					username = Utils.safePath(username);
 
 					LPCArray data = this.i3UserCache.getLPCMapping(
 							new LPCString(mudname)).getLPCArray(
@@ -390,13 +391,13 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 		if (!mudname.equals(Utils.getServerName())) {
 			LPCMapping usernames = this.i3UserCache
-					.getLPCMapping(new LPCString(mudname));
+					.getLPCMapping(new LPCString(Utils.safePath(mudname)));
 
 			if (usernames == null)
 				return -1;
 
 			LPCArray data = usernames.getLPCArray(new LPCString(Utils
-					.safeUsername(username)));
+					.safePath(username)));
 
 			if (data == null)
 				return -1;
@@ -478,13 +479,13 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 		if (!mudname.equals(Utils.getServerName())) {
 			LPCMapping usernames = this.i3UserCache
-					.getLPCMapping(new LPCString(mudname));
+					.getLPCMapping(new LPCString(Utils.safePath(mudname)));
 
 			if (usernames == null)
 				return null;
 
 			LPCArray data = usernames.getLPCArray(new LPCString(Utils
-					.safeUsername(username)));
+					.safePath(username)));
 
 			if (data == null)
 				return null;
@@ -533,7 +534,8 @@ public class I3UCache extends ServiceTemplate implements Listener {
 
 				if (shadows.get(username.toString()) != null)
 					removeUserCache(mudname, username);
-				else if (shadows.get(visname.toString().toLowerCase()) != null) {
+				else if (shadows.get(Utils.stripColor(visname.toString())
+						.toLowerCase()) != null) {
 					data.set(
 							VISNAME,
 							new LPCString(StringUtils.capitalize(username
@@ -792,7 +794,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 			LPCMapping users = new LPCMapping(
 					this.i3UserCache.getLPCMapping(mudname));
 
-			users.remove(new LPCString(Utils.safeUsername(username.toString())));
+			users.remove(new LPCString(Utils.safePath(username.toString())));
 			this.i3UserCache.put(mudname, users);
 
 			if (users.isEmpty())
@@ -866,14 +868,13 @@ public class I3UCache extends ServiceTemplate implements Listener {
 		ConfigurationSection i3UsersSection = root.createSection("i3users");
 
 		for (Entry<Object, Object> mud : this.i3UserCache.entrySet()) {
-			ConfigurationSection mudSection = i3UsersSection.createSection(mud
-					.getKey().toString());
+			ConfigurationSection mudSection = i3UsersSection
+					.createSection(Utils.safePath(mud.getKey().toString()));
 			LPCMapping users = (LPCMapping) mud.getValue();
 
 			for (Entry<Object, Object> user : users.entrySet()) {
 				ConfigurationSection userSection = mudSection
-						.createSection(Utils.safeUsername(user.getKey()
-								.toString()));
+						.createSection(Utils.safePath(user.getKey().toString()));
 				LPCArray data = (LPCArray) user.getValue();
 
 				userSection.set("visname", data.get(VISNAME).toString());
