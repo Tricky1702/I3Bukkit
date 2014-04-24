@@ -598,7 +598,7 @@ public class I3UCache extends ServiceTemplate implements Listener {
 				.runTaskLaterAsynchronously(Intermud3.instance, new Runnable() {
 					@Override
 					public void run() {
-						sendUCacheUpdate(I3UCache.this.tmpName, false);
+						sendUCacheUpdate(tmpName, false);
 					}
 				}, 2 * 20);
 	}
