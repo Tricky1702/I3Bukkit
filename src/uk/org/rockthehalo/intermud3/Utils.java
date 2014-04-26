@@ -27,50 +27,56 @@ public class Utils {
 		return stripColor(Intermud3.instance.getServer().getServerName());
 	}
 
-	public static boolean isLPCArray(Object obj) {
+	public static boolean isLPCArray(final Object obj) {
 		return LPCArray.class.isInstance(obj);
 	}
 
-	public static boolean isLPCInt(Object obj) {
+	public static boolean isLPCInt(final Object obj) {
 		return LPCInt.class.isInstance(obj);
 	}
 
-	public static boolean isLPCMapping(Object obj) {
+	public static boolean isLPCMapping(final Object obj) {
 		return LPCMapping.class.isInstance(obj);
 	}
 
-	public static boolean isLPCMixed(Object obj) {
+	public static boolean isLPCMixed(final Object obj) {
 		return LPCMixed.class.isInstance(obj);
 	}
 
-	public static boolean isLPCString(Object obj) {
+	public static boolean isLPCString(final Object obj) {
 		return LPCString.class.isInstance(obj);
 	}
 
-	public static boolean isLPCVar(Object obj) {
+	public static boolean isLPCVar(final Object obj) {
 		return isLPCArray(obj) || isLPCInt(obj) || isLPCMapping(obj)
 				|| isLPCMixed(obj) || isLPCString(obj);
 	}
 
-	public static boolean isPlayer(Object player) {
+	public static boolean isPlayer(final Object player) {
 		return Player.class.isInstance(player);
 	}
 
-	public static int rnd(int range) {
+	public static int rnd(final int range) {
 		return (int) (Math.random() * range);
 	}
 
-	public static long rnd(long range) {
+	public static long rnd(final long range) {
 		return (long) (Math.random() * range);
 	}
 
 	public static String safePath(String path) {
+		if (path == null)
+			return null;
+
 		path = stripColor(path);
 
 		return INVALIDPATHCHARS.matcher(path).replaceAll("_");
 	}
 
 	public static String stripColor(String msg) {
+		if (msg == null)
+			return null;
+
 		msg = toChatColor(msg);
 
 		return ChatColor.stripColor(msg);
@@ -82,6 +88,9 @@ public class Utils {
 	 * @return ChatColor version of Pinkfish coded message.
 	 */
 	public static String toChatColor(String msg) {
+		if (msg == null)
+			return null;
+
 		if (!msg.contains("%^"))
 			return msg;
 
@@ -136,7 +145,7 @@ public class Utils {
 		return msg.replace("%^", "");
 	}
 
-	public static String toMudMode(Object obj) {
+	public static String toMudMode(final Object obj) {
 		if (obj == null)
 			return "0";
 
@@ -217,6 +226,9 @@ public class Utils {
 	 * @return Pinkfish version of ChatColor coded message.
 	 */
 	public static String toPinkfish(String msg) {
+		if (msg == null)
+			return null;
+
 		if (!msg.contains(ChatColor.COLOR_CHAR + ""))
 			return msg;
 
@@ -310,12 +322,15 @@ public class Utils {
 		return output + "%^RESET%^";
 	}
 
-	private static String blankFromStrings(String str, String target) {
-		StringBuffer in = new StringBuffer("");
-		int x = 0;
+	private static String blankFromStrings(final String str, final String target) {
+		if (str == null || target == null)
+			return null;
 
 		if (!str.contains("\""))
 			return str;
+
+		StringBuffer in = new StringBuffer("");
+		int x = 0;
 
 		while (x < str.length()) {
 			char c = str.charAt(x);
@@ -374,7 +389,10 @@ public class Utils {
 		return in.toString();
 	}
 
-	private static String blankFromStrings(String str, String[] targets) {
+	private static String blankFromStrings(String str, final String[] targets) {
+		if (str == null || targets == null)
+			return null;
+
 		for (String target : targets)
 			str = blankFromStrings(str, target);
 
@@ -565,13 +583,16 @@ public class Utils {
 		throw new I3Exception("Invalid MudMode string: " + mudModeString);
 	}
 
-	private static String replaceAndIngnoreInStrings(String str, String target,
-			String replacement) {
-		StringBuffer in = new StringBuffer("");
-		int x = 0;
+	private static String replaceAndIngnoreInStrings(final String str,
+			final String target, final String replacement) {
+		if (str == null || target == null)
+			return null;
 
 		if (!str.contains("\""))
 			return str.replace(target, replacement);
+
+		StringBuffer in = new StringBuffer("");
+		int x = 0;
 
 		while (x < str.length()) {
 			char c = str.charAt(x);
@@ -621,8 +642,11 @@ public class Utils {
 		return in.toString();
 	}
 
-	private static int scanForward(String str, String leftTarget,
-			String rightTarget) {
+	private static int scanForward(final String str, final String leftTarget,
+			final String rightTarget) {
+		if (str == null || leftTarget == null || rightTarget == null)
+			return -1;
+
 		int left = 0, right = str.indexOf(rightTarget);
 
 		while (left < right) {
