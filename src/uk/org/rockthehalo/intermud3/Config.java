@@ -15,20 +15,21 @@ public class Config {
 	private FileConfiguration config = null;
 	private File configFile = null;
 
-	public Config(JavaPlugin plugin, String fileName) {
+	public Config(final JavaPlugin plugin, final String fileName) {
 		this.plugin = plugin;
 		this.resourceFileName = fileName;
 		this.configFile = new File(plugin.getDataFolder(), fileName);
 	}
 
-	public Config(JavaPlugin plugin, String fileName, String resourceFileName) {
+	public Config(final JavaPlugin plugin, final String fileName,
+			final String resourceFileName) {
 		this.plugin = plugin;
 		this.resourceFileName = resourceFileName;
 		this.configFile = new File(plugin.getDataFolder(), fileName);
 	}
 
 	public void clearConfig() {
-		for (String key : this.config.getKeys(false))
+		for (final String key : this.config.getKeys(false))
 			this.config.set(key, null);
 	}
 
@@ -51,7 +52,7 @@ public class Config {
 		this.config = YamlConfiguration.loadConfiguration(this.configFile);
 
 		// Look for defaults in the jar
-		InputStream defConfigStream = getResource();
+		final InputStream defConfigStream = getResource();
 
 		if (defConfigStream != null) {
 			YamlConfiguration defConfig = YamlConfiguration

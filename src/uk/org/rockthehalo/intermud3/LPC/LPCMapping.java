@@ -17,25 +17,24 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		super.setType(LPCTypes.MAPPING);
 	}
 
-	public LPCMapping(LPCMapping obj) {
-		this();
-		this.putAll(Collections.synchronizedMap(obj.getLPCData()));
-	}
-
-	public LPCMapping(int size) {
+	public LPCMapping(final int size) {
 		this();
 		this.lpcData = Collections
 				.synchronizedMap(new LinkedHashMap<Object, Object>(size));
 	}
 
-	public LPCMapping(Map<Object, Object> lpcData) {
-		this();
-		this.putAll(Collections.synchronizedMap(lpcData));
+	public LPCMapping(final Map<Object, Object> o) {
+		this(o.size());
+		this.putAll(Collections.synchronizedMap(o));
+	}
+
+	public LPCMapping(final LPCMapping o) {
+		this(o.getLPCData());
 	}
 
 	@Override
-	public boolean add(Object lpcData) throws I3Exception {
-		throw new I3Exception("Invalid operation for LPCMapping: add(lpcData)");
+	public boolean add(final Object o) throws I3Exception {
+		throw new I3Exception("Invalid operation for LPCMapping: add(o)");
 	}
 
 	@Override
@@ -49,33 +48,33 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public boolean containsKey(Object index) {
-		if (index == null)
+	public boolean containsKey(final Object key) {
+		if (key == null)
 			return false;
 
-		return this.getKey(index) != null;
-	}
+		if (String.class.isInstance(key))
+			return getKey(new LPCString((String) key)) != null;
+		else if (Number.class.isInstance(key))
+			return getKey(new LPCInt((Number) key)) != null;
+		else if (Utils.isLPCVar(key))
+			return getKey(key) != null;
 
-	public boolean containsKey(String index) {
-		if (index == null)
-			return false;
-
-		return this.getKey(new LPCString(index)) != null;
+		return false;
 	}
 
 	@Override
-	public boolean containsValue(Object lpcData) {
-		if (lpcData == null)
+	public boolean containsValue(final Object value) {
+		if (value == null)
 			return false;
 
-		return this.getValue(lpcData) != null;
-	}
+		if (String.class.isInstance(value))
+			return getValue(new LPCString((String) value)) != null;
+		else if (Number.class.isInstance(value))
+			return getValue(new LPCInt((Number) value)) != null;
+		else if (Utils.isLPCVar(value))
+			return getValue(value) != null;
 
-	public boolean containsValue(String lpcData) {
-		if (lpcData == null)
-			return false;
-
-		return this.getValue(new LPCString(lpcData)) != null;
+		return false;
 	}
 
 	@Override
@@ -84,11 +83,23 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public Object get(Object index) {
-		if (index == null)
+	public boolean equals(final Object o) {
+		if (o == null)
+			return false;
+
+		if (Utils.isLPCMapping(o)
+				&& Utils.toMudMode(o).equals(Utils.toMudMode(this)))
+			return true;
+
+		return false;
+	}
+
+	@Override
+	public Object get(final Object key) {
+		if (key == null)
 			return null;
 
-		Object realKey = this.getKey(index);
+		final Object realKey = getKey(key);
 
 		if (realKey == null)
 			return null;
@@ -100,19 +111,52 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		if (key == null)
 			return null;
 
-		Class<? extends Object> kClass = key.getClass();
-		String kString = key.toString();
+		if (String.class.isInstance(key))
+			key = new LPCString((String) key);
+		else if (Number.class.isInstance(key))
+			key = new LPCInt((Number) key);
 
-		for (Object obj : this.keySet())
-			if (kClass.isInstance(obj) && obj.toString().equals(kString))
-				return obj;
+		final Class<? extends Object> kClass = key.getClass();
+
+		for (final Object obj : keySet())
+			if (kClass.isInstance(obj)) {
+				switch (LPCVar.getType(obj)) {
+				case ARRAY:
+					if (((LPCArray) obj).equals(key))
+						return obj;
+
+					break;
+				case INT:
+					if (((LPCInt) obj).equals(key))
+						return obj;
+
+					break;
+				case MAPPING:
+					if (((LPCMapping) obj).equals(key))
+						return obj;
+
+					break;
+				case MIXED:
+					if (((LPCMixed) obj).equals(key))
+						return obj;
+
+					break;
+				case STRING:
+					if (((LPCString) obj).equals(key))
+						return obj;
+
+					break;
+				default:
+					break;
+				}
+			}
 
 		return null;
 	}
 
 	@Override
-	public LPCArray getLPCArray(Object index) {
-		Object obj = this.get(index);
+	public LPCArray getLPCArray(final Object o) {
+		final Object obj = get(o);
 
 		if (Utils.isLPCArray(obj))
 			return (LPCArray) obj;
@@ -126,8 +170,8 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public LPCInt getLPCInt(Object index) {
-		Object obj = this.get(index);
+	public LPCInt getLPCInt(final Object o) {
+		final Object obj = get(o);
 
 		if (Utils.isLPCInt(obj))
 			return (LPCInt) obj;
@@ -136,8 +180,8 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public LPCMapping getLPCMapping(Object index) {
-		Object obj = this.get(index);
+	public LPCMapping getLPCMapping(final Object o) {
+		final Object obj = get(o);
 
 		if (Utils.isLPCMapping(obj))
 			return (LPCMapping) obj;
@@ -146,8 +190,8 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public LPCString getLPCString(Object index) {
-		Object obj = this.get(index);
+	public LPCString getLPCString(final Object o) {
+		final Object obj = get(o);
 
 		if (Utils.isLPCString(obj))
 			return (LPCString) obj;
@@ -159,14 +203,52 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		if (value == null)
 			return null;
 
-		Class<? extends Object> vClass = value.getClass();
-		String vString = value.toString();
+		if (String.class.isInstance(value))
+			value = new LPCString((String) value);
+		else if (Number.class.isInstance(value))
+			value = new LPCInt((Number) value);
 
-		for (Object obj : this.values())
-			if (vClass.isInstance(obj) && obj.toString().equals(vString))
-				return obj;
+		final Class<? extends Object> vClass = value.getClass();
+
+		for (final Object obj : values())
+			if (vClass.isInstance(obj)) {
+				switch (LPCVar.getType(obj)) {
+				case ARRAY:
+					if (((LPCArray) obj).equals(value))
+						return obj;
+
+					break;
+				case INT:
+					if (((LPCInt) obj).equals(value))
+						return obj;
+
+					break;
+				case MAPPING:
+					if (((LPCMapping) obj).equals(value))
+						return obj;
+
+					break;
+				case MIXED:
+					if (((LPCMixed) obj).equals(value))
+						return obj;
+
+					break;
+				case STRING:
+					if (((LPCString) obj).equals(value))
+						return obj;
+
+					break;
+				default:
+					break;
+				}
+			}
 
 		return null;
+	}
+
+	@Override
+	public int hashCode() {
+		return Utils.toMudMode(this).hashCode();
 	}
 
 	@Override
@@ -180,29 +262,29 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public Object put(Object index, Object lpcData) {
-		if (index == null || lpcData == null)
-			return null;
-
-		Object realKey = this.getKey(index);
-
-		if (realKey == null)
-			realKey = index;
-
-		return this.lpcData.put(realKey, lpcData);
-	}
-
-	@Override
-	public void putAll(Map<? extends Object, ? extends Object> map) {
-		this.lpcData.putAll(map);
-	}
-
-	@Override
-	public Object remove(Object key) {
+	public Object put(final Object key, final Object value) {
 		if (key == null)
 			return null;
 
-		Object realKey = this.getKey(key);
+		Object realKey = getKey(key);
+
+		if (realKey == null)
+			realKey = key;
+
+		return this.lpcData.put(realKey, value);
+	}
+
+	@Override
+	public void putAll(Map<? extends Object, ? extends Object> m) {
+		this.lpcData.putAll(m);
+	}
+
+	@Override
+	public Object remove(final Object key) {
+		if (key == null)
+			return null;
+
+		final Object realKey = getKey(key);
 
 		if (realKey == null)
 			return null;
@@ -211,51 +293,48 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 	}
 
 	@Override
-	public Object set(Object index, Object lpcData) {
-		if (index == null || lpcData == null)
-			return null;
-
-		return this.put(index, lpcData);
+	public Object set(final Object key, final Object value) {
+		return this.put(key, value);
 	}
 
 	@Override
-	public void setLPCData(LPCArray obj) throws I3Exception {
+	public void setLPCData(final LPCArray o) throws I3Exception {
 		throw new I3Exception(
 				"Invalid operation for LPCMapping: setLPCData(LPCArray)");
 	}
 
 	@Override
-	public void setLPCData(LPCInt obj) throws I3Exception {
+	public void setLPCData(final LPCInt o) throws I3Exception {
 		throw new I3Exception(
 				"Invalid operation for LPCMapping: setLPCData(LPCInt)");
 	}
 
 	@Override
-	public void setLPCData(LPCMapping obj) {
-		this.clear();
-		this.putAll(Collections.synchronizedMap(obj.getLPCData()));
+	public void setLPCData(final LPCMapping o) {
+		clear();
+		putAll(Collections.synchronizedMap(o.getLPCData()));
 	}
 
 	@Override
-	public void setLPCData(LPCString obj) throws I3Exception {
+	public void setLPCData(final LPCString o) throws I3Exception {
 		throw new I3Exception(
 				"Invalid operation for LPCMapping: setLPCData(LPCString)");
 	}
 
 	@Override
-	public void setLPCData(Object obj) throws I3Exception {
-		if (Utils.isLPCArray(obj))
-			setLPCData((LPCArray) obj);
-		else if (Utils.isLPCInt(obj))
-			setLPCData((LPCInt) obj);
-		else if (Utils.isLPCMapping(obj))
-			setLPCData((LPCMapping) obj);
-		else if (Utils.isLPCString(obj))
-			setLPCData((LPCString) obj);
+	public void setLPCData(final Object o) throws I3Exception {
+		if (Utils.isLPCArray(o))
+			setLPCData((LPCArray) o);
+		else if (Utils.isLPCInt(o))
+			setLPCData((LPCInt) o);
+		else if (Utils.isLPCMapping(o))
+			setLPCData((LPCMapping) o);
+		else if (Utils.isLPCString(o))
+			setLPCData((LPCString) o);
 		else
 			throw new I3Exception(
 					"Invalid data for LPCMapping: setLPCData(Object) '"
-							+ obj.toString() + "'");
+							+ o.toString() + "'");
 	}
 
 	@Override

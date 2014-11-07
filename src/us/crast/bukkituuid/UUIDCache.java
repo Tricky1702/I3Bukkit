@@ -50,7 +50,7 @@ public class UUIDCache implements Listener {
 	 * get it, and return null. A fetch at a later point will then be able to
 	 * return this id.
 	 */
-	public UUID getIdOptimistic(String name) {
+	public UUID getIdOptimistic(final String name) {
 		Validate.notEmpty(name);
 		UUID uuid = cache.get(name);
 		if (uuid == null) {
@@ -72,7 +72,7 @@ public class UUIDCache implements Listener {
 	 *            The player name.
 	 * @return a UUID
 	 */
-	public UUID getId(String name) {
+	public UUID getId(final String name) {
 		Validate.notEmpty(name);
 		UUID uuid = cache.get(name);
 		if (uuid == null) {
@@ -100,7 +100,7 @@ public class UUIDCache implements Listener {
 	 * @param name
 	 *            The player's name
 	 */
-	public void ensurePlayerUUID(String name) {
+	public void ensurePlayerUUID(final String name) {
 		if (cache.containsKey(name))
 			return;
 		cache.put(name, ZERO_UUID);
@@ -117,7 +117,7 @@ public class UUIDCache implements Listener {
 				});
 	}
 
-	private void syncFetch(ArrayList<String> names) {
+	private void syncFetch(final ArrayList<String> names) {
 		final UUIDFetcher fetcher = new UUIDFetcher(names);
 		try {
 			cache.putAll(fetcher.call());
@@ -126,19 +126,19 @@ public class UUIDCache implements Listener {
 		}
 	}
 
-	private ArrayList<String> nameList(String name) {
+	private ArrayList<String> nameList(final String name) {
 		ArrayList<String> names = new ArrayList<String>();
 		names.add(name);
 		return names;
 	}
 
 	@EventHandler
-	void onPlayerJoin(PlayerJoinEvent event) {
+	void onPlayerJoin(final PlayerJoinEvent event) {
 		ensurePlayerUUID(event.getPlayer().getName());
 	}
 
 	@EventHandler
-	void onPlayerQuit(PlayerQuitEvent event) {
+	void onPlayerQuit(final PlayerQuitEvent event) {
 		cache.remove(event.getPlayer().getName());
 	}
 }

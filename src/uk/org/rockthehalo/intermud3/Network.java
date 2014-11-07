@@ -1,10 +1,8 @@
 package uk.org.rockthehalo.intermud3;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.Socket;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +19,14 @@ import uk.org.rockthehalo.intermud3.services.I3Startup;
 import uk.org.rockthehalo.intermud3.services.ServiceManager;
 import uk.org.rockthehalo.intermud3.services.ServiceType;
 
-public class Network implements Runnable {
-	private volatile Thread inputThread = null;
+public class Network {
+	private volatile Thread clentThread = null;
 
 	public final long maxRetryTime = 600;
 	public final long minRetryTime = 30;
 	public final long retryTimeStep = 20;
 
-	private Socket sock = null;
-	private DataOutputStream sockOut = null;
-	private DataInputStream sockIn = null;
+	private I3Client client = null;
 
 	private LPCString adminEmail = new LPCString();
 	private boolean autoConnect = false;
@@ -58,27 +54,27 @@ public class Network implements Runnable {
 		}
 	}
 
-	public void addRouter(LPCString routerName, LPCString routerIP,
-			LPCInt routerPort) {
-		LPCArray newRouterList = new LPCArray();
-		LPCArray newRouterArray = new LPCArray();
+	public void addRouter(final LPCString routerName, final LPCString routerIP,
+			final LPCInt routerPort) {
+		final LPCArray newRouterList = new LPCArray();
+		final LPCArray newRouterArray = new LPCArray();
 
 		newRouterArray.add(new LPCString(routerName));
 		newRouterArray.add(new LPCString(routerIP + " " + routerPort));
 		newRouterList.add(newRouterArray);
 
 		if (this.routerList != null) {
-			ListIterator<Object> litr = this.routerList.listIterator();
+			final ListIterator<Object> litr = this.routerList.listIterator();
 
 			while (litr.hasNext()) {
-				LPCArray arr = (LPCArray) litr.next();
-				String name = arr.getLPCString(0).toString();
-				String ipport = arr.getLPCString(1).toString();
-				String[] router = StringUtils.split(ipport, " ");
+				final LPCArray arr = (LPCArray) litr.next();
+				final String name = arr.getLPCString(0).toString();
+				final String ipport = arr.getLPCString(1).toString();
+				final String[] router = StringUtils.split(ipport, " ");
 
 				if (!name.equals(routerName.toString())
 						|| !router[0].equals(routerIP.toString())
-						|| Integer.parseInt(router[1]) != routerPort.toInt())
+						|| Integer.parseInt(router[1]) != routerPort.toNum())
 					newRouterList.add(arr);
 			}
 		}
@@ -90,41 +86,44 @@ public class Network implements Runnable {
 		if (isConnected())
 			return;
 
+		final I3Startup service = ServiceType.I3STARTUP.getService();
+
+		if (service == null) {
+			Log.error("I3Startup service not found!");
+
+			return;
+		}
+
 		if (this.preferredRouter == null || this.preferredRouter.size() < 2) {
 			Log.error("No preferred router.");
 
 			return;
 		}
 
-		String[] router = StringUtils.split(this.preferredRouter
-				.getLPCString(1).toString(), " ");
-
 		try {
-			sock = new Socket(router[0].trim(), Integer.parseInt(router[1]
-					.trim()));
-			sockOut = new DataOutputStream(sock.getOutputStream());
+			final String[] router = StringUtils.split(this.preferredRouter
+					.getLPCString(1).toString(), " ");
+			final String host = router[0].trim();
+			final int port = Integer.parseInt(router[1].trim());
+
+			this.client = new I3Client(InetAddress.getByName(host), port);
+
+			this.clentThread = new Thread(this.client);
+			this.clentThread.setName("I3Client");
+			this.clentThread.setDaemon(true);
+			this.clentThread.start();
+
+			this.routerConnected = false;
+			this.idleTimeout = System.currentTimeMillis();
+
+			Intermud3.callout.addCallOut(service, "send", 5);
+		} catch (NumberFormatException nfE) {
+			nfE.printStackTrace();
 		} catch (UnknownHostException uhE) {
 			uhE.printStackTrace();
-
-			return;
 		} catch (IOException ioE) {
 			ioE.printStackTrace();
-
-			return;
 		}
-
-		this.inputThread = new Thread(null, this, "Intermud3");
-		this.inputThread.start();
-
-		this.routerConnected = false;
-		this.idleTimeout = System.currentTimeMillis();
-
-		I3Startup service = ServiceType.I3STARTUP.getService();
-
-		if (service == null)
-			Log.error("I3Startup service not found!");
-		else
-			Intermud3.callout.addCallOut(service, "send", 2);
 	}
 
 	public void create() {
@@ -140,9 +139,9 @@ public class Network implements Runnable {
 				root.getStringList("router.list"));
 		this.hostName = new LPCString(Utils.stripColor(root.getString(
 				"hostName", "")));
-		this.routerPassword = new LPCInt(root.getInt("router.password"));
+		this.routerPassword = new LPCInt(root.getLong("router.password"));
 
-		String preferredRouter = root.getString("router.preferred");
+		final String preferredRouter = root.getString("router.preferred");
 		String[] parts, ipport;
 
 		parts = StringUtils.split(preferredRouter, ",");
@@ -162,15 +161,15 @@ public class Network implements Runnable {
 		addRouter(this.defRouterName, this.defRouterIP, this.defRouterPort);
 
 		for (int i = 0; i < this.configRouterList.size(); i++) {
-			String otherRouter = this.configRouterList.get(i);
+			final String otherRouter = this.configRouterList.get(i);
 
 			parts = StringUtils.split(otherRouter, ",");
 			ipport = StringUtils.split(parts[1].trim(), " ");
 
-			LPCString otherRouterName = new LPCString(parts[0].trim());
-			LPCString otherRouterIP = new LPCString(ipport[0].trim());
-			LPCInt otherRouterPort = new LPCInt(Integer.parseInt(ipport[1]
-					.trim()));
+			final LPCString otherRouterName = new LPCString(parts[0].trim());
+			final LPCString otherRouterIP = new LPCString(ipport[0].trim());
+			final LPCInt otherRouterPort = new LPCInt(
+					Integer.parseInt(ipport[1].trim()));
 
 			addRouter(otherRouterName, otherRouterIP, otherRouterPort);
 		}
@@ -259,15 +258,14 @@ public class Network implements Runnable {
 	 * @return true if socket connected, false otherwise
 	 */
 	public boolean isConnected() {
-		return this.sock != null && this.sockIn != null && this.sockOut != null
-				&& this.inputThread != null;
+		return this.client != null && this.client.isConnected();
 	}
 
 	/**
 	 * @return true if router connected, false otherwise
 	 */
 	public boolean isRouterConnected() {
-		return this.routerConnected;
+		return isConnected() && this.routerConnected;
 	}
 
 	public void reconnect() {
@@ -277,20 +275,12 @@ public class Network implements Runnable {
 		if (this.reconnectWait > this.maxRetryTime)
 			this.reconnectWait = this.maxRetryTime;
 
-		if (isConnected()) {
-			shutdown(0);
-			this.reconnectWait -= this.retryTimeStep;
-			saveConfig();
-			reconnect(5);
-
-			return;
-		}
-
-		Intermud3.callout.addCallOut(this, "connect", 3);
+		shutdown(0);
+		Intermud3.callout.addCallOut(this, "connect", 5);
 		saveConfig();
 	}
 
-	public void reconnect(long reconnectWait) {
+	public void reconnect(final long reconnectWait) {
 		Intermud3.callout.addCallOut(this, "reconnect", reconnectWait);
 	}
 
@@ -304,7 +294,7 @@ public class Network implements Runnable {
 	/**
 	 * Reload the main config file and setup the local variables.
 	 */
-	public void reloadConfig(boolean flag) {
+	public void reloadConfig(final boolean flag) {
 		this.routerList.clear();
 		Intermud3.config.reloadConfig();
 		create();
@@ -323,7 +313,7 @@ public class Network implements Runnable {
 		remove(0);
 	}
 
-	public void remove(int arg) {
+	public void remove(final long arg) {
 		shutdown(arg);
 
 		// Clear out all lists.
@@ -346,191 +336,11 @@ public class Network implements Runnable {
 		this.routerPort = null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Runnable#run()
-	 */
-	@Override
-	public void run() {
-		try {
-			this.sock.setSoTimeout(60000);
-			this.sockIn = new DataInputStream(this.sock.getInputStream());
-		} catch (IOException ioE) {
-			this.sockIn = null;
-			this.routerConnected = false;
-		}
-
-		while (isConnected()) {
-			Packet packet;
-			PacketType type = null;
-			LPCString omud = null, ouser = null, tmud = null, tuser = null;
-			String str, err = null, namedType = "";
-
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException iE) {
-				if (!isConnected()) {
-					Log.warn("Shutdown!!!");
-
-					return;
-				}
-			}
-
-			try {
-				byte[] tmp;
-				int len = 0;
-
-				while (isConnected()) {
-					try {
-						len = sockIn.readInt();
-
-						break;
-					} catch (IOException ioE) {
-						if ((ioE.getMessage() == null)
-								|| (ioE.getMessage().toUpperCase()
-										.indexOf("TIMED OUT") < 0))
-							throw ioE;
-
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException iE) {
-						}
-
-						continue;
-					}
-				}
-
-				if (len > 65536) {
-					int skipped = 0;
-
-					try {
-						while (skipped < len)
-							skipped += sockIn.skipBytes(len);
-					} catch (IOException e) {
-					}
-
-					Log.error("Got illegal packet: " + skipped + "/" + len
-							+ " bytes.");
-
-					continue;
-				}
-
-				tmp = new byte[len];
-
-				while (isConnected()) {
-					try {
-						sockIn.readFully(tmp);
-
-						break;
-					} catch (IOException e) {
-						if ((e.getMessage() == null)
-								|| (e.getMessage().toUpperCase()
-										.indexOf("TIMED OUT") < 0))
-							throw e;
-
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException ie) {
-						}
-
-						Log.error("Timeout receiving packet sized " + len);
-
-						continue;
-					}
-				}
-
-				str = new String(tmp);
-			} catch (IOException ioE) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException iE) {
-					if (!isConnected()) {
-						Log.warn("Shutdown!!!");
-
-						return;
-					}
-				}
-
-				String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE
-						.getMessage();
-
-				if (errMsg != null)
-					Log.error("inputThread: " + errMsg);
-
-				this.routerConnected = false;
-				reconnect(this.reconnectWait);
-
-				return;
-			}
-
-			packet = new Packet();
-			packet.fromMudMode(str);
-
-			if (packet.isEmpty())
-				continue;
-			else if (!Utils.isLPCArray(packet))
-				err = "packet not array";
-			else if (packet.size() <= 6)
-				err = "packet size too small";
-			else {
-				namedType = packet.getLPCString(Payload.TYPE).toString();
-				type = PacketType.getNamedType(namedType);
-				omud = packet.getLPCString(Payload.O_MUD);
-				ouser = packet.getLPCString(Payload.O_USER);
-				tmud = packet.getLPCString(Payload.T_MUD);
-				tuser = packet.getLPCString(Payload.T_USER);
-
-				if (tmud != null
-						&& !tmud.toString().equals(Utils.getServerName())) {
-					if (namedType.equals("mudlist")) {
-						Log.warn("Wrong destination (" + tmud
-								+ ") for mudlist packet.");
-						packet.set(Payload.T_MUD,
-								new LPCString(Utils.getServerName()));
-					} else {
-						err = "wrong destination mud (" + tmud + ")";
-					}
-				} else if (omud == null) {
-					err = "originating mud not a string";
-				} else if (type == null) {
-					err = "SERVICE is not a string";
-				}
-			}
-
-			if (err != null) {
-				Log.error(err + ".");
-				Log.error(packet.toMudMode());
-
-				continue;
-			}
-
-			this.routerConnected = true;
-			this.setIdleTimeout(System.currentTimeMillis());
-
-			// Sanity check on the originator username
-			if (ouser != null)
-				packet.set(Payload.O_USER, new LPCString(ouser.toString()
-						.toLowerCase()));
-
-			// Sanity check on the target username
-			if (tuser != null)
-				packet.set(Payload.T_USER, new LPCString(tuser.toString()
-						.toLowerCase()));
-
-			if (type == null)
-				Log.warn("Service handler for I3 packet " + packet.toMudMode()
-						+ " not available.");
-			else
-				type.handler(packet);
-		}
-	}
-
 	public void saveConfig() {
 		saveConfig(false);
 	}
 
-	public void saveConfig(boolean flag) {
+	public void saveConfig(final boolean flag) {
 		Intermud3.config.saveConfig();
 
 		if (flag)
@@ -541,7 +351,7 @@ public class Network implements Runnable {
 	 * @param packet
 	 *            the packet to send to the router
 	 */
-	public void send(Packet packet) {
+	public void send(final Packet packet) {
 		if (isConnected())
 			send(packet.toMudMode());
 	}
@@ -550,37 +360,36 @@ public class Network implements Runnable {
 	 * @param str
 	 *            the mudmode string to send to the router
 	 */
-	public void send(String str) {
+	public void send(final String str) {
 		if (isConnected()) {
 			try {
 				byte[] packet = str.getBytes("ISO-8859-1");
-				int size = packet.length;
+				final int size = packet.length;
 
 				for (int i = 0; i < size; i++) {
+					final int c = packet[i] & 0xff;
+
 					// 160 is a non-breaking space. We'll consider that
 					// "printable".
-					if ((packet[i] & 0xFF) < 32
-							|| ((packet[i] & 0xFF) >= 127 && (packet[i] & 0xFF) <= 159)) {
+					if (c < 32 || (c >= 127 && c <= 159)) {
 						// Java uses it as a replacement character,
 						// so it's probably ok for us too.
 						packet[i] = '?';
 					}
 				}
 
-				sockOut.writeInt(size);
-				sockOut.write(packet);
-				sockOut.flush();
+				this.client.send(packet);
 			} catch (UnsupportedEncodingException ueE) {
-				String errMsg = ueE.getMessage() == null ? ueE.toString() : ueE
-						.getMessage();
+				final String errMsg = ueE.getMessage() == null ? ueE.toString()
+						: ueE.getMessage();
 
 				Log.error("Unsupported encoding: " + str);
 
 				if (errMsg != null)
 					Log.error(errMsg);
 			} catch (IOException ioE) {
-				String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE
-						.getMessage();
+				final String errMsg = ioE.getMessage() == null ? ioE.toString()
+						: ioE.getMessage();
 
 				Log.error("Problem sending data: " + str);
 
@@ -590,9 +399,9 @@ public class Network implements Runnable {
 		}
 	}
 
-	public void sendPacket(String i3Type, String origUser, String targMud,
-			String targUser, Packet payload) {
-		Packet packet = new Packet();
+	public void sendPacket(final String i3Type, final String origUser,
+			final String targMud, final String targUser, final Packet payload) {
+		final Packet packet = new Packet();
 
 		packet.add(new LPCString(i3Type));
 		packet.add(new LPCInt(5));
@@ -616,46 +425,50 @@ public class Network implements Runnable {
 		if (payload == null)
 			packet.add(new LPCInt(0));
 		else
-			for (Object obj : payload)
+			for (final Object obj : payload)
 				packet.add(obj);
 
 		send(packet);
 	}
 
-	public void sendToRouter(PacketType i3Type, String origUser, Packet packet) {
+	public void sendToRouter(final PacketType i3Type, final String origUser,
+			final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, getRouterName().toString(),
 				null, packet);
 	}
 
-	public void sendToRouter(String i3Type, String origUser, Packet packet) {
+	public void sendToRouter(final String i3Type, final String origUser,
+			final Packet packet) {
 		sendPacket(i3Type, origUser, getRouterName().toString(), null, packet);
 	}
 
-	public void sendToMud(PacketType i3Type, String origUser, String targMud,
-			Packet packet) {
+	public void sendToMud(final PacketType i3Type, final String origUser,
+			final String targMud, final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, null, packet);
 	}
 
-	public void sendToMud(String i3Type, String origUser, String targMud,
-			Packet packet) {
+	public void sendToMud(final String i3Type, final String origUser,
+			final String targMud, final Packet packet) {
 		sendPacket(i3Type, origUser, targMud, null, packet);
 	}
 
-	public void sendToUser(PacketType i3Type, String origUser, String targMud,
-			String targUser, Packet packet) {
+	public void sendToUser(final PacketType i3Type, final String origUser,
+			final String targMud, final String targUser, final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, targUser, packet);
 	}
 
-	public void sendToUser(String i3Type, String origUser, String targMud,
-			String targUser, Packet packet) {
+	public void sendToUser(final String i3Type, final String origUser,
+			final String targMud, final String targUser, final Packet packet) {
 		sendPacket(i3Type, origUser, targMud, targUser, packet);
 	}
 
-	public void sendToAll(PacketType i3Type, String origUser, Packet packet) {
+	public void sendToAll(final PacketType i3Type, final String origUser,
+			final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, null, null, packet);
 	}
 
-	public void sendToAll(String i3Type, String origUser, Packet packet) {
+	public void sendToAll(final String i3Type, final String origUser,
+			final Packet packet) {
 		sendPacket(i3Type, origUser, null, null, packet);
 	}
 
@@ -663,7 +476,7 @@ public class Network implements Runnable {
 	 * @param adminEmail
 	 *            the adminEmail to set
 	 */
-	public void setAdminEmail(LPCString adminEmail) {
+	public void setAdminEmail(final LPCString adminEmail) {
 		this.adminEmail = new LPCString(Utils.stripColor(adminEmail.toString()));
 	}
 
@@ -671,7 +484,7 @@ public class Network implements Runnable {
 	 * @param adminEmail
 	 *            the adminEmail to set
 	 */
-	public void setAdminEmail(String adminEmail) {
+	public void setAdminEmail(final String adminEmail) {
 		this.adminEmail = new LPCString(adminEmail);
 	}
 
@@ -679,7 +492,7 @@ public class Network implements Runnable {
 	 * @param configRouterList
 	 *            the configRouterList to set
 	 */
-	public void setConfigRouterList(List<String> configRouterList) {
+	public void setConfigRouterList(final List<String> configRouterList) {
 		this.configRouterList = new ArrayList<String>(configRouterList);
 	}
 
@@ -687,7 +500,7 @@ public class Network implements Runnable {
 	 * @param adminEmail
 	 *            the adminEmail to set
 	 */
-	public void setHostName(LPCString hostName) {
+	public void setHostName(final LPCString hostName) {
 		this.hostName = new LPCString(Utils.stripColor(hostName.toString()));
 	}
 
@@ -695,7 +508,7 @@ public class Network implements Runnable {
 	 * @param adminEmail
 	 *            the adminEmail to set
 	 */
-	public void setHostName(String hostName) {
+	public void setHostName(final String hostName) {
 		this.hostName = new LPCString(Utils.stripColor(hostName));
 	}
 
@@ -703,7 +516,7 @@ public class Network implements Runnable {
 	 * @param idleTimeout
 	 *            the idleTimeout to set
 	 */
-	public void setIdleTimeout(long idleTimeout) {
+	public void setIdleTimeout(final long idleTimeout) {
 		this.idleTimeout = idleTimeout;
 	}
 
@@ -711,7 +524,7 @@ public class Network implements Runnable {
 	 * @param preferredRouter
 	 *            the preferredRouter to set
 	 */
-	public void setPreferredRouter(LPCArray preferredRouter) {
+	public void setPreferredRouter(final LPCArray preferredRouter) {
 		this.preferredRouter = new LPCArray(preferredRouter);
 	}
 
@@ -719,7 +532,7 @@ public class Network implements Runnable {
 	 * @param reconnectWait
 	 *            the reconnectWait to set
 	 */
-	public void setReconnectWait(long reconnectWait) {
+	public void setReconnectWait(final long reconnectWait) {
 		this.reconnectWait = reconnectWait;
 	}
 
@@ -727,7 +540,7 @@ public class Network implements Runnable {
 	 * @param flag
 	 *            set routerConnected true or false
 	 */
-	public void setRouterConnected(boolean flag) {
+	public void setRouterConnected(final boolean flag) {
 		this.routerConnected = flag;
 	}
 
@@ -735,7 +548,7 @@ public class Network implements Runnable {
 	 * @param routerIP
 	 *            the routerIP to set
 	 */
-	public void setRouterIP(LPCString routerIP) {
+	public void setRouterIP(final LPCString routerIP) {
 		this.routerIP = new LPCString(routerIP);
 	}
 
@@ -743,7 +556,7 @@ public class Network implements Runnable {
 	 * @param routerIP
 	 *            the routerIP to set
 	 */
-	public void setRouterIP(String routerIP) {
+	public void setRouterIP(final String routerIP) {
 		this.routerIP = new LPCString(routerIP);
 	}
 
@@ -751,7 +564,7 @@ public class Network implements Runnable {
 	 * @param routerList
 	 *            the routerList to set
 	 */
-	public void setRouterList(LPCArray routerList) {
+	public void setRouterList(final LPCArray routerList) {
 		this.routerList = new LPCArray(routerList);
 	}
 
@@ -759,7 +572,7 @@ public class Network implements Runnable {
 	 * @param routerName
 	 *            the routerName to set
 	 */
-	public void setRouterName(LPCString routerName) {
+	public void setRouterName(final LPCString routerName) {
 		this.routerName = new LPCString(routerName);
 	}
 
@@ -767,7 +580,7 @@ public class Network implements Runnable {
 	 * @param routerName
 	 *            the routerName to set
 	 */
-	public void setRouterName(String routerName) {
+	public void setRouterName(final String routerName) {
 		this.routerName = new LPCString(routerName);
 	}
 
@@ -775,7 +588,16 @@ public class Network implements Runnable {
 	 * @param routerPassword
 	 *            the routerPassword to set
 	 */
-	public void setRouterPassword(int routerPassword) {
+	public void setRouterPassword(final int routerPassword) {
+		this.routerPassword = new LPCInt(
+				new Integer(routerPassword).longValue());
+	}
+
+	/**
+	 * @param routerPassword
+	 *            the routerPassword to set
+	 */
+	public void setRouterPassword(final long routerPassword) {
 		this.routerPassword = new LPCInt(routerPassword);
 	}
 
@@ -783,7 +605,7 @@ public class Network implements Runnable {
 	 * @param routerPassword
 	 *            the routerPassword to set
 	 */
-	public void setRouterPassword(LPCInt routerPassword) {
+	public void setRouterPassword(final LPCInt routerPassword) {
 		this.routerPassword = new LPCInt(routerPassword);
 	}
 
@@ -791,7 +613,15 @@ public class Network implements Runnable {
 	 * @param routerPort
 	 *            the routerPort to set
 	 */
-	public void setRouterPort(int routerPort) {
+	public void setRouterPort(final int routerPort) {
+		this.routerPort = new LPCInt(new Integer(routerPort).longValue());
+	}
+
+	/**
+	 * @param routerPort
+	 *            the routerPort to set
+	 */
+	public void setRouterPort(final long routerPort) {
 		this.routerPort = new LPCInt(routerPort);
 	}
 
@@ -799,7 +629,7 @@ public class Network implements Runnable {
 	 * @param routerPort
 	 *            the routerPort to set
 	 */
-	public void setRouterPort(LPCInt routerPort) {
+	public void setRouterPort(final LPCInt routerPort) {
 		this.routerPort = new LPCInt(routerPort);
 	}
 
@@ -807,41 +637,26 @@ public class Network implements Runnable {
 		shutdown(0);
 	}
 
-	public void shutdown(int restartDelay) {
-		if (isConnected() && isRouterConnected()) {
-			Packet packet = new Packet();
+	public void shutdown(final long restartDelay) {
+		if (isRouterConnected()) {
+			final Packet packet = new Packet();
 
+			Log.debug("Sending shutdown packet...");
 			packet.add(new LPCInt(restartDelay));
 			sendToRouter("shutdown", null, packet);
 			this.routerConnected = false;
 		}
 
-		if (this.sockIn != null)
-			try {
-				this.sockIn.close();
-			} catch (IOException ioE) {
-				ioE.printStackTrace();
-			}
+		if (this.clentThread != null) {
+			final Thread moribund = this.clentThread;
 
-		if (this.sockOut != null)
-			try {
-				this.sockOut.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		if (this.sock != null)
-			try {
-				this.sock.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		if (this.inputThread != null) {
-			Thread moribund = this.inputThread;
-
-			this.inputThread = null;
+			this.clentThread = null;
 			moribund.interrupt();
+		}
+
+		if (this.client != null) {
+			this.client.remove();
+			this.client = null;
 		}
 	}
 }

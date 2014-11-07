@@ -9,23 +9,23 @@ public class Log {
 	/**
 	 * @param msg
 	 */
-	public static void debug(String msg) {
-		if (Intermud3.instance.getDebugFlag())
+	public static void debug(final String msg) {
+		if (Intermud3.instance != null && Intermud3.instance.getDebugFlag())
 			log("Debug: " + msg, Level.INFO);
 	}
 
 	/**
 	 * @param msg
 	 */
-	public static void debug(String msg, Throwable thrown) {
-		if (Intermud3.instance.getDebugFlag())
+	public static void debug(final String msg, final Throwable thrown) {
+		if (Intermud3.instance != null && Intermud3.instance.getDebugFlag())
 			log("Debug: " + msg, Level.INFO, thrown);
 	}
 
 	/**
 	 * @param msg
 	 */
-	public static void error(String msg) {
+	public static void error(final String msg) {
 		log("Error: " + msg, Level.INFO);
 	}
 
@@ -33,14 +33,14 @@ public class Log {
 	 * @param msg
 	 * @param thrown
 	 */
-	public static void error(String msg, Throwable thrown) {
+	public static void error(final String msg, final Throwable thrown) {
 		log("Error: " + msg, Level.INFO, thrown);
 	}
 
 	/**
 	 * @param msg
 	 */
-	public static void info(String msg) {
+	public static void info(final String msg) {
 		log(msg, Level.INFO);
 	}
 
@@ -48,7 +48,7 @@ public class Log {
 	 * @param msg
 	 * @param thrown
 	 */
-	public static void info(String msg, Throwable thrown) {
+	public static void info(final String msg, final Throwable thrown) {
 		log(msg, Level.INFO, thrown);
 	}
 
@@ -56,8 +56,9 @@ public class Log {
 	 * @param msg
 	 * @param level
 	 */
-	private static void log(String msg, Level level) {
-		Intermud3.instance.getLogger().log(level, msg);
+	private static void log(final String msg, final Level level) {
+		if (Intermud3.instance != null)
+			Intermud3.instance.getLogger().log(level, msg);
 	}
 
 	/**
@@ -65,14 +66,16 @@ public class Log {
 	 * @param level
 	 * @param thrown
 	 */
-	private static void log(String msg, Level level, Throwable thrown) {
-		Intermud3.instance.getLogger().log(level, msg, thrown);
+	private static void log(final String msg, final Level level,
+			final Throwable thrown) {
+		if (Intermud3.instance != null)
+			Intermud3.instance.getLogger().log(level, msg, thrown);
 	}
 
 	/**
 	 * @param msg
 	 */
-	public static void warn(String msg) {
+	public static void warn(final String msg) {
 		log("Warning: " + msg, Level.INFO);
 	}
 
@@ -80,7 +83,7 @@ public class Log {
 	 * @param msg
 	 * @param thrown
 	 */
-	public static void warn(String msg, Throwable thrown) {
+	public static void warn(final String msg, final Throwable thrown) {
 		log("Warning: " + msg, Level.INFO, thrown);
 	}
 }

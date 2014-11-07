@@ -20,7 +20,8 @@ public class ServiceManager {
 	 * @param serviceType
 	 * @param service
 	 */
-	private static <T> void addService(ServiceType serviceType, T service) {
+	private static <T> void addService(final ServiceType serviceType,
+			final T service) {
 		serviceType.setService(service);
 	}
 
@@ -28,8 +29,8 @@ public class ServiceManager {
 	 * Call the create method on all I3 services that have defined it.
 	 */
 	public static void create() {
-		for (ServiceType s : ServiceType.values()) {
-			Object service = s.getService();
+		for (final ServiceType s : ServiceType.values()) {
+			final Object service = s.getService();
 			Method method = null;
 
 			if (service != null)
@@ -73,12 +74,12 @@ public class ServiceManager {
 	 * method.
 	 */
 	public static void debugInfo() {
-		List<String> serviceList = new ArrayList<String>(
+		final List<String> serviceList = new ArrayList<String>(
 				ServiceType.values().length);
-		List<String> routerServiceList = new ArrayList<String>(
+		final List<String> routerServiceList = new ArrayList<String>(
 				ServiceType.values().length);
 
-		for (ServiceType s : ServiceType.values()) {
+		for (final ServiceType s : ServiceType.values()) {
 			serviceList.add(s.getName());
 
 			if (s.isVisibleOnRouter())
@@ -89,8 +90,8 @@ public class ServiceManager {
 		Log.debug("RouterServices: "
 				+ StringUtils.join(routerServiceList, ", "));
 
-		for (ServiceType s : ServiceType.values()) {
-			Object service = s.getService();
+		for (final ServiceType s : ServiceType.values()) {
+			final Object service = s.getService();
 			Method method = null;
 
 			if (service != null)
@@ -119,9 +120,9 @@ public class ServiceManager {
 	 * @return the services registered for I3
 	 */
 	public static LPCMapping getRouterServices() {
-		LPCMapping mapping = new LPCMapping(ServiceType.size());
+		final LPCMapping mapping = new LPCMapping(ServiceType.size());
 
-		for (ServiceType service : ServiceType.values())
+		for (final ServiceType service : ServiceType.values())
 			if (service.isVisibleOnRouter())
 				mapping.put(new LPCString(service.getName()), new LPCInt(1));
 
@@ -134,7 +135,7 @@ public class ServiceManager {
 	 * @return the service object or null if not found
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T getService(String serviceName) {
+	public static <T> T getService(final String serviceName) {
 		return (T) ServiceType.getNamedService(serviceName).getService();
 	}
 
@@ -142,8 +143,8 @@ public class ServiceManager {
 	 * Call the remove method on all I3 services that have defined it.
 	 */
 	public static void remove() {
-		for (ServiceType s : ServiceType.values()) {
-			Object service = s.getService();
+		for (final ServiceType s : ServiceType.values()) {
+			final Object service = s.getService();
 			Method method = null;
 
 			if (service != null)

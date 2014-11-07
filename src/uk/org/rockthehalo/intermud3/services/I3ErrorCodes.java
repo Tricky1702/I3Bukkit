@@ -1,8 +1,8 @@
 package uk.org.rockthehalo.intermud3.services;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
@@ -14,8 +14,8 @@ import uk.org.rockthehalo.intermud3.LPC.LPCString;
 public enum I3ErrorCodes {
 	BAD_MOJO("bad-mojo") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -32,8 +32,8 @@ public enum I3ErrorCodes {
 	},
 	BAD_PKT("bad-pkt") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -44,12 +44,11 @@ public enum I3ErrorCodes {
 	},
 	BAD_PROTO("bad-proto") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
-			if (errorMsg != null
-					&& errorMsg.toString().contains("MUD already connected")) {
+			if (errorMsg != null && errorMsg.contains("MUD already connected")) {
 				Log.error("Bad Proto::" + errorMsg);
 				Log.error("Reconnecting in 5 minutes.");
 				Intermud3.network.setReconnectWait(Intermud3.network
@@ -61,28 +60,29 @@ public enum I3ErrorCodes {
 	},
 	NOT_ALLOWED("not-allowed") {
 		@Override
-		public void handler(Packet packet) {
+		public void handler(final Packet packet) {
 			if (packet.size() > errorPayload.size() - 1) {
-				LPCArray data = packet.getLPCArray(errorPayload
+				final LPCArray data = packet.getLPCArray(errorPayload
 						.get("ERR_PACKET"));
 
 				if (data != null
 						&& data.getLPCString(Payload.TYPE).toString()
 								.equals("channel-listen")) {
-					LPCString channel = data
+					final LPCString channel = data
 							.getLPCString(I3Channel.chanListenPayload
 									.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
-						LPCString errorMsg = packet.getLPCString(errorPayload
-								.get("ERR_MESSAGE"));
+						final LPCString errorMsg = packet
+								.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
 							Log.error("Not Allowed::" + errorMsg);
 						else
 							Log.error("Not Allowed");
 
-						I3Channel service = ServiceType.I3CHANNEL.getService();
+						final I3Channel service = ServiceType.I3CHANNEL
+								.getService();
 
 						if (service != null) {
 							service.sendChannelListen(channel, false);
@@ -96,8 +96,8 @@ public enum I3ErrorCodes {
 	},
 	NOT_IMP("not-imp") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -108,28 +108,29 @@ public enum I3ErrorCodes {
 	},
 	UNK_CHANNEL("unk-channel") {
 		@Override
-		public void handler(Packet packet) {
+		public void handler(final Packet packet) {
 			if (packet.size() > errorPayload.size() - 1) {
-				LPCArray data = packet.getLPCArray(errorPayload
+				final LPCArray data = packet.getLPCArray(errorPayload
 						.get("ERR_PACKET"));
 
 				if (data != null
 						&& data.getLPCString(Payload.TYPE).toString()
 								.equals("channel-listen")) {
-					LPCString channel = data
+					final LPCString channel = data
 							.getLPCString(I3Channel.chanListenPayload
 									.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
-						LPCString errorMsg = packet.getLPCString(errorPayload
-								.get("ERR_MESSAGE"));
+						final LPCString errorMsg = packet
+								.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
 							Log.error("Unknown Channel::" + errorMsg);
 						else
 							Log.error("Unknown Channel");
 
-						I3Channel service = ServiceType.I3CHANNEL.getService();
+						final I3Channel service = ServiceType.I3CHANNEL
+								.getService();
 
 						if (service != null) {
 							service.sendChannelListen(channel, false);
@@ -143,8 +144,8 @@ public enum I3ErrorCodes {
 	},
 	UNK_DST("unk-dst") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 			if (errorMsg != null)
 				Log.error("Unknown Destination::" + errorMsg);
@@ -154,8 +155,8 @@ public enum I3ErrorCodes {
 	},
 	UNK_SRC("unk-src") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -166,8 +167,8 @@ public enum I3ErrorCodes {
 	},
 	UNK_TYPE("unk-type") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -178,8 +179,8 @@ public enum I3ErrorCodes {
 	},
 	UNK_USER("unk-user") {
 		@Override
-		public void handler(Packet packet) {
-			LPCString errorMsg = packet.getLPCString(errorPayload
+		public void handler(final Packet packet) {
+			final LPCString errorMsg = packet.getLPCString(errorPayload
 					.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
@@ -189,34 +190,30 @@ public enum I3ErrorCodes {
 		}
 	};
 
-	private static Map<String, I3ErrorCodes> nameToErrorCode = null;
+	private static final Map<String, I3ErrorCodes> nameToErrorCode = new HashMap<String, I3ErrorCodes>(
+			values().length);
+
 	private String errorCodeName = null;
 
 	public static final Payload errorPayload = new Payload(Arrays.asList(
 			"ERR_CODE", "ERR_MESSAGE", "ERR_PACKET"));
 
-	private I3ErrorCodes(String errorCodeName) {
+	private I3ErrorCodes(final String errorCodeName) {
 		this.errorCodeName = errorCodeName;
 	}
 
 	public String getErrorCodeName() {
-		return this.errorCodeName;
+		return errorCodeName;
 	}
 
-	public static I3ErrorCodes getNamedErrorCode(String errorCodeName) {
-		if (I3ErrorCodes.nameToErrorCode == null)
-			I3ErrorCodes.initMapping();
-
-		return I3ErrorCodes.nameToErrorCode.get(errorCodeName);
+	public static I3ErrorCodes getNamedErrorCode(final String errorCodeName) {
+		return nameToErrorCode.get(errorCodeName);
 	}
 
-	private static void initMapping() {
-		I3ErrorCodes.nameToErrorCode = new ConcurrentHashMap<String, I3ErrorCodes>(
-				I3ErrorCodes.values().length);
-
-		for (I3ErrorCodes type : I3ErrorCodes.values())
-			I3ErrorCodes.nameToErrorCode.put(type.errorCodeName, type);
+	static {
+		for (final I3ErrorCodes type : values())
+			nameToErrorCode.put(type.errorCodeName, type);
 	}
 
-	public abstract void handler(Packet packet);
+	public abstract void handler(final Packet packet);
 }

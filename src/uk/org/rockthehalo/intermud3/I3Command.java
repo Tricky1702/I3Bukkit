@@ -39,8 +39,8 @@ public class I3Command implements CommandExecutor {
 	 * @return true on success
 	 */
 	@Override
-	public boolean onCommand(CommandSender sender, Command command,
-			String label, String[] args) {
+	public boolean onCommand(final CommandSender sender, final Command command,
+			final String label, final String[] args) {
 		if (!checkPerm(sender, "use"))
 			return false;
 
@@ -62,13 +62,12 @@ public class I3Command implements CommandExecutor {
 			adminCommand = true;
 		}
 
-		String subcmd = StringUtils.lowerCase(args[0]);
+		final String subcmd = StringUtils.lowerCase(args[0]);
 		String[] subcmdargs = {};
 
 		if (args.length > 1) {
-			String tmp;
+			final String tmp = StringUtils.join(args, " ", 1, args.length);
 
-			tmp = StringUtils.join(args, " ", 1, args.length);
 			subcmdargs = tmp.split(" ");
 		}
 
@@ -95,11 +94,11 @@ public class I3Command implements CommandExecutor {
 	 *            Passed Intermud3 command arguments
 	 * @return true on success
 	 */
-	private boolean processI3SubCommand(CommandSender sender, Command command,
-			String label, String subcmd, String[] args) {
-		I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
-		I3UCache i3UCache = ServiceType.I3UCACHE.getService();
-		String input = null;
+	private boolean processI3SubCommand(final CommandSender sender,
+			final Command command, final String label, final String subcmd,
+			final String[] args) {
+		final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+		final I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 		Log.debug("args: " + StringUtils.join(args, ","));
 
@@ -122,7 +121,8 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(label, sender, command, subcmd);
 
-			String plrName = Utils.stripColor(((Player) sender).getName());
+			final String plrName = Utils
+					.stripColor(((Player) sender).getName());
 			String chan = args[0];
 
 			if (chan.equals(".") && this.lastChannel != null)
@@ -132,9 +132,10 @@ public class I3Command implements CommandExecutor {
 					&& !i3Channel.getAliases().containsValue(chan))
 				chan = i3Channel.getAliases().get(chan);
 
-			List<Object> user = i3UCache.getLocalUser(plrName);
+			final List<Object> user = i3UCache.getLocalUser(plrName);
 			@SuppressWarnings("unchecked")
-			List<String> tunein = (List<String>) user.get(I3UCache.TUNEIN);
+			final List<String> tunein = (List<String>) user
+					.get(I3UCache.TUNEIN);
 
 			if (!tunein.contains(chan)) {
 				sender.sendMessage("Not listening to I3 channel "
@@ -144,7 +145,9 @@ public class I3Command implements CommandExecutor {
 			}
 
 			this.lastChannel = chan;
-			input = StringUtils.join(args, " ", 1, args.length);
+
+			final String input = StringUtils.join(args, " ", 1, args.length);
+
 			i3Channel.sendEmote(chan, plrName, input);
 		} else if (subcmd.equals("msg")) {
 			if (!(Utils.isPlayer(sender))) {
@@ -159,7 +162,8 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(label, sender, command, subcmd);
 
-			String plrName = Utils.stripColor(((Player) sender).getName());
+			final String plrName = Utils
+					.stripColor(((Player) sender).getName());
 			String chan = args[0];
 
 			if (chan.equals(".") && this.lastChannel != null)
@@ -169,9 +173,10 @@ public class I3Command implements CommandExecutor {
 					&& !i3Channel.getAliases().containsValue(chan))
 				chan = i3Channel.getAliases().get(chan);
 
-			List<Object> user = i3UCache.getLocalUser(plrName);
+			final List<Object> user = i3UCache.getLocalUser(plrName);
 			@SuppressWarnings("unchecked")
-			List<String> tunein = (List<String>) user.get(I3UCache.TUNEIN);
+			final List<String> tunein = (List<String>) user
+					.get(I3UCache.TUNEIN);
 
 			if (!tunein.contains(chan)) {
 				sender.sendMessage("Not listening to I3 channel "
@@ -181,14 +186,16 @@ public class I3Command implements CommandExecutor {
 			}
 
 			this.lastChannel = chan;
-			input = StringUtils.join(args, " ", 1, args.length);
+
+			final String input = StringUtils.join(args, " ", 1, args.length);
+
 			i3Channel.sendMessage(chan, plrName, input);
 		} else if (subcmd.startsWith("tune")) {
 			if (subcmd.equals("tunein")) {
 				if (args.length < 1)
 					return usage(label, sender, command, "tune");
 
-				input = args[0];
+				final String input = args[0];
 
 				if (!i3Channel.getChanList().containsKey(input)) {
 					sender.sendMessage("I3 channel " + ChatColor.GREEN + input
@@ -204,7 +211,7 @@ public class I3Command implements CommandExecutor {
 				if (args.length < 1)
 					return usage(label, sender, command, "tune");
 
-				input = args[0];
+				final String input = args[0];
 
 				if (!i3Channel.getListening().contains(input)) {
 					sender.sendMessage("Not listening to I3 channel "
@@ -222,8 +229,8 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(label, sender, command, subcmd);
 
-			String alias = args[0];
-			String chan = args[1];
+			final String alias = args[0];
+			final String chan = args[1];
 
 			if (i3Channel.getChanList().containsKey(alias)) {
 				sender.sendMessage(ChatColor.RED
@@ -239,8 +246,8 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 1)
 				return usage(label, sender, command, subcmd);
 
-			String alias = args[0];
-			Map<String, String> aliases = i3UCache.getAliases(Utils
+			final String alias = args[0];
+			final Map<String, String> aliases = i3UCache.getAliases(Utils
 					.stripColor(((Player) sender).getName()));
 
 			if (aliases == null || !aliases.containsKey(alias)) {
@@ -281,8 +288,9 @@ public class I3Command implements CommandExecutor {
 	 *            Passed Intermud3 admin command arguments
 	 * @return true on success
 	 */
-	private boolean processI3AdminSubCommand(CommandSender sender,
-			Command command, String label, String subcmd, String[] args) {
+	private boolean processI3AdminSubCommand(final CommandSender sender,
+			final Command command, final String label, final String subcmd,
+			final String[] args) {
 		String input = null;
 
 		Log.debug("args: " + StringUtils.join(args, ","));
@@ -307,9 +315,9 @@ public class I3Command implements CommandExecutor {
 			if (!checkPerm(sender, "admin.reload"))
 				return false;
 
-			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
-			I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
-			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
+			final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			final I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+			final I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 			if (i3Channel != null)
 				i3Channel.reloadConfig(true);
@@ -327,9 +335,9 @@ public class I3Command implements CommandExecutor {
 			if (!checkPerm(sender, "admin.save"))
 				return false;
 
-			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
-			I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
-			I3UCache i3UCache = ServiceType.I3UCACHE.getService();
+			final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			final I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+			final I3UCache i3UCache = ServiceType.I3UCACHE.getService();
 
 			if (i3Channel != null)
 				i3Channel.saveConfig(true);
@@ -347,7 +355,7 @@ public class I3Command implements CommandExecutor {
 			if (!checkPerm(sender, "admin.channels"))
 				return false;
 
-			I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 
 			if (i3Channel == null)
 				sender.sendMessage(ChatColor.RED
@@ -410,8 +418,8 @@ public class I3Command implements CommandExecutor {
 							return usage(label, sender, command, subcmd
 									+ " alias");
 
-						String alias = args[1];
-						String chan = args[2];
+						final String alias = args[1];
+						final String chan = args[2];
 
 						if (i3Channel.getChanList().containsKey(alias)) {
 							sender.sendMessage(ChatColor.RED
@@ -432,7 +440,7 @@ public class I3Command implements CommandExecutor {
 							return usage(label, sender, command, subcmd
 									+ " unalias");
 
-						String alias = args[1];
+						final String alias = args[1];
 
 						if (!i3Channel.getAliases().containsKey(alias)) {
 							sender.sendMessage("Alias " + ChatColor.GREEN
@@ -464,7 +472,7 @@ public class I3Command implements CommandExecutor {
 				if (!checkPerm(sender, "admin.debug"))
 					return false;
 
-				boolean oldDebug = Intermud3.instance.getDebugFlag();
+				final boolean oldDebug = Intermud3.instance.getDebugFlag();
 				boolean debug;
 
 				if (args[0].equalsIgnoreCase("on"))
@@ -499,8 +507,8 @@ public class I3Command implements CommandExecutor {
 	 * @param subnode
 	 * @return
 	 */
-	private boolean checkPerm(CommandSender sender, String subnode) {
-		boolean ok = sender.hasPermission("intermud3." + subnode);
+	private boolean checkPerm(final CommandSender sender, final String subnode) {
+		final boolean ok = sender.hasPermission("intermud3." + subnode);
 
 		if (!ok)
 			sender.sendMessage(ChatColor.RED
@@ -515,11 +523,12 @@ public class I3Command implements CommandExecutor {
 	 * @param command
 	 * @return
 	 */
-	private boolean usage(String cmd, CommandSender sender, Command command) {
+	private boolean usage(final String cmd, final CommandSender sender,
+			final Command command) {
 		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /"
 				+ cmd + " " + ChatColor.RED + "====]");
 
-		for (String line : command.getUsage().split("\\n"))
+		for (final String line : command.getUsage().split("\\n"))
 			sender.sendMessage(formatLine(cmd, line));
 
 		return true;
@@ -532,12 +541,12 @@ public class I3Command implements CommandExecutor {
 	 * @param subcmd
 	 * @return
 	 */
-	private boolean usage(String cmd, CommandSender sender, Command command,
-			String subcmd) {
+	private boolean usage(final String cmd, final CommandSender sender,
+			final Command command, final String subcmd) {
 		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /"
 				+ cmd + " " + subcmd + " " + ChatColor.RED + "====]");
 
-		for (String line : command.getUsage().split("\\n"))
+		for (final String line : command.getUsage().split("\\n"))
 			if (line.startsWith("/<command> " + subcmd))
 				sender.sendMessage(formatLine(cmd, line));
 
@@ -549,10 +558,10 @@ public class I3Command implements CommandExecutor {
 	 * @param line
 	 * @return
 	 */
-	private String formatLine(String cmd, String line) {
+	private String formatLine(final String cmd, final String line) {
 		int i = line.indexOf(" - ");
 		String usage = line.substring(0, i);
-		String desc = line.substring(i + 3);
+		final String desc = line.substring(i + 3);
 
 		usage = usage.replace("<command>", cmd);
 		usage = usage.replaceAll("\\[[^]:]+\\]", ChatColor.AQUA + "$0"

@@ -21,13 +21,12 @@ public class Packet extends LPCArray {
 	 * @param mudModeString
 	 *            the MudMode string to convert
 	 */
-	public void fromMudMode(String mudModeString) {
-		Object obj = Utils.toObject(mudModeString);
+	public void fromMudMode(final String mudModeString) {
+		final Object obj = Utils.toObject(mudModeString);
 
-		if (obj == null || !Utils.isLPCArray(obj)) {
+		if (obj == null || !Utils.isLPCArray(obj))
 			this.setLPCData(new LPCArray());
-		} else {
+		else
 			this.setLPCData((LPCArray) obj);
-		}
 	}
 }

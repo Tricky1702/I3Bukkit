@@ -88,7 +88,7 @@ public class Intermud3 extends JavaPlugin {
 		bootTime = System.currentTimeMillis();
 	}
 
-	public void setDebugFlag(boolean flag) {
+	public void setDebugFlag(final boolean flag) {
 		config.getConfig().set("debug", flag);
 	}
 }

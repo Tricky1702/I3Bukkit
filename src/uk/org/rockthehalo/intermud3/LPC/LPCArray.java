@@ -11,63 +11,72 @@ import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCArray extends LPCVar implements List<Object> {
-	private Vector<Object> lpcData = new Vector<Object>();
+	private Vector<Object> lpcData = new Vector<Object>(32);
 
 	public LPCArray() {
 		super.setType(LPCTypes.ARRAY);
 	}
 
-	public LPCArray(LPCArray obj) {
+	public LPCArray(final int size) {
 		this();
-		this.addAll(obj.getLPCData());
+		this.lpcData = new Vector<Object>(Utils.nullList(size));
 	}
 
-	public LPCArray(int size) {
+	public LPCArray(final Vector<Object> vec) {
 		this();
-		this.lpcData = new Vector<Object>(size);
-
-		for (int i = 0; i < size; i++)
-			this.lpcData.add(null);
+		this.lpcData = new Vector<Object>(vec.size());
+		addAll(vec);
 	}
 
-	public LPCArray(Vector<Object> lpcData) {
+	public LPCArray(final Set<Object> set) {
 		this();
-		this.addAll(lpcData);
+		this.lpcData = new Vector<Object>(set.size());
+		addAll(set);
 	}
 
-	public LPCArray(Set<Object> lpcData) {
+	public LPCArray(final List<Object> list) {
 		this();
-		this.addAll(lpcData);
+		this.lpcData = new Vector<Object>(list.size());
+
+		for (final Object o : list) {
+			if (Utils.isLPCVar(o))
+				this.add(o);
+			else if (String.class.isInstance(o))
+				this.add(new LPCString((String) o));
+			else if (Integer.class.isInstance(o))
+				this.add(new LPCInt((Integer) o));
+			else if (Long.class.isInstance(o))
+				this.add(new LPCInt((Long) o));
+			else
+				this.add(new LPCMixed(o));
+		}
 	}
 
-	public LPCArray(List<String> lpcData) {
-		this();
-
-		for (String s : lpcData)
-			this.add(new LPCString(s));
+	public LPCArray(final LPCArray o) {
+		this(o.getLPCData());
 	}
 
-	public boolean add(LPCArray arr) {
-		return this.lpcData.add(arr);
+	public boolean add(final LPCArray o) {
+		return this.lpcData.add(o);
 	}
 
 	@Override
-	public boolean add(Object lpcData) {
-		return this.lpcData.add(lpcData);
+	public boolean add(final Object o) {
+		return this.lpcData.add(o);
 	}
 
 	@Override
-	public void add(int index, Object lpcData) {
-		this.lpcData.add(index, lpcData);
+	public void add(final int index, final Object element) {
+		this.lpcData.add(index, element);
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends Object> c) {
+	public boolean addAll(final Collection<? extends Object> c) {
 		return this.lpcData.addAll(c);
 	}
 
 	@Override
-	public boolean addAll(int index, Collection<? extends Object> c) {
+	public boolean addAll(final int index, final Collection<? extends Object> c) {
 		return this.lpcData.addAll(index, c);
 	}
 
@@ -82,43 +91,60 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public boolean contains(Object o) {
+	public boolean contains(final Object o) {
 		if (o == null)
 			return false;
 
-		return this.getValue(o) != null;
-	}
+		if (String.class.isInstance(o))
+			return getValue(new LPCString((String) o)) != null;
+		else if (Number.class.isInstance(o))
+			return getValue(new LPCInt((Number) o)) != null;
+		else if (Utils.isLPCVar(o))
+			return getValue(o) != null;
 
-	public boolean contains(String s) {
-		if (s == null)
-			return false;
-
-		return this.getValue(new LPCString(s)) != null;
+		return false;
 	}
 
 	@Override
-	public boolean containsAll(Collection<?> c) {
+	public boolean containsAll(final Collection<?> c) {
 		return this.lpcData.containsAll(c);
 	}
 
 	@Override
-	public Object get(int index) {
+	public boolean equals(final Object o) {
+		if (o == null)
+			return false;
+
+		if (Utils.isLPCArray(o)
+				&& Utils.toMudMode(o).equals(Utils.toMudMode(this)))
+			return true;
+
+		return false;
+	}
+
+	@Override
+	public Object get(final int index) {
 		return this.lpcData.get(index);
 	}
 
 	@Override
-	public Object get(Object index) {
+	public Object get(final Object index) {
 		if (index == null)
 			return null;
 
-		int ind = Integer.class.cast(index);
+		final int i;
 
-		return this.get(ind);
+		if (Number.class.isInstance(index))
+			i = ((Number) index).intValue();
+		else
+			return null;
+
+		return get(i);
 	}
 
 	@Override
-	public LPCArray getLPCArray(Object index) {
-		Object obj = this.get(index);
+	public LPCArray getLPCArray(final Object index) {
+		final Object obj = get(index);
 
 		if (Utils.isLPCArray(obj))
 			return (LPCArray) obj;
@@ -132,8 +158,8 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public LPCInt getLPCInt(Object index) {
-		Object obj = this.get(index);
+	public LPCInt getLPCInt(final Object index) {
+		final Object obj = get(index);
 
 		if (Utils.isLPCInt(obj))
 			return (LPCInt) obj;
@@ -142,8 +168,8 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public LPCMapping getLPCMapping(Object index) {
-		Object obj = this.get(index);
+	public LPCMapping getLPCMapping(final Object index) {
+		final Object obj = get(index);
 
 		if (Utils.isLPCMapping(obj))
 			return (LPCMapping) obj;
@@ -152,8 +178,8 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public LPCString getLPCString(Object index) {
-		Object obj = this.get(index);
+	public LPCString getLPCString(final Object index) {
+		final Object obj = get(index);
 
 		if (Utils.isLPCString(obj))
 			return (LPCString) obj;
@@ -161,46 +187,107 @@ public class LPCArray extends LPCVar implements List<Object> {
 		return null;
 	}
 
-	public Object getValue(Object key) {
-		return this.getValue(key, 0);
+	public Object getValue(final Object o) {
+		return getValue(o, 0);
 	}
 
-	public Object getValue(Object key, int index) {
-		if (key == null || index < 0 || index >= this.size())
+	public Object getValue(final Object o, final int index) {
+		if (o == null || index < 0 || index >= size())
 			return null;
 
-		ListIterator<Object> litr = this.listIterator(index);
-		Class<? extends Object> kClass = key.getClass();
-		String kString = key.toString();
+		final ListIterator<Object> litr = listIterator(index);
+		final Class<? extends Object> oClass = o.getClass();
 
 		while (litr.hasNext()) {
-			Object obj = litr.next();
+			final Object obj = litr.next();
 
-			if (kClass.isInstance(obj) && obj.toString().equals(kString))
-				return obj;
+			if (oClass.isInstance(obj)) {
+				switch (LPCVar.getType(obj)) {
+				case ARRAY:
+					if (((LPCArray) obj).equals(o))
+						return obj;
+
+					break;
+				case INT:
+					if (((LPCInt) obj).equals(o))
+						return obj;
+
+					break;
+				case MAPPING:
+					if (((LPCMapping) obj).equals(o))
+						return obj;
+
+					break;
+				case MIXED:
+					if (((LPCMixed) obj).equals(o))
+						return obj;
+
+					break;
+				case STRING:
+					if (((LPCString) obj).equals(o))
+						return obj;
+
+					break;
+				default:
+					break;
+				}
+			}
 		}
 
 		return null;
 	}
 
 	@Override
-	public int indexOf(Object o) {
-		return this.indexOf(o, 0);
+	public int hashCode() {
+		return Utils.toMudMode(this).hashCode();
 	}
 
-	public int indexOf(Object o, int index) {
-		if (o == null || index < 0 || index >= this.size())
+	@Override
+	public int indexOf(final Object o) {
+		return indexOf(o, 0);
+	}
+
+	public int indexOf(final Object o, int index) {
+		if (o == null || index < 0 || index >= size())
 			return -1;
 
-		ListIterator<Object> litr = this.listIterator(index);
-		Class<? extends Object> oClass = o.getClass();
-		String oString = o.toString();
+		final ListIterator<Object> litr = listIterator(index);
+		final Class<? extends Object> oClass = o.getClass();
 
 		while (litr.hasNext()) {
-			Object obj = litr.next();
+			final Object obj = litr.next();
 
-			if (oClass.isInstance(obj) && obj.toString().equals(oString))
-				return index;
+			if (oClass.isInstance(obj)) {
+				switch (LPCVar.getType(obj)) {
+				case ARRAY:
+					if (((LPCArray) obj).equals(o))
+						return index;
+
+					break;
+				case INT:
+					if (((LPCInt) obj).equals(o))
+						return index;
+
+					break;
+				case MAPPING:
+					if (((LPCMapping) obj).equals(o))
+						return index;
+
+					break;
+				case MIXED:
+					if (((LPCMixed) obj).equals(o))
+						return index;
+
+					break;
+				case STRING:
+					if (((LPCString) obj).equals(o))
+						return index;
+
+					break;
+				default:
+					break;
+				}
+			}
 
 			++index;
 		}
@@ -219,24 +306,51 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public int lastIndexOf(Object o) {
-		return this.lastIndexOf(o, this.size());
+	public int lastIndexOf(final Object o) {
+		return lastIndexOf(o, this.size());
 	}
 
-	public int lastIndexOf(Object o, int index) {
-		if (o == null || index < 0 || index > this.size())
+	public int lastIndexOf(final Object o, int index) {
+		if (o == null || index < 0 || index > size())
 			return -1;
 
-		ListIterator<Object> litr = this.listIterator(index);
-
-		Class<? extends Object> oClass = o.getClass();
-		String oString = o.toString();
+		final ListIterator<Object> litr = listIterator(index);
+		final Class<? extends Object> oClass = o.getClass();
 
 		while (litr.hasPrevious()) {
-			Object obj = litr.previous();
+			final Object obj = litr.previous();
 
-			if (oClass.isInstance(obj) && obj.toString().equals(oString))
-				return index;
+			if (oClass.isInstance(obj)) {
+				switch (LPCVar.getType(obj)) {
+				case ARRAY:
+					if (((LPCArray) obj).equals(o))
+						return index;
+
+					break;
+				case INT:
+					if (((LPCInt) obj).equals(o))
+						return index;
+
+					break;
+				case MAPPING:
+					if (((LPCMapping) obj).equals(o))
+						return index;
+
+					break;
+				case MIXED:
+					if (((LPCMixed) obj).equals(o))
+						return index;
+
+					break;
+				case STRING:
+					if (((LPCString) obj).equals(o))
+						return index;
+
+					break;
+				default:
+					break;
+				}
+			}
 
 			--index;
 		}
@@ -250,96 +364,103 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public ListIterator<Object> listIterator(int index) {
+	public ListIterator<Object> listIterator(final int index) {
 		return this.lpcData.listIterator(index);
 	}
 
 	@Override
-	public boolean remove(Object o) {
+	public boolean remove(final Object o) {
 		if (o == null)
 			return false;
 
-		int index = this.indexOf(o);
+		final int index = indexOf(o);
 
 		if (index == -1)
 			return false;
 
-		this.remove(index);
+		remove(index);
 
 		return true;
 	}
 
 	@Override
-	public Object remove(int index) {
+	public Object remove(final int index) {
 		return this.lpcData.remove(index);
 	}
 
 	@Override
-	public boolean removeAll(Collection<?> c) {
+	public boolean removeAll(final Collection<?> c) {
 		return this.lpcData.removeAll(c);
 	}
 
 	@Override
-	public boolean retainAll(Collection<?> c) {
+	public boolean retainAll(final Collection<?> c) {
 		return this.lpcData.retainAll(c);
 	}
 
 	@Override
-	public Object set(int index, Object lpcData) {
-		return this.lpcData.set(index, lpcData);
+	public Object set(final int index, final Object element) {
+		return this.lpcData.set(index, element);
 	}
 
 	@Override
-	public Object set(Object index, Object lpcData) throws I3Exception {
+	public Object set(final Object index, final Object element)
+			throws I3Exception {
 		if (index == null)
 			return null;
 
-		int ind = Integer.class.cast(index);
+		final int i;
 
-		if (ind < 0 || ind >= this.size())
+		if (Number.class.isInstance(index))
+			i = ((Number) index).intValue();
+		else
 			throw new I3Exception(
-					"Index out of range for set(index, lpcdata) in LPCArray: "
+					"Invalid index type for set(index, element) in LPCArray: '"
+							+ index + "'");
+
+		if (i < 0 || i >= size())
+			throw new I3Exception(
+					"Index out of range for set(index, element) in LPCArray: "
 							+ index);
 
-		return this.set(ind, lpcData);
+		return set(i, element);
 	}
 
 	@Override
-	public void setLPCData(LPCArray obj) {
-		this.clear();
-		this.addAll(obj.getLPCData());
+	public void setLPCData(final LPCArray o) {
+		clear();
+		addAll(o.getLPCData());
 	}
 
 	@Override
-	public void setLPCData(LPCInt obj) {
-		this.clear();
-		this.add(obj);
+	public void setLPCData(final LPCInt o) {
+		clear();
+		add(o);
 	}
 
 	@Override
-	public void setLPCData(LPCMapping obj) {
-		this.clear();
-		this.add(obj);
+	public void setLPCData(final LPCMapping o) {
+		clear();
+		add(o);
 	}
 
 	@Override
-	public void setLPCData(LPCString obj) {
-		this.clear();
-		this.add(obj);
+	public void setLPCData(final LPCString o) {
+		clear();
+		add(o);
 	}
 
 	@Override
-	public void setLPCData(Object obj) throws I3Exception {
-		if (Utils.isLPCArray(obj)) {
-			this.clear();
-			this.addAll(((LPCArray) obj).getLPCData());
-		} else if (Utils.isLPCVar(obj)) {
-			this.clear();
-			this.add(obj);
+	public void setLPCData(final Object o) throws I3Exception {
+		if (Utils.isLPCArray(o)) {
+			clear();
+			addAll(((LPCArray) o).getLPCData());
+		} else if (Utils.isLPCVar(o)) {
+			clear();
+			add(o);
 		} else {
 			throw new I3Exception(
-					"Invalid data for LPCArray: setLPCData(Object) '"
-							+ obj.toString() + "'");
+					"Invalid data for LPCArray: setLPCData(Object) '" + o + "'");
 		}
 	}
 
@@ -349,17 +470,17 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public List<Object> subList(int fromIndex, int toIndex) {
+	public List<Object> subList(final int fromIndex, final int toIndex) {
 		return this.lpcData.subList(fromIndex, toIndex);
 	}
 
 	@Override
 	public Object[] toArray() {
-		return this.lpcData.toArray();
+		return (this.lpcData.toArray());
 	}
 
 	@Override
-	public <T> T[] toArray(T[] a) {
+	public <T> T[] toArray(final T[] a) {
 		return this.lpcData.toArray(a);
 	}
 

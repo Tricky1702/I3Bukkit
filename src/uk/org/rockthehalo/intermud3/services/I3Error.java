@@ -19,10 +19,11 @@ public class I3Error extends ServiceTemplate {
 	 * .rockthehalo.intermud3.LPC.Packet)
 	 */
 	@Override
-	public void replyHandler(Packet packet) {
-		String errorCode = packet.getLPCString(
+	public void replyHandler(final Packet packet) {
+		final String errorCode = packet.getLPCString(
 				I3ErrorCodes.errorPayload.get("ERR_CODE")).toString();
-		I3ErrorCodes i3ErrorCode = I3ErrorCodes.getNamedErrorCode(errorCode);
+		final I3ErrorCodes i3ErrorCode = I3ErrorCodes
+				.getNamedErrorCode(errorCode);
 
 		if (i3ErrorCode != null) {
 			i3ErrorCode.handler(packet);
@@ -30,9 +31,9 @@ public class I3Error extends ServiceTemplate {
 			return;
 		}
 
-		LPCString errorMsg = packet.getLPCString(I3ErrorCodes.errorPayload
-				.get("ERR_MESSAGE"));
-		LPCString originator = packet.getLPCString(Payload.O_MUD);
+		final LPCString errorMsg = packet
+				.getLPCString(I3ErrorCodes.errorPayload.get("ERR_MESSAGE"));
+		final LPCString originator = packet.getLPCString(Payload.O_MUD);
 
 		Log.error("Unhandled Error: " + originator + "/" + errorCode + "/"
 				+ errorMsg);
@@ -46,11 +47,10 @@ public class I3Error extends ServiceTemplate {
 	 * .rockthehalo.intermud3.LPC.Packet)
 	 */
 	@Override
-	public void reqHandler(Packet packet) {
+	public void reqHandler(final Packet packet) {
 	}
 
-	public void send(Packet packet) {
-		Packet payload;
+	public void send(final Packet packet) {
 		String oUser, tMud, tUser, errCode, errMsg;
 
 		if (packet.getLPCInt(0) != null)
@@ -71,14 +71,15 @@ public class I3Error extends ServiceTemplate {
 		errCode = packet.get(3).toString();
 		errMsg = packet.get(4).toString();
 
-		payload = new Packet();
+		final Packet payload = new Packet();
+
 		payload.add(errCode);
 		payload.add(errMsg);
 
 		if (packet.size() != 6 || packet.getLPCArray(5) == null)
 			payload.add(0);
 		else
-			for (Object obj : packet.subList(5, packet.size()))
+			for (final Object obj : packet.subList(5, packet.size()))
 				payload.add(obj);
 
 		Intermud3.network.sendToUser(PacketType.ERROR, oUser, tMud, tUser,

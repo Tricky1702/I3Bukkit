@@ -1,8 +1,11 @@
 package uk.org.rockthehalo.intermud3;
 
-import java.util.Iterator;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.Vector;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
@@ -19,6 +22,11 @@ import uk.org.rockthehalo.intermud3.LPC.LPCVar;
 public class Utils {
 	private static final Pattern INVALIDPATHCHARS = Pattern
 			.compile("[^A-Za-z0-9#': -]");
+	private static final char COLOR_CHAR = '&';
+	private static final Pattern COLOR_PATTERN = Pattern.compile("(?i)"
+			+ String.valueOf(COLOR_CHAR) + "[0-9A-FK-OR]");
+	private static final Pattern URL_PATTERN = Pattern
+			.compile("(?i)https?://\\S+");
 
 	private Utils() {
 	}
@@ -56,6 +64,10 @@ public class Utils {
 		return Player.class.isInstance(player);
 	}
 
+	public static List<Object> nullList(int size) {
+		return Collections.nCopies(size, null);
+	}
+
 	public static int rnd(final int range) {
 		return (int) (Math.random() * range);
 	}
@@ -88,112 +100,113 @@ public class Utils {
 	 * @return ChatColor version of Pinkfish coded message.
 	 */
 	public static String toChatColor(String msg) {
-		if (msg == null)
-			return null;
-
-		if (!msg.contains("%^"))
+		if (msg == null || msg.isEmpty() || !msg.contains("%^"))
 			return msg;
 
-		msg.replace("%^BOLD%^BLACK", ChatColor.DARK_GRAY + "");
-		msg.replace("%^BOLD%^%^BLACK", ChatColor.DARK_GRAY + "");
-		msg.replace("%^BLACK", ChatColor.BLACK + "");
+		msg = msg.replace("%^BOLD%^BLACK", ChatColor.DARK_GRAY + "")
+				.replace("%^BOLD%^%^BLACK", ChatColor.DARK_GRAY + "")
+				.replace("%^BLACK", ChatColor.BLACK + "");
 
-		msg.replace("%^LIGHTRED", ChatColor.RED + "");
-		msg.replace("%^RED", ChatColor.DARK_RED + "");
-		msg.replace("%^DARKRED", ChatColor.DARK_RED + "");
+		msg = msg.replace("%^LIGHTRED", ChatColor.RED + "")
+				.replace("%^RED", ChatColor.DARK_RED + "")
+				.replace("%^DARKRED", ChatColor.DARK_RED + "");
 
-		msg.replace("%^LIGHTGREEN", ChatColor.GREEN + "");
-		msg.replace("%^GREEN", ChatColor.DARK_GREEN + "");
-		msg.replace("%^DARKGREEN", ChatColor.DARK_GREEN + "");
+		msg = msg.replace("%^LIGHTGREEN", ChatColor.GREEN + "")
+				.replace("%^GREEN", ChatColor.DARK_GREEN + "")
+				.replace("%^DARKGREEN", ChatColor.DARK_GREEN + "");
 
-		msg.replace("%^ORANGE", ChatColor.GOLD + "");
-		msg.replace("%^LIGHTYELLOW", ChatColor.YELLOW + "");
-		msg.replace("%^YELLOW", ChatColor.YELLOW + "");
-		msg.replace("%^DARKYELLOW", ChatColor.GOLD + "");
+		msg = msg.replace("%^ORANGE", ChatColor.GOLD + "")
+				.replace("%^LIGHTYELLOW", ChatColor.YELLOW + "")
+				.replace("%^YELLOW", ChatColor.YELLOW + "")
+				.replace("%^DARKYELLOW", ChatColor.GOLD + "");
 
-		msg.replace("%^LIGHTBLUE", ChatColor.BLUE + "");
-		msg.replace("%^BLUE", ChatColor.DARK_BLUE + "");
-		msg.replace("%^DARKBLUE", ChatColor.DARK_BLUE + "");
+		msg = msg.replace("%^LIGHTBLUE", ChatColor.BLUE + "")
+				.replace("%^BLUE", ChatColor.DARK_BLUE + "")
+				.replace("%^DARKBLUE", ChatColor.DARK_BLUE + "");
 
-		msg.replace("%^PINK", ChatColor.LIGHT_PURPLE + "");
-		msg.replace("%^LIGHTMAGENTA", ChatColor.LIGHT_PURPLE + "");
-		msg.replace("%^PURPLE", ChatColor.DARK_PURPLE + "");
-		msg.replace("%^MAGENTA", ChatColor.DARK_PURPLE + "");
-		msg.replace("%^DARKMAGENTA", ChatColor.DARK_PURPLE + "");
+		msg = msg.replace("%^PINK", ChatColor.LIGHT_PURPLE + "")
+				.replace("%^LIGHTMAGENTA", ChatColor.LIGHT_PURPLE + "")
+				.replace("%^PURPLE", ChatColor.DARK_PURPLE + "")
+				.replace("%^MAGENTA", ChatColor.DARK_PURPLE + "")
+				.replace("%^DARKMAGENTA", ChatColor.DARK_PURPLE + "");
 
-		msg.replace("%^LIGHTCYAN", ChatColor.AQUA + "");
-		msg.replace("%^CYAN", ChatColor.DARK_AQUA + "");
-		msg.replace("%^DARKCYAN", ChatColor.DARK_AQUA + "");
+		msg = msg.replace("%^LIGHTCYAN", ChatColor.AQUA + "")
+				.replace("%^CYAN", ChatColor.DARK_AQUA + "")
+				.replace("%^DARKCYAN", ChatColor.DARK_AQUA + "");
 
-		msg.replace("%^LIGHTGREY", ChatColor.WHITE + "");
-		msg.replace("%^LIGHTGRAY", ChatColor.WHITE + "");
-		msg.replace("%^GREY", ChatColor.GRAY + "");
-		msg.replace("%^GRAY", ChatColor.GRAY + "");
-		msg.replace("%^DARKGREY", ChatColor.DARK_GRAY + "");
-		msg.replace("%^DARKGRAY", ChatColor.DARK_GRAY + "");
+		msg = msg.replace("%^LIGHTGREY", ChatColor.WHITE + "")
+				.replace("%^LIGHTGRAY", ChatColor.WHITE + "")
+				.replace("%^GREY", ChatColor.GRAY + "")
+				.replace("%^GRAY", ChatColor.GRAY + "")
+				.replace("%^DARKGREY", ChatColor.DARK_GRAY + "")
+				.replace("%^DARKGRAY", ChatColor.DARK_GRAY + "");
 
-		msg.replace("%^WHITE", ChatColor.GRAY + "");
+		msg = msg.replace("%^WHITE", ChatColor.GRAY + "");
 
-		msg.replace("%^BOLD", ChatColor.BOLD + "");
-		msg.replace("%^UNDERLINE", ChatColor.UNDERLINE + "");
-		msg.replace("%^ITALIC", ChatColor.ITALIC + "");
+		msg = msg.replace("%^BOLD", ChatColor.BOLD + "")
+				.replace("%^UNDERLINE", ChatColor.UNDERLINE + "")
+				.replace("%^ITALIC", ChatColor.ITALIC + "");
 
-		msg.replace("%^RESET", ChatColor.RESET + "");
+		msg = msg.replace("%^RESET", ChatColor.RESET + "");
 
-		msg.replaceAll("%^[A-Z0-9_]%^", "");
+		// Cleanup.
+		msg = msg.replaceAll("%^[A-Z0-9_]%^", "").replaceAll("%^", "")
+				.replaceAll(ChatColor.RESET + "[ \t]*$", "");
 
-		return msg.replace("%^", "");
+		return msg;
 	}
 
 	public static String toMudMode(final Object obj) {
 		if (obj == null)
 			return "0";
 
+		if (!isLPCVar(obj))
+			return obj.toString();
+
 		switch (LPCVar.getType(obj)) {
 		case ARRAY: {
-			Iterator<Object> itr = ((LPCArray) obj).iterator();
-			Vector<String> list = new Vector<String>();
-
-			while (itr.hasNext()) {
-				Object next = itr.next();
-
-				list.add(toMudMode(next));
-			}
-
-			if (list.isEmpty())
+			if (((LPCArray) obj).isEmpty())
 				return "({})";
-			else
-				return "({" + StringUtils.join(list, ",") + ",})";
+
+			final ArrayList<String> list = new ArrayList<String>(
+					((LPCArray) obj).size());
+
+			for (final Object elem : (LPCArray) obj)
+				list.add(toMudMode(elem));
+
+			return "({" + StringUtils.join(list, ",") + ",})";
 		}
 		case INT:
 			return ((LPCInt) obj).toString();
 		case MAPPING: {
-			Vector<String> list = new Vector<String>();
+			if (((LPCMapping) obj).isEmpty())
+				return "([])";
 
-			for (Entry<Object, Object> mapping : ((LPCMapping) obj).entrySet())
+			final ArrayList<String> list = new ArrayList<String>(
+					((LPCMapping) obj).size());
+
+			for (final Entry<Object, Object> mapping : ((LPCMapping) obj)
+					.entrySet())
 				list.add(toMudMode(mapping.getKey()) + ":"
 						+ toMudMode(mapping.getValue()));
 
-			if (list.isEmpty())
-				return "([])";
-			else
-				return "([" + StringUtils.join(list, ",") + ",])";
+			return "([" + StringUtils.join(list, ",") + ",])";
 		}
 		case STRING: {
 			String str = ((LPCString) obj).toString();
 
 			str = str.replace("\"", "\\\"");
 			str = "\"" + str + "\"";
-			str = str.replace("\\", "\\\\");
-			str = str.replace("\\\"", "\"");
-			str = str.replace("\n", "\\n");
-			str = str.replace("\r", "");
-			str = str.replace("\t", "\\t");
-			str = str.replace("\b", "\\b");
-			str = str.replace("\u00A0", " ");
+
+			str = str.replace("\\", "\\\\").replace("\\\"", "\"")
+					.replace("\n", "\\n").replace("\r", "")
+					.replace("\t", "\\t").replace("\b", "\\b")
+					.replace("\u00a0", " ");
 
 			return str;
 		}
+		case MIXED:
+			return toMudMode(((LPCMixed) obj).getLPCData());
 		default:
 			return obj.toString();
 		}
@@ -226,16 +239,39 @@ public class Utils {
 	 * @return Pinkfish version of ChatColor coded message.
 	 */
 	public static String toPinkfish(String msg) {
-		if (msg == null)
-			return null;
+		if (msg == null || msg.isEmpty())
+			return msg;
+
+		if (COLOR_PATTERN.matcher(msg).lookingAt()) {
+			Matcher matcher = URL_PATTERN.matcher(msg);
+
+			while (matcher.find()) {
+				final String match = matcher.group();
+				final String replacement = match.replaceAll(COLOR_CHAR + "",
+						COLOR_CHAR + "_");
+
+				msg = msg.replace(match, replacement);
+			}
+
+			msg = ChatColor.translateAlternateColorCodes(COLOR_CHAR, msg);
+			matcher = URL_PATTERN.matcher(msg);
+
+			while (matcher.find()) {
+				final String match = matcher.group();
+				final String replacement = match.replaceAll(COLOR_CHAR + "_",
+						COLOR_CHAR + "");
+
+				msg = msg.replace(match, replacement);
+			}
+		}
 
 		if (!msg.contains(ChatColor.COLOR_CHAR + ""))
 			return msg;
 
-		String output = new String();
+		String output = "";
 
 		while (msg.length() > 1) {
-			int i = msg.indexOf(ChatColor.COLOR_CHAR);
+			final int i = msg.indexOf(ChatColor.COLOR_CHAR);
 
 			if (i == -1)
 				break;
@@ -244,6 +280,9 @@ public class Utils {
 				output += msg.substring(0, i);
 				msg = msg.substring(i);
 			}
+
+			if (msg.length() == 1)
+				break;
 
 			switch (msg.toLowerCase().charAt(1)) {
 			case '0':
@@ -326,7 +365,7 @@ public class Utils {
 		if (str == null || target == null)
 			return null;
 
-		if (!str.contains("\""))
+		if (str.isEmpty() || target.isEmpty() || !str.contains("\""))
 			return str;
 
 		StringBuffer in = new StringBuffer("");
@@ -393,7 +432,7 @@ public class Utils {
 		if (str == null || targets == null)
 			return null;
 
-		for (String target : targets)
+		for (final String target : targets)
 			str = blankFromStrings(str, target);
 
 		return str;
@@ -406,13 +445,13 @@ public class Utils {
 
 		mudModeString = mudModeString.trim();
 
-		if (mudModeString.length() < 1) {
+		if (mudModeString.isEmpty()) {
 			return null;
 		} else if (mudModeString.length() == 1) {
 			try {
-				int x = Integer.parseInt(mudModeString);
+				final long x = Long.parseLong(mudModeString);
 
-				return new LPCInt(Integer.valueOf(x));
+				return new LPCInt(Long.valueOf(x));
 			} catch (NumberFormatException nfE) {
 				throw new I3Exception("Invalid LPC Data in string: "
 						+ mudModeString, nfE);
@@ -421,7 +460,7 @@ public class Utils {
 
 		if (mudModeString.charAt(0) == '(') {
 			if (mudModeString.charAt(1) == '{') {
-				LPCArray array = new LPCArray();
+				final LPCArray array = new LPCArray();
 				String tmp = mudModeString;
 
 				if (!mudModeString.contains("})"))
@@ -463,7 +502,7 @@ public class Utils {
 
 				return array;
 			} else if (mudModeString.charAt(1) == '[') {
-				LPCMapping mapping = new LPCMapping();
+				final LPCMapping mapping = new LPCMapping();
 				String tmp = mudModeString;
 
 				if (!mudModeString.contains("])"))
@@ -541,21 +580,39 @@ public class Utils {
 				}
 			}
 
-			return new LPCString(in.toString());
+			byte[] data = new byte[in.length()];
+
+			try {
+				data = in.toString().getBytes("ISO-8859-1");
+			} catch (UnsupportedEncodingException ueE) {
+				throw new I3Exception("Invalid character encoding: "
+						+ in.toString(), ueE);
+			}
+
+			for (int i = 0; i < data.length; i++) {
+				final int ch = data[i] & 0xff;
+
+				// 160 is a non-breaking space. We'll consider that
+				// "printable".
+				if (ch < 32 || (ch >= 127 && ch <= 159)) {
+					// Java uses it as a replacement character,
+					// so it's probably ok for us too.
+					data[i] = '?';
+				}
+			}
+
+			return new LPCString(data.toString());
 		} else if (Character.isDigit(mudModeString.charAt(0))
 				|| mudModeString.charAt(0) == '-') {
 			String tmp;
-			int x = 0;
 
 			if (mudModeString.length() > 1 && mudModeString.startsWith("0x")) {
 				tmp = "0x";
-				mudModeString = mudModeString.substring(2,
-						mudModeString.length());
+				mudModeString = mudModeString.substring(2);
 			} else if (mudModeString.length() > 1
 					&& mudModeString.startsWith("-")) {
 				tmp = "-";
-				mudModeString = mudModeString.substring(1,
-						mudModeString.length());
+				mudModeString = mudModeString.substring(1);
 			} else {
 				tmp = "";
 			}
@@ -565,28 +622,30 @@ public class Utils {
 				tmp += mudModeString.charAt(0);
 
 				if (mudModeString.length() > 1)
-					mudModeString = mudModeString.substring(1,
-							mudModeString.length());
+					mudModeString = mudModeString.substring(1);
 				else
 					mudModeString = "";
 			}
 
 			try {
-				x = Integer.parseInt(tmp);
+				final long x = Long.parseLong(tmp);
+
+				return new LPCInt(Long.valueOf(x));
 			} catch (NumberFormatException nfE) {
 				throw new I3Exception("Invalid number format: " + tmp, nfE);
 			}
-
-			return new LPCInt(Integer.valueOf(x));
 		}
 
 		throw new I3Exception("Invalid MudMode string: " + mudModeString);
 	}
 
 	private static String replaceAndIngnoreInStrings(final String str,
-			final String target, final String replacement) {
+			final String target, String replacement) {
 		if (str == null || target == null)
 			return null;
+
+		if (replacement == null)
+			replacement = "";
 
 		if (!str.contains("\""))
 			return str.replace(target, replacement);

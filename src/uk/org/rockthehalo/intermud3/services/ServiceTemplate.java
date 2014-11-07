@@ -9,7 +9,7 @@ public abstract class ServiceTemplate {
 	 * @param packet
 	 *            the reply packet
 	 */
-	public abstract void replyHandler(Packet packet);
+	public abstract void replyHandler(final Packet packet);
 
 	/**
 	 * Service request handler.
@@ -17,5 +17,5 @@ public abstract class ServiceTemplate {
 	 * @param packet
 	 *            the request packet
 	 */
-	public abstract void reqHandler(Packet packet);
+	public abstract void reqHandler(final Packet packet);
 }

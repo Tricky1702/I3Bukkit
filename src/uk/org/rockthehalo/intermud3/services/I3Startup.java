@@ -2,10 +2,14 @@ package uk.org.rockthehalo.intermud3.services;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Server;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
@@ -18,11 +22,15 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
 public class I3Startup extends ServiceTemplate {
+	private static final Payload startupPayload = new Payload(Arrays.asList(
+			"ST_ROUTERLIST", "ST_PASSWORD"));
+
 	public I3Startup() {
 	}
 
 	public void remove() {
 		Intermud3.callout.removeCallOuts(this);
+		startupPayload.remove();
 	}
 
 	/*
@@ -33,29 +41,29 @@ public class I3Startup extends ServiceTemplate {
 	 * .rockthehalo.intermud3.LPC.Packet)
 	 */
 	@Override
-	public void replyHandler(Packet packet) {
-		if (packet.size() != 8) {
-			Log.error("We don't like startup-reply packet size. Should be 8 but is "
-					+ packet.size());
+	public void replyHandler(final Packet packet) {
+		if (packet.size() != startupPayload.size()) {
+			Log.error("We don't like startup-reply packet size. Should be "
+					+ startupPayload.size() + " but is " + packet.size());
 			Log.error(packet.toMudMode());
 
 			return;
 		}
 
-		int oMud = Payload.O_MUD;
-		String oMudName = packet.getLPCString(oMud).toString();
+		final LPCString oMudName = packet.getLPCString(Payload.O_MUD);
 
-		if (!oMudName.equals(Intermud3.network.getRouterName().toString())) {
+		if (!oMudName.equals(Intermud3.network.getRouterName())) {
 			Log.error("Illegal access. Not from the router.");
 			Log.error(packet.toMudMode());
 
 			return;
 		}
 
-		LPCArray routerList = new LPCArray();
+		final LPCArray routerList = new LPCArray();
 
-		if (packet.getLPCArray(6) != null)
-			routerList.setLPCData(packet.getLPCArray(6));
+		if (packet.getLPCArray(startupPayload.get("ST_ROUTERLIST")) != null)
+			routerList.setLPCData(packet.getLPCArray(startupPayload
+					.get("ST_ROUTERLIST")));
 
 		if (routerList.isEmpty()) {
 			Log.error("We don't like the absence of packet element 6.");
@@ -66,38 +74,46 @@ public class I3Startup extends ServiceTemplate {
 
 		Intermud3.network.setRouterList(routerList);
 
-		List<String> configRouterList = new ArrayList<String>();
+		final List<String> configRouterList = new ArrayList<String>(
+				routerList.size());
 
-		for (Object obj : routerList)
-			configRouterList.add(((LPCArray) obj).getLPCString(0) + ", "
-					+ ((LPCArray) obj).getLPCString(1));
+		for (final Object obj : routerList) {
+			LPCArray router = (LPCArray) obj;
 
-		Intermud3.config.getConfig().set("router.list", configRouterList);
+			configRouterList.add(router.getLPCString(0) + ", "
+					+ router.getLPCString(1));
+		}
 
-		LPCArray preferredRouter = new LPCArray(routerList.getLPCArray(0));
-		LPCString preferredName = preferredRouter.getLPCString(0);
-		LPCString preferredAddr = preferredRouter.getLPCString(1);
-		String[] router = StringUtils.split(preferredAddr.toString(), " ");
-		LPCString preferredIP = new LPCString(router[0].trim());
-		LPCInt preferredPort = new LPCInt(Integer.parseInt(router[1].trim()));
+		final FileConfiguration i3Root = Intermud3.config.getConfig();
 
-		Intermud3.config.getConfig().set("router.preferred",
-				preferredName + ", " + preferredAddr);
+		i3Root.set("router.list", configRouterList);
+
+		final LPCArray preferredRouter = new LPCArray(routerList.getLPCArray(0));
+		final LPCString preferredName = preferredRouter.getLPCString(0);
+		final LPCString preferredAddr = preferredRouter.getLPCString(1);
+		final String[] router = StringUtils
+				.split(preferredAddr.toString(), " ");
+		final LPCString preferredIP = new LPCString(router[0].trim());
+		final LPCInt preferredPort = new LPCInt(Integer.parseInt(router[1]
+				.trim()));
+
+		i3Root.set("router.preferred", preferredName + ", " + preferredAddr);
 		Intermud3.network.setRouterName(preferredName);
 		Intermud3.network.setRouterIP(preferredIP);
 		Intermud3.network.setRouterPort(preferredPort);
 
-		LPCArray currentRouter = new LPCArray(
+		final LPCArray currentRouter = new LPCArray(
 				Intermud3.network.getPreferredRouter());
-		LPCString currentName = currentRouter.getLPCString(0);
-		LPCString currentAddr = currentRouter.getLPCString(1);
+		final LPCString currentName = currentRouter.getLPCString(0);
+		final LPCString currentAddr = currentRouter.getLPCString(1);
 
-		if (preferredName.toString().equals(currentName.toString())
-				&& preferredAddr.toString().equals(currentAddr.toString())) {
-			LPCInt i = packet.getLPCInt(7);
+		if (preferredName.equals(currentName)
+				&& preferredAddr.equals(currentAddr)) {
+			final LPCInt i = packet
+					.getLPCInt(startupPayload.get("ST_PASSWORD"));
 
 			if (i != null) {
-				Intermud3.config.getConfig().set("router.password", i.toInt());
+				i3Root.set("router.password", i.toNum());
 				Intermud3.network.setRouterPassword(i);
 			}
 		} else {
@@ -106,13 +122,26 @@ public class I3Startup extends ServiceTemplate {
 			Log.info("Changing router details to "
 					+ Utils.toMudMode(preferredRouter));
 
-			Intermud3.config.getConfig().set("router.password", 0);
-			Intermud3.config.getConfig().set("router.chanlistID", 0);
-			Intermud3.config.getConfig().set("router.mudlistID", 0);
+			i3Root.set("router.password", 0);
 			Intermud3.network.saveConfig();
+
+			final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+			final I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+
+			if (i3Channel != null) {
+				i3Channel.setChanlistID(0);
+				i3Channel.saveConfig();
+			}
+
+			if (i3Mudlist != null) {
+				i3Mudlist.setMudlistID(0);
+				i3Mudlist.saveConfig();
+			}
+
+			Intermud3.network.setRouterPassword(0);
 			Intermud3.network.setPreferredRouter(preferredRouter);
 			Intermud3.network.shutdown(0);
-			Intermud3.callout.addCallOut(Intermud3.network, "connect", 1);
+			Intermud3.callout.addCallOut(Intermud3.network, "connect", 2);
 
 			return;
 		}
@@ -131,16 +160,16 @@ public class I3Startup extends ServiceTemplate {
 	 * .rockthehalo.intermud3.LPC.Packet)
 	 */
 	@Override
-	public void reqHandler(Packet packet) {
+	public void reqHandler(final Packet packet) {
 	}
 
 	public void send() {
 		if (Intermud3.network.isRouterConnected())
 			return;
 
-		I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
-		I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
-		Packet payload = new Packet();
+		final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
+		final I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
+		final Packet payload = new Packet();
 
 		payload.add(Intermud3.network.getRouterPassword());
 
@@ -158,24 +187,21 @@ public class I3Startup extends ServiceTemplate {
 			i3Channel.setChanlistID(0);
 		}
 
-		payload.add(new LPCInt(Intermud3.instance.getServer().getPort()));
+		final Server server = Intermud3.instance.getServer();
+
+		payload.add(new LPCInt(server.getPort()));
 		payload.add(new LPCInt(0));
 		payload.add(new LPCInt(0));
 
-		LPCString mudlibVersion = new LPCString(Intermud3.instance.getServer()
-				.getName()
-				+ " "
-				+ Intermud3.instance.getServer().getBukkitVersion());
-		LPCString baseMudlibVersion = new LPCString(Intermud3.instance
-				.getServer().getName()
-				+ " "
-				+ Intermud3.instance.getServer().getBukkitVersion());
-		LPCString driverVersion = new LPCString("RtH "
-				+ Intermud3.instance.getServer().getName() + " Client v"
+		final LPCString mudlibVersion = new LPCString(server.getName() + " "
+				+ server.getBukkitVersion());
+		final LPCString baseMudlibVersion = new LPCString(server.getName()
+				+ " " + server.getBukkitVersion());
+		final LPCString driverVersion = new LPCString("RtH " + server.getName()
+				+ " Client v"
 				+ Intermud3.instance.getDescription().getVersion());
-		LPCString mudType = new LPCString("Other."
-				+ Intermud3.instance.getServer().getName());
-		LPCString openStatus = new LPCString("beta testing");
+		final LPCString mudType = new LPCString("Other." + server.getName());
+		final LPCString openStatus = new LPCString("beta testing");
 
 		payload.add(mudlibVersion);
 		payload.add(baseMudlibVersion);
@@ -185,28 +211,53 @@ public class I3Startup extends ServiceTemplate {
 		payload.add(Intermud3.network.getAdminEmail());
 		payload.add(ServiceManager.getRouterServices());
 
-		Date bootTime = new Date(Intermud3.instance.getBootTime());
-		SimpleDateFormat fmt = new SimpleDateFormat(
-				"E, d MMMM yyyy - HH:mm:ss zzz");
-		String tmStr = fmt.format(bootTime);
+		final Date bootTime = new Date(Intermud3.instance.getBootTime());
+		final Calendar cal = Calendar.getInstance();
+		final String ord;
 
-		LPCMapping otherInfo = new LPCMapping();
+		cal.setTime(bootTime);
 
-		otherInfo.set(new LPCString("upsince"), new LPCString(tmStr));
+		switch (cal.get(Calendar.DAY_OF_MONTH)) {
+		case 1:
+		case 21:
+		case 31:
+			ord = "st";
+
+			break;
+		case 2:
+		case 22:
+			ord = "nd";
+
+			break;
+		case 3:
+		case 23:
+			ord = "rd";
+
+			break;
+		default:
+			ord = "th";
+		}
+
+		final SimpleDateFormat fmt = new SimpleDateFormat(
+				"EEEE, d'$ord$' MMMM yyyy - HH:mm:ss zzz");
+		final String tmStr = fmt.format(bootTime);
+		final LPCMapping otherInfo = new LPCMapping();
+
+		otherInfo.put(new LPCString("upsince"),
+				new LPCString(tmStr.replace("$ord$", ord)));
 
 		if (!Intermud3.network.getHostName().isEmpty())
-			otherInfo.set(new LPCString("host"),
+			otherInfo.put(new LPCString("host"),
 					Intermud3.network.getHostName());
 
-		otherInfo.set(
+		otherInfo.put(
 				new LPCString("architecture"),
-				new LPCString(System.getProperty("os.name") + " "
+				new LPCString(System.getProperty("os.name") + "/"
 						+ System.getProperty("os.arch")));
-		otherInfo.set(new LPCString("java"),
+		otherInfo.put(new LPCString("java"),
 				new LPCString(System.getProperty("java.version")));
 
 		payload.add(otherInfo);
-		Log.debug("I3Startup packet: " + payload.toMudMode());
 		Intermud3.network.sendToRouter("startup-req-3", null, payload);
 	}
 }
