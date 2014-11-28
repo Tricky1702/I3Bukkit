@@ -5,14 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public enum ServiceType {
-	UNKNOWN("unknown"), I3CHANNEL("channel"), I3ERROR("error"), I3MUDLIST(
-			"mudlist"), I3PING("ping"), I3STARTUP("startup"), I3UCACHE("ucache");
+	UNKNOWN("unknown"), I3CHANNEL("channel"), I3ERROR("error"), I3MUDLIST("mudlist"), I3PING("ping"), I3STARTUP("startup"), I3UCACHE(
+			"ucache");
 
 	private static final Map<String, ServiceType> nameToService = Collections
-			.synchronizedMap(new LinkedHashMap<String, ServiceType>(
-					values().length));
-	private static final Map<Object, String> serviceToName = Collections
-			.synchronizedMap(new LinkedHashMap<Object, String>(values().length));
+			.synchronizedMap(new LinkedHashMap<String, ServiceType>(values().length));
+	private static final Map<Object, String> serviceToName = Collections.synchronizedMap(new LinkedHashMap<Object, String>(
+			values().length));
+
 	private String name = null;
 	private Object service = null;
 	private boolean visibleOnRouter = false;
@@ -21,8 +21,7 @@ public enum ServiceType {
 		this(name, null, false);
 	}
 
-	private ServiceType(final String name, final Object service,
-			final boolean visibleOnRouter) {
+	private ServiceType(final String name, final Object service, final boolean visibleOnRouter) {
 		this.name = name;
 		this.service = service;
 		this.visibleOnRouter = visibleOnRouter;

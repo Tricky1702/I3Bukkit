@@ -236,8 +236,7 @@ public class PacketTypes {
 			}
 		};
 
-		private static final Map<String, PacketType> nameToType = new HashMap<String, PacketType>(
-				values().length);
+		private static final Map<String, PacketType> nameToType = new HashMap<String, PacketType>(values().length);
 
 		private String name = null;
 

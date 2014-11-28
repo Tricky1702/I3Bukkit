@@ -10,8 +10,7 @@ import uk.org.rockthehalo.intermud3.I3Exception;
 import uk.org.rockthehalo.intermud3.Utils;
 
 public class LPCMapping extends LPCVar implements Map<Object, Object> {
-	private Map<Object, Object> lpcData = Collections
-			.synchronizedMap(new LinkedHashMap<Object, Object>());
+	private Map<Object, Object> lpcData = Collections.synchronizedMap(new LinkedHashMap<Object, Object>());
 
 	public LPCMapping() {
 		super.setType(LPCTypes.MAPPING);
@@ -19,8 +18,7 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 
 	public LPCMapping(final int size) {
 		this();
-		this.lpcData = Collections
-				.synchronizedMap(new LinkedHashMap<Object, Object>(size));
+		this.lpcData = Collections.synchronizedMap(new LinkedHashMap<Object, Object>(size));
 	}
 
 	public LPCMapping(final Map<Object, Object> o) {
@@ -87,8 +85,7 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		if (o == null)
 			return false;
 
-		if (Utils.isLPCMapping(o)
-				&& Utils.toMudMode(o).equals(Utils.toMudMode(this)))
+		if (Utils.isLPCMapping(o) && Utils.toMudMode(o).equals(Utils.toMudMode(this)))
 			return true;
 
 		return false;
@@ -299,14 +296,12 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 
 	@Override
 	public void setLPCData(final LPCArray o) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCMapping: setLPCData(LPCArray)");
+		throw new I3Exception("Invalid operation for LPCMapping: setLPCData(LPCArray)");
 	}
 
 	@Override
 	public void setLPCData(final LPCInt o) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCMapping: setLPCData(LPCInt)");
+		throw new I3Exception("Invalid operation for LPCMapping: setLPCData(LPCInt)");
 	}
 
 	@Override
@@ -317,8 +312,7 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 
 	@Override
 	public void setLPCData(final LPCString o) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCMapping: setLPCData(LPCString)");
+		throw new I3Exception("Invalid operation for LPCMapping: setLPCData(LPCString)");
 	}
 
 	@Override
@@ -332,9 +326,7 @@ public class LPCMapping extends LPCVar implements Map<Object, Object> {
 		else if (Utils.isLPCString(o))
 			setLPCData((LPCString) o);
 		else
-			throw new I3Exception(
-					"Invalid data for LPCMapping: setLPCData(Object) '"
-							+ o.toString() + "'");
+			throw new I3Exception("Invalid data for LPCMapping: setLPCData(Object) '" + o.toString() + "'");
 	}
 
 	@Override

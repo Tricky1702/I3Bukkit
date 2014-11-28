@@ -1,8 +1,10 @@
 package uk.org.rockthehalo.intermud3.services;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
@@ -23,19 +25,15 @@ import uk.org.rockthehalo.intermud3.LPC.LPCMapping;
 import uk.org.rockthehalo.intermud3.LPC.LPCString;
 
 public class I3Mudlist extends ServiceTemplate {
-	private static final Payload mudlistPayload = new Payload(Arrays.asList(
-			"ML_ID", "ML_INFO"));
-	private static final int hBeatDelay = 5 * 60;
+	private static final long hBeatDelay = 5L * 60L;
+	private static final Payload mudlistPayload = new Payload(Arrays.asList("ML_ID", "ML_INFO"));
 
-	private final Map<String, LPCArray> mudList = Collections
-			.synchronizedMap(new HashMap<String, LPCArray>());
-	private final Map<String, Long> lastUpdate = Collections
-			.synchronizedMap(new HashMap<String, Long>());
-	private final Map<String, Integer> stateCount = Collections
-			.synchronizedMap(new HashMap<String, Integer>());
+	private final Map<String, Long> lastUpdate = Collections.synchronizedMap(new HashMap<String, Long>());
+	private final Map<String, LPCArray> mudList = Collections.synchronizedMap(new HashMap<String, LPCArray>());
+	private final Map<String, Integer> stateCount = Collections.synchronizedMap(new HashMap<String, Integer>());
 
 	private Config config = null;
-	private int HBeat = 0;
+	private long hBeat = 0L;
 	private LPCInt mudlistID = new LPCInt();
 
 	public static final int STATE = 0;
@@ -56,13 +54,13 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void create() {
-		this.config = new Config(Intermud3.instance, "mudlist.yml");
+		this.config = new Config("mudlist.yml");
 
 		if (!this.config.getFile().exists()) {
 			final FileConfiguration root = this.config.getConfig();
 
-			root.addDefault("mudlistID", 0L);
-			root.addDefault("mudList", "{}");
+			root.set("mudlistID", 0L);
+			root.set("mudList", this.mudList);
 
 			this.config.saveConfig();
 		}
@@ -73,8 +71,7 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void debugInfo() {
-		Log.debug("I3Mudlist: mudList: "
-				+ StringUtils.join(this.mudList.keySet().iterator(), ", "));
+		Log.debug("I3Mudlist: mudList: " + StringUtils.join(this.mudList.keySet().iterator(), ", "));
 	}
 
 	/**
@@ -92,23 +89,22 @@ public class I3Mudlist extends ServiceTemplate {
 	}
 
 	public void heartBeat() {
-		this.HBeat++;
+		this.hBeat++;
 
-		if (this.HBeat >= 12 * 6)
-			this.HBeat = 0;
+		if (this.hBeat >= 12L * 6L)
+			this.hBeat = 0L;
 
-		if (this.HBeat == 0) {
+		if (this.hBeat == 0L) {
 			final Map<String, Integer> oldStateCount = new HashMap<String, Integer>();
 
 			oldStateCount.putAll(this.stateCount);
 
-			for (final Entry<String, Integer> stateCount : oldStateCount
-					.entrySet())
+			for (final Entry<String, Integer> stateCount : oldStateCount.entrySet())
 				this.stateCount.put(stateCount.getKey(), 0);
 		}
 
 		final Vector<String> muds = new Vector<String>();
-		final long tm = System.currentTimeMillis() / 1000;
+		final long tm = System.currentTimeMillis() / 1000L;
 
 		for (final Entry<String, LPCArray> mudList : this.mudList.entrySet()) {
 			final String mudname = mudList.getKey();
@@ -120,8 +116,7 @@ public class I3Mudlist extends ServiceTemplate {
 			else
 				timestamp = this.lastUpdate.get(mudname);
 
-			if (mudInfo != null && mudInfo.getLPCInt(STATE).toNum() != -1
-					&& tm - timestamp > 7 * 24 * 60 * 60)
+			if (mudInfo != null && mudInfo.getLPCInt(STATE).toNum() != -1L && tm - timestamp > 7L * 24L * 60L * 60L)
 				muds.add(mudname);
 		}
 
@@ -135,10 +130,8 @@ public class I3Mudlist extends ServiceTemplate {
 			Log.debug("Removing mud '" + muds.get(0) + "' from the mudlist.");
 			removeMudFromList(muds.get(0));
 		} else {
-			Log.debug("Removing muds '"
-					+ StringUtils.join(muds.subList(0, muds.size() - 1), "', '")
-					+ "' and '" + muds.get(muds.size() - 1)
-					+ "' from the mudlist.");
+			Log.debug("Removing muds '" + StringUtils.join(muds.subList(0, muds.size() - 1), "', '") + "' and '"
+					+ muds.get(muds.size() - 1) + "' from the mudlist.");
 
 			for (final String mudname : muds)
 				removeMudFromList(mudname);
@@ -162,48 +155,40 @@ public class I3Mudlist extends ServiceTemplate {
 
 		final FileConfiguration root = this.config.getConfig();
 
-		this.mudlistID = new LPCInt(root.getLong("mudlistID", 0));
+		this.mudlistID = new LPCInt(root.getLong("mudlistID", 0L));
 		this.mudList.clear();
 		this.lastUpdate.clear();
 
 		if (root.contains("mudUpdate")) {
-			final LPCMapping oldMudList = (LPCMapping) Utils.toObject(root
-					.getString("mudList", "([])"));
+			final LPCMapping oldMudList = (LPCMapping) Utils.toObject(root.getString("mudList", "([])"));
 
 			if (oldMudList != null && !oldMudList.isEmpty())
 				for (final Object mudname : oldMudList.keySet()) {
 					final String name = Utils.safePath(mudname.toString());
 
 					this.mudList.put(name, oldMudList.getLPCArray(mudname));
-					this.lastUpdate
-							.put(name, System.currentTimeMillis() / 1000);
+					this.lastUpdate.put(name, System.currentTimeMillis() / 1000L);
 				}
 
-			final LPCMapping oldMudUpdate = (LPCMapping) Utils.toObject(root
-					.getString("mudUpdate", "([])"));
+			final LPCMapping oldMudUpdate = (LPCMapping) Utils.toObject(root.getString("mudUpdate", "([])"));
 
 			if (oldMudUpdate != null && !oldMudUpdate.isEmpty())
 				for (final Object mudname : oldMudUpdate.keySet()) {
 					final String name = Utils.safePath(mudname.toString());
 
 					if (this.mudList.containsKey(name))
-						this.lastUpdate.put(name,
-								oldMudUpdate.getLPCInt(mudname).toNum());
+						this.lastUpdate.put(name, oldMudUpdate.getLPCInt(mudname).toNum());
 				}
 		} else {
-			final ConfigurationSection mudListSection = root
-					.getConfigurationSection("mudList");
+			final ConfigurationSection mudListSection = root.getConfigurationSection("mudList");
 
-			for (final String mudname : mudListSection.getKeys(false)) {
-				final ConfigurationSection mudSection = mudListSection
-						.getConfigurationSection(mudname);
+			if (mudListSection != null) {
+				for (final String mudname : mudListSection.getKeys(false)) {
+					final ConfigurationSection mudSection = mudListSection.getConfigurationSection(mudname);
 
-				this.mudList.put(mudname, (LPCArray) Utils.toObject(mudSection
-						.getString("mudInfo", "({})")));
-				this.lastUpdate.put(
-						mudname,
-						mudSection.getLong("lastUpdate",
-								System.currentTimeMillis() / 1000));
+					this.mudList.put(mudname, (LPCArray) Utils.toObject(mudSection.getString("mudInfo", "({})")));
+					this.lastUpdate.put(mudname, mudSection.getLong("lastUpdate", System.currentTimeMillis() / 1000L));
+				}
 			}
 		}
 
@@ -241,8 +226,7 @@ public class I3Mudlist extends ServiceTemplate {
 	@Override
 	public void replyHandler(final Packet packet) {
 		if (packet.size() != mudlistPayload.size()) {
-			Log.error("We don't like mudlist packet size. Should be "
-					+ mudlistPayload.size() + " but is " + packet.size());
+			Log.error("We don't like mudlist packet size. Should be " + mudlistPayload.size() + " but is " + packet.size());
 			Log.error(packet.toMudMode());
 
 			return;
@@ -259,9 +243,8 @@ public class I3Mudlist extends ServiceTemplate {
 
 		setMudlistID(packet.getLPCInt(mudlistPayload.get("ML_ID")));
 
-		final LPCMapping info = packet.getLPCMapping(mudlistPayload
-				.get("ML_INFO"));
-		long tm = System.currentTimeMillis() / 1000;
+		final LPCMapping info = packet.getLPCMapping(mudlistPayload.get("ML_INFO"));
+		final long tm = System.currentTimeMillis() / 1000L;
 
 		for (final Entry<Object, Object> mud : info.entrySet()) {
 			final LPCString mudname = (LPCString) mud.getKey();
@@ -272,13 +255,10 @@ public class I3Mudlist extends ServiceTemplate {
 			if (Utils.isLPCArray(value))
 				infoData = (LPCArray) value;
 
-			if (infoData == null || infoData.isEmpty()
-					|| infoData.getLPCInt(STATE) == null) {
+			if (infoData == null || infoData.isEmpty() || infoData.getLPCInt(STATE) == null) {
 				if (this.mudList.containsKey(name)) {
 					removeMudFromList(name);
-					Log.debug("Removing mud '"
-							+ mudname
-							+ "', reason: Router has purged it from the listing.");
+					Log.debug("Removing mud '" + mudname + "', reason: Router has purged it from the listing.");
 				}
 
 				continue;
@@ -297,73 +277,81 @@ public class I3Mudlist extends ServiceTemplate {
 			if (this.mudList.containsKey(name)) {
 				mudInfo = this.mudList.get(name);
 
-				if (mudInfo.equals(mudInfo))
+				if (mudInfo.equals(infoData))
 					continue;
 			} else
 				mudInfo = null;
 
-			final long state = infoData.getLPCInt(STATE).toNum();
+			final LPCInt stateInfo = infoData.getLPCInt(STATE);
+			final long state;
 
-			if (state != -1) {
-				if (state > 7 * 24 * 60 * 60) {
+			if (stateInfo == null)
+				state = 0;
+			else
+				state = stateInfo.toNum();
+
+			if (state != -1L) {
+				if (state > 7L * 24L * 60L * 60L) {
 					removeMudFromList(name);
-					msg = "Removing mud '" + mudname
-							+ "', reason: Shutdown delay is too long.";
+					Log.debug("Removing mud '" + mudname + "', reason: Shutdown delay is too long.");
+
+					continue;
 				} else {
 					msg = "Mud '" + mudname + "' is down. Restart time: ";
 
-					if (state == 0)
+					if (state == 0L)
 						msg += "unknown.";
-					else if (state == 1)
+					else if (state == 1L)
 						msg += "now.";
-					else if (state <= 5 * 60)
+					else if (state <= 5L * 60L)
 						msg += state + " seconds.";
 					else
 						msg += "indefinate.";
-
-					this.mudList.put(name, infoData);
-					this.lastUpdate.put(name, tm);
 				}
 			} else {
-				final LPCString elem5 = infoData.getLPCString(MUDLIB);
-				final LPCString elem7 = infoData.getLPCString(DRIVER);
+				if (mudInfo != null)
+					msg = "Mud '" + mudname + "' is up.";
+				else
+					msg = "Adding mud '" + mudname + "' to the mudlist.";
 
-				String extra = "", libname = "", driver = "";
+				final List<String> extraInfo = new ArrayList<String>(3);
+				final LPCString mudlibInfo = infoData.getLPCString(MUDLIB);
+				final LPCString baselibInfo = infoData.getLPCString(BASELIB);
+				final LPCString driverInfo = infoData.getLPCString(DRIVER);
 
-				if (elem5 != null) {
-					final String str = elem5.toString().trim();
+				if (mudlibInfo != null) {
+					final String str = mudlibInfo.toString().trim();
 
 					infoData.set(MUDLIB, new LPCString(str));
 
 					if (!str.isEmpty())
-						libname = "Libname: " + str;
+						extraInfo.add("Lib: " + str);
 				}
 
-				if (elem7 != null) {
-					final String str = elem7.toString().trim();
+				if (baselibInfo != null) {
+					final String str = baselibInfo.toString().trim();
+
+					infoData.set(BASELIB, new LPCString(str));
+
+					if (!str.isEmpty())
+						extraInfo.add("Baselib: " + str);
+				}
+
+				if (driverInfo != null) {
+					final String str = driverInfo.toString().trim();
 
 					infoData.set(DRIVER, new LPCString(str));
 
 					if (!str.isEmpty())
-						driver = "Driver: " + str;
+						extraInfo.add("Driver: " + str);
 				}
 
-				if (!libname.isEmpty() && driver.isEmpty())
-					extra = " (" + libname + ")";
-				else if (libname.isEmpty() && !driver.isEmpty())
-					extra = " (" + driver + ")";
-				else if (!libname.isEmpty() && !driver.isEmpty())
-					extra = " (" + libname + ", " + driver + ")";
-
-				if (mudInfo != null)
-					msg = "Mud '" + mudname + "' is up." + extra;
-				else
-					msg = "Adding mud '" + mudname + "' to the mudlist."
-							+ extra;
-
-				this.mudList.put(name, infoData);
-				this.lastUpdate.put(name, tm);
+				if (!extraInfo.isEmpty())
+					msg += " (" + StringUtils.join(extraInfo, ", ") + ")";
 			}
+
+			this.mudList.put(name, infoData);
+			this.lastUpdate.put(name, tm);
 
 			if (stateCount < 7 && !msg.isEmpty())
 				Log.debug(msg);
@@ -395,21 +383,19 @@ public class I3Mudlist extends ServiceTemplate {
 
 		root.set("mudlistID", this.mudlistID.toNum());
 
-		final ConfigurationSection mudListSection = root
-				.createSection("mudList");
+		final ConfigurationSection mudListSection = root.createSection("mudList");
 
 		for (final Entry<String, LPCArray> mudList : this.mudList.entrySet()) {
 			final String mudname = Utils.safePath(mudList.getKey());
-			final ConfigurationSection mudSection = mudListSection
-					.createSection(mudname);
 			final LPCArray info = mudList.getValue();
+			final ConfigurationSection mudSection = mudListSection.createSection(mudname);
 
 			mudSection.set("mudInfo", Utils.toMudMode(info));
 
 			Long lastUpdate = this.lastUpdate.get(mudname);
 
 			if (lastUpdate == null)
-				lastUpdate = System.currentTimeMillis() / 1000;
+				lastUpdate = System.currentTimeMillis() / 1000L;
 
 			mudSection.set("lastUpdate", lastUpdate);
 		}

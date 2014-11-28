@@ -30,8 +30,7 @@ public class I3Client implements Runnable {
 		final public int type;
 		final public int ops;
 
-		public ChangeRequest(final SocketChannel socket, final int type,
-				final int ops) {
+		public ChangeRequest(final SocketChannel socket, final int type, final int ops) {
 			this.socket = socket;
 			this.type = type;
 			this.ops = ops;
@@ -52,15 +51,13 @@ public class I3Client implements Runnable {
 	private SocketChannel socket = null;
 
 	// A list of change requests
-	private List<ChangeRequest> pendingChanges = Collections
-			.synchronizedList(new LinkedList<ChangeRequest>());
+	private List<ChangeRequest> pendingChanges = Collections.synchronizedList(new LinkedList<ChangeRequest>());
 
 	// A map of socket channels to a list of ByteBuffer instances
 	private Map<SocketChannel, List<ByteBuffer>> pendingData = Collections
 			.synchronizedMap(new HashMap<SocketChannel, List<ByteBuffer>>());
 
-	public I3Client(final InetAddress hostAddress, final int port)
-			throws IOException {
+	public I3Client(final InetAddress hostAddress, final int port) throws IOException {
 		this.hostAddress = hostAddress;
 		this.port = port;
 		this.selector = initSelector();
@@ -107,15 +104,13 @@ public class I3Client implements Runnable {
 			this.pendingData.put(this.socket, queue);
 		}
 
-		final byte[] header = ByteBuffer.allocate(4).putInt(data.length)
-				.array();
+		final byte[] header = ByteBuffer.allocate(4).putInt(data.length).array();
 
 		queue.add(ByteBuffer.wrap(header));
 		queue.add(ByteBuffer.wrap(data));
 
-		this.pendingChanges.add(new ChangeRequest(this.socket,
-				ChangeRequest.CHANGEOPS, SelectionKey.OP_READ
-						| SelectionKey.OP_WRITE));
+		this.pendingChanges.add(new ChangeRequest(this.socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_READ
+				| SelectionKey.OP_WRITE));
 
 		// Finally, wake up our selecting thread so it can make the required
 		// changes
@@ -128,16 +123,14 @@ public class I3Client implements Runnable {
 
 		while (this.running) {
 			if (this.pendingChanges != null) {
-				final Iterator<ChangeRequest> changes = this.pendingChanges
-						.iterator();
+				final Iterator<ChangeRequest> changes = this.pendingChanges.iterator();
 
 				while (this.running && changes.hasNext()) {
 					final ChangeRequest change = changes.next();
 
 					switch (change.type) {
 					case ChangeRequest.CHANGEOPS: {
-						final SelectionKey key = change.socket
-								.keyFor(this.selector);
+						final SelectionKey key = change.socket.keyFor(this.selector);
 
 						if (key == null || !key.isValid()) {
 							this.running = false;
@@ -220,15 +213,14 @@ public class I3Client implements Runnable {
 		Log.warn("Shutdown.");
 	}
 
-	private ByteBuffer readBuf(final SelectionKey key, final int length)
-			throws IOException {
+	private ByteBuffer readBuf(final SelectionKey key, final int length) throws IOException {
 		if (!key.isValid() || !key.isReadable() || length <= 0)
 			return null;
 
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
+
 		// The buffer into which we'll read data when it's available
 		final ByteBuffer readBuffer = ByteBuffer.allocate(length);
-
 		// Attempt to read off the channel
 		int nBytes = 0;
 
@@ -289,6 +281,7 @@ public class I3Client implements Runnable {
 
 		final Packet packet = new Packet();
 		final LPCString omud, tmud;
+
 		PacketType type = null;
 		LPCString namedType = null, ouser = null, tuser = null;
 		String err = null;
@@ -316,12 +309,10 @@ public class I3Client implements Runnable {
 
 			tmud = packet.getLPCString(Payload.T_MUD);
 
-			if (tmud != null && !tmud.equals(Utils.getServerName())) {
+			if (tmud != null && !tmud.equalsIgnoreCase(Utils.getServerName())) {
 				if (namedType.equals("mudlist")) {
-					Log.warn("Wrong destination (" + tmud
-							+ ") for mudlist packet.");
-					packet.set(Payload.T_MUD,
-							new LPCString(Utils.getServerName()));
+					Log.warn("Wrong destination (" + tmud + ") for mudlist packet.");
+					packet.set(Payload.T_MUD, new LPCString(Utils.getServerName()));
 				} else {
 					err += "Wrong destination mud (" + tmud + ")";
 				}
@@ -350,8 +341,7 @@ public class I3Client implements Runnable {
 		type = PacketType.getNamedType(namedType.toString());
 
 		if (type == null)
-			Log.warn("Service handler for I3 packet " + packet.toMudMode()
-					+ " not available.");
+			Log.warn("Service handler for I3 packet " + packet.toMudMode() + " not available.");
 		else
 			type.handler(packet);
 	}
@@ -433,12 +423,10 @@ public class I3Client implements Runnable {
 		socketChannel.configureBlocking(false);
 
 		// Kick off connection establishment
-		socketChannel
-				.connect(new InetSocketAddress(this.hostAddress, this.port));
+		socketChannel.connect(new InetSocketAddress(this.hostAddress, this.port));
 
-		this.pendingChanges.add(new ChangeRequest(socketChannel,
-				ChangeRequest.REGISTER, SelectionKey.OP_CONNECT
-						| SelectionKey.OP_READ | SelectionKey.OP_WRITE));
+		this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.REGISTER, SelectionKey.OP_CONNECT
+				| SelectionKey.OP_READ | SelectionKey.OP_WRITE));
 
 		return socketChannel;
 	}

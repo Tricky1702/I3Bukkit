@@ -19,8 +19,8 @@ public class I3Exception extends Exception {
 		super(message, cause);
 	}
 
-	public I3Exception(final String message, final Throwable cause,
-			final boolean enableSuppression, final boolean writableStackTrace) {
+	public I3Exception(final String message, final Throwable cause, final boolean enableSuppression,
+			final boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 

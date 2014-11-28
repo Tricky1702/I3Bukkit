@@ -27,9 +27,7 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 			try {
 				this.lpcData += Long.parseLong(o.toString());
 			} catch (NumberFormatException nfE) {
-				throw new I3Exception(
-						"Invalid argument for LPCInt: add(Object) '" + o + "'",
-						nfE);
+				throw new I3Exception("Invalid argument for LPCInt: add(Object) '" + o + "'", nfE);
 			}
 
 		return true;
@@ -63,11 +61,9 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 		if (o == null)
 			return false;
 
-		if (Number.class.isInstance(o)
-				&& ((Number) o).longValue() == this.lpcData.longValue())
+		if (Number.class.isInstance(o) && ((Number) o).longValue() == this.lpcData.longValue())
 			return true;
-		else if (Utils.isLPCInt(o)
-				&& ((LPCInt) o).getLPCData().equals(this.lpcData))
+		else if (Utils.isLPCInt(o) && ((LPCInt) o).getLPCData().equals(this.lpcData))
 			return true;
 
 		return false;
@@ -95,8 +91,7 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 
 	@Override
 	public LPCArray getLPCArray(final Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: getLPCArray(index)");
+		throw new I3Exception("Invalid operation for LPCInt: getLPCArray(index)");
 	}
 
 	@Override
@@ -123,14 +118,12 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 
 	@Override
 	public LPCMapping getLPCMapping(final Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: getLPCMapping(index)");
+		throw new I3Exception("Invalid operation for LPCInt: getLPCMapping(index)");
 	}
 
 	@Override
 	public LPCString getLPCString(final Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: getLPCString(index)");
+		throw new I3Exception("Invalid operation for LPCInt: getLPCString(index)");
 	}
 
 	@Override
@@ -144,16 +137,13 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 	}
 
 	@Override
-	public Object set(final Object index, final Object element)
-			throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: set(index, element)");
+	public Object set(final Object index, final Object element) throws I3Exception {
+		throw new I3Exception("Invalid operation for LPCInt: set(index, element)");
 	}
 
 	@Override
 	public void setLPCData(final LPCArray o) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: setLPCData(LPCArray)");
+		throw new I3Exception("Invalid operation for LPCInt: setLPCData(LPCArray)");
 	}
 
 	@Override
@@ -163,8 +153,7 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 
 	@Override
 	public void setLPCData(final LPCMapping o) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCInt: setLPCData(LPCMapping)");
+		throw new I3Exception("Invalid operation for LPCInt: setLPCData(LPCMapping)");
 	}
 
 	@Override
@@ -172,9 +161,7 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 		try {
 			this.lpcData = new Long(Long.parseLong(o.toString()));
 		} catch (NumberFormatException nfE) {
-			throw new I3Exception(
-					"Invalid argument for LPCInt: setLPCData(LPCString) '" + o
-							+ "'", nfE);
+			throw new I3Exception("Invalid argument for LPCInt: setLPCData(LPCString) '" + o + "'", nfE);
 		}
 	}
 
@@ -189,9 +176,7 @@ public class LPCInt extends LPCVar implements Comparable<Object> {
 		else if (Utils.isLPCString(o))
 			setLPCData((LPCString) o);
 		else
-			throw new I3Exception(
-					"Invalid argument for LPCInt: setLPCData(Object) '" + o
-							+ "'");
+			throw new I3Exception("Invalid argument for LPCInt: setLPCData(Object) '" + o + "'");
 	}
 
 	@Override

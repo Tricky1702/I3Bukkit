@@ -22,22 +22,21 @@ import uk.org.rockthehalo.intermud3.services.ServiceType;
 public class Network {
 	private volatile Thread clentThread = null;
 
-	public final long maxRetryTime = 600;
-	public final long minRetryTime = 30;
-	public final long retryTimeStep = 20;
-
-	private I3Client client = null;
+	public final static long MAX_RETRY_TIME = 600L;
+	public final static long MIN_RETRY_TIME = 30L;
+	public final static long RETRY_TIME_STEP = 20L;
 
 	private LPCString adminEmail = new LPCString();
 	private boolean autoConnect = false;
+	private I3Client client = null;
 	private List<String> configRouterList = new ArrayList<String>();
 	private LPCString defRouterIP = new LPCString();
 	private LPCString defRouterName = new LPCString();
 	private LPCInt defRouterPort = new LPCInt();
 	private LPCString hostName = new LPCString();
-	private long idleTimeout = 0;
+	private long idleTimeout = 0L;
 	private LPCArray preferredRouter = new LPCArray();
-	private long reconnectWait = this.minRetryTime;
+	private long reconnectWait = MIN_RETRY_TIME;
 	private boolean routerConnected = false;
 	private LPCString routerIP = new LPCString();
 	private LPCArray routerList = new LPCArray();
@@ -54,8 +53,7 @@ public class Network {
 		}
 	}
 
-	public void addRouter(final LPCString routerName, final LPCString routerIP,
-			final LPCInt routerPort) {
+	public void addRouter(final LPCString routerName, final LPCString routerIP, final LPCInt routerPort) {
 		final LPCArray newRouterList = new LPCArray();
 		final LPCArray newRouterArray = new LPCArray();
 
@@ -72,8 +70,7 @@ public class Network {
 				final String ipport = arr.getLPCString(1).toString();
 				final String[] router = StringUtils.split(ipport, " ");
 
-				if (!name.equals(routerName.toString())
-						|| !router[0].equals(routerIP.toString())
+				if (!name.equals(routerName.toString()) || !router[0].equals(routerIP.toString())
 						|| Integer.parseInt(router[1]) != routerPort.toNum())
 					newRouterList.add(arr);
 			}
@@ -101,8 +98,7 @@ public class Network {
 		}
 
 		try {
-			final String[] router = StringUtils.split(this.preferredRouter
-					.getLPCString(1).toString(), " ");
+			final String[] router = StringUtils.split(this.preferredRouter.getLPCString(1).toString(), " ");
 			final String host = router[0].trim();
 			final int port = Integer.parseInt(router[1].trim());
 
@@ -116,7 +112,7 @@ public class Network {
 			this.routerConnected = false;
 			this.idleTimeout = System.currentTimeMillis();
 
-			Intermud3.callout.addCallOut(service, "send", 5);
+			Intermud3.callout.addCallOut(service, "send", 5L);
 		} catch (NumberFormatException nfE) {
 			nfE.printStackTrace();
 		} catch (UnknownHostException uhE) {
@@ -132,13 +128,10 @@ public class Network {
 		root.set("router.chanlistID", null);
 		root.set("router.mudlistID", null);
 
-		this.adminEmail = new LPCString(Utils.stripColor(root
-				.getString("adminEmail")));
+		this.adminEmail = new LPCString(Utils.stripColor(root.getString("adminEmail")));
 		this.autoConnect = root.getBoolean("autoConnect", false);
-		this.configRouterList = new ArrayList<String>(
-				root.getStringList("router.list"));
-		this.hostName = new LPCString(Utils.stripColor(root.getString(
-				"hostName", "")));
+		this.configRouterList = new ArrayList<String>(root.getStringList("router.list"));
+		this.hostName = new LPCString(Utils.stripColor(root.getString("hostName", "")));
 		this.routerPassword = new LPCInt(root.getLong("router.password"));
 
 		final String preferredRouter = root.getString("router.preferred");
@@ -168,8 +161,7 @@ public class Network {
 
 			final LPCString otherRouterName = new LPCString(parts[0].trim());
 			final LPCString otherRouterIP = new LPCString(ipport[0].trim());
-			final LPCInt otherRouterPort = new LPCInt(
-					Integer.parseInt(ipport[1].trim()));
+			final LPCInt otherRouterPort = new LPCInt(Integer.parseInt(ipport[1].trim()));
 
 			addRouter(otherRouterName, otherRouterIP, otherRouterPort);
 		}
@@ -270,13 +262,13 @@ public class Network {
 
 	public void reconnect() {
 		addRouter(this.defRouterName, this.defRouterIP, this.defRouterPort);
-		this.reconnectWait += this.retryTimeStep;
+		this.reconnectWait += RETRY_TIME_STEP;
 
-		if (this.reconnectWait > this.maxRetryTime)
-			this.reconnectWait = this.maxRetryTime;
+		if (this.reconnectWait > MAX_RETRY_TIME)
+			this.reconnectWait = MAX_RETRY_TIME;
 
 		shutdown(0);
-		Intermud3.callout.addCallOut(this, "connect", 5);
+		Intermud3.callout.addCallOut(this, "connect", 5L);
 		saveConfig();
 	}
 
@@ -380,16 +372,14 @@ public class Network {
 
 				this.client.send(packet);
 			} catch (UnsupportedEncodingException ueE) {
-				final String errMsg = ueE.getMessage() == null ? ueE.toString()
-						: ueE.getMessage();
+				final String errMsg = ueE.getMessage() == null ? ueE.toString() : ueE.getMessage();
 
 				Log.error("Unsupported encoding: " + str);
 
 				if (errMsg != null)
 					Log.error(errMsg);
 			} catch (IOException ioE) {
-				final String errMsg = ioE.getMessage() == null ? ioE.toString()
-						: ioE.getMessage();
+				final String errMsg = ioE.getMessage() == null ? ioE.toString() : ioE.getMessage();
 
 				Log.error("Problem sending data: " + str);
 
@@ -399,8 +389,8 @@ public class Network {
 		}
 	}
 
-	public void sendPacket(final String i3Type, final String origUser,
-			final String targMud, final String targUser, final Packet payload) {
+	public void sendPacket(final String i3Type, final String origUser, final String targMud, final String targUser,
+			final Packet payload) {
 		final Packet packet = new Packet();
 
 		packet.add(new LPCString(i3Type));
@@ -431,44 +421,37 @@ public class Network {
 		send(packet);
 	}
 
-	public void sendToRouter(final PacketType i3Type, final String origUser,
-			final Packet packet) {
-		sendPacket(i3Type.getName(), origUser, getRouterName().toString(),
-				null, packet);
+	public void sendToRouter(final PacketType i3Type, final String origUser, final Packet packet) {
+		sendPacket(i3Type.getName(), origUser, getRouterName().toString(), null, packet);
 	}
 
-	public void sendToRouter(final String i3Type, final String origUser,
-			final Packet packet) {
+	public void sendToRouter(final String i3Type, final String origUser, final Packet packet) {
 		sendPacket(i3Type, origUser, getRouterName().toString(), null, packet);
 	}
 
-	public void sendToMud(final PacketType i3Type, final String origUser,
-			final String targMud, final Packet packet) {
+	public void sendToMud(final PacketType i3Type, final String origUser, final String targMud, final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, null, packet);
 	}
 
-	public void sendToMud(final String i3Type, final String origUser,
-			final String targMud, final Packet packet) {
+	public void sendToMud(final String i3Type, final String origUser, final String targMud, final Packet packet) {
 		sendPacket(i3Type, origUser, targMud, null, packet);
 	}
 
-	public void sendToUser(final PacketType i3Type, final String origUser,
-			final String targMud, final String targUser, final Packet packet) {
+	public void sendToUser(final PacketType i3Type, final String origUser, final String targMud, final String targUser,
+			final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, targMud, targUser, packet);
 	}
 
-	public void sendToUser(final String i3Type, final String origUser,
-			final String targMud, final String targUser, final Packet packet) {
+	public void sendToUser(final String i3Type, final String origUser, final String targMud, final String targUser,
+			final Packet packet) {
 		sendPacket(i3Type, origUser, targMud, targUser, packet);
 	}
 
-	public void sendToAll(final PacketType i3Type, final String origUser,
-			final Packet packet) {
+	public void sendToAll(final PacketType i3Type, final String origUser, final Packet packet) {
 		sendPacket(i3Type.getName(), origUser, null, null, packet);
 	}
 
-	public void sendToAll(final String i3Type, final String origUser,
-			final Packet packet) {
+	public void sendToAll(final String i3Type, final String origUser, final Packet packet) {
 		sendPacket(i3Type, origUser, null, null, packet);
 	}
 
@@ -589,8 +572,7 @@ public class Network {
 	 *            the routerPassword to set
 	 */
 	public void setRouterPassword(final int routerPassword) {
-		this.routerPassword = new LPCInt(
-				new Integer(routerPassword).longValue());
+		this.routerPassword = new LPCInt(new Integer(routerPassword).longValue());
 	}
 
 	/**

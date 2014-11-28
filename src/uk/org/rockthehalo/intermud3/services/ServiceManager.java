@@ -20,8 +20,7 @@ public class ServiceManager {
 	 * @param serviceType
 	 * @param service
 	 */
-	private static <T> void addService(final ServiceType serviceType,
-			final T service) {
+	private static <T> void addService(final ServiceType serviceType, final T service) {
 		serviceType.setService(service);
 	}
 
@@ -33,13 +32,23 @@ public class ServiceManager {
 			final Object service = s.getService();
 			Method method = null;
 
-			if (service != null)
+			if (service != null) {
+				Method[] methods = {};
+
 				try {
-					method = service.getClass().getMethod("create");
-				} catch (NoSuchMethodException e) {
-				} catch (SecurityException e) {
-					Log.error("", e);
+					methods = service.getClass().getMethods();
+				} catch (SecurityException sE) {
+					Log.error("ServiceManager.create::Security exception in getting methods of " + service, sE);
 				}
+
+				for (Method m : methods) {
+					if (m.getName().equals("create")) {
+						method = m;
+
+						break;
+					}
+				}
+			}
 
 			if (method != null) {
 				try {
@@ -74,10 +83,8 @@ public class ServiceManager {
 	 * method.
 	 */
 	public static void debugInfo() {
-		final List<String> serviceList = new ArrayList<String>(
-				ServiceType.values().length);
-		final List<String> routerServiceList = new ArrayList<String>(
-				ServiceType.values().length);
+		final List<String> serviceList = new ArrayList<String>(ServiceType.values().length);
+		final List<String> routerServiceList = new ArrayList<String>(ServiceType.values().length);
 
 		for (final ServiceType s : ServiceType.values()) {
 			serviceList.add(s.getName());
@@ -87,20 +94,29 @@ public class ServiceManager {
 		}
 
 		Log.debug("Services:       " + StringUtils.join(serviceList, ", "));
-		Log.debug("RouterServices: "
-				+ StringUtils.join(routerServiceList, ", "));
+		Log.debug("RouterServices: " + StringUtils.join(routerServiceList, ", "));
 
 		for (final ServiceType s : ServiceType.values()) {
 			final Object service = s.getService();
 			Method method = null;
 
-			if (service != null)
+			if (service != null) {
+				Method[] methods = {};
+
 				try {
-					method = service.getClass().getMethod("debugInfo");
-				} catch (NoSuchMethodException e) {
-				} catch (SecurityException e) {
-					Log.error("", e);
+					methods = service.getClass().getMethods();
+				} catch (SecurityException sE) {
+					Log.error("ServiceManager.debuygInfo::Security exception in getting methods of " + service, sE);
 				}
+
+				for (Method m : methods) {
+					if (m.getName().equals("debugInfo")) {
+						method = m;
+
+						break;
+					}
+				}
+			}
 
 			if (method != null) {
 				try {
@@ -147,13 +163,23 @@ public class ServiceManager {
 			final Object service = s.getService();
 			Method method = null;
 
-			if (service != null)
+			if (service != null) {
+				Method[] methods = {};
+
 				try {
-					method = service.getClass().getMethod("remove");
-				} catch (NoSuchMethodException e) {
-				} catch (SecurityException e) {
-					Log.error("", e);
+					methods = service.getClass().getMethods();
+				} catch (SecurityException sE) {
+					Log.error("ServiceManager.remove::Security exception in getting methods of " + service, sE);
 				}
+
+				for (Method m : methods) {
+					if (m.getName().equals("remove")) {
+						method = m;
+
+						break;
+					}
+				}
+			}
 
 			if (method != null) {
 				try {

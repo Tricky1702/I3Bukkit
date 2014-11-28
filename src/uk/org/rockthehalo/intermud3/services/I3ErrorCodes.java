@@ -15,17 +15,16 @@ public enum I3ErrorCodes {
 	BAD_MOJO("bad-mojo") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Bad Mojo::" + errorMsg);
+				Log.error("Bad mojo::" + errorMsg);
 			else
-				Log.error("Bad Mojo");
+				Log.error("Bad mojo!");
 
+			Log.error(packet.toMudMode());
 			Log.error("Reconnecting in 2 minutes.");
-			Intermud3.network.setReconnectWait(Intermud3.network
-					.getReconnectWait() - 10);
+			Intermud3.network.setReconnectWait(Intermud3.network.getReconnectWait() - 10);
 			Intermud3.network.reconnect((2 * 60) + 5);
 			Intermud3.network.shutdown(2 * 60);
 		}
@@ -33,26 +32,26 @@ public enum I3ErrorCodes {
 	BAD_PKT("bad-pkt") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Bad Packet::" + errorMsg);
+				Log.error("Bad packet::" + errorMsg);
 			else
-				Log.error("Bad Packet");
+				Log.error("Bad packet!");
+
+			Log.error(packet.toMudMode());
 		}
 	},
 	BAD_PROTO("bad-proto") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null && errorMsg.contains("MUD already connected")) {
-				Log.error("Bad Proto::" + errorMsg);
+				Log.error("Bad proto::" + errorMsg);
+				Log.error(packet.toMudMode());
 				Log.error("Reconnecting in 5 minutes.");
-				Intermud3.network.setReconnectWait(Intermud3.network
-						.getReconnectWait() - 10);
+				Intermud3.network.setReconnectWait(Intermud3.network.getReconnectWait() - 10);
 				Intermud3.network.reconnect((5 * 60) + 5);
 				Intermud3.network.shutdown(5 * 60);
 			}
@@ -62,27 +61,22 @@ public enum I3ErrorCodes {
 		@Override
 		public void handler(final Packet packet) {
 			if (packet.size() > errorPayload.size() - 1) {
-				final LPCArray data = packet.getLPCArray(errorPayload
-						.get("ERR_PACKET"));
+				final LPCArray data = packet.getLPCArray(errorPayload.get("ERR_PACKET"));
 
-				if (data != null
-						&& data.getLPCString(Payload.TYPE).toString()
-								.equals("channel-listen")) {
-					final LPCString channel = data
-							.getLPCString(I3Channel.chanListenPayload
-									.get("CHAN_CHANNAME"));
+				if (data != null && data.getLPCString(Payload.TYPE).equals("channel-listen")) {
+					final LPCString channel = data.getLPCString(I3Channel.chanListenPayload.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
-						final LPCString errorMsg = packet
-								.getLPCString(errorPayload.get("ERR_MESSAGE"));
+						final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
-							Log.error("Not Allowed::" + errorMsg);
+							Log.error("Not allowed::" + errorMsg);
 						else
-							Log.error("Not Allowed");
+							Log.error("Not allowed!");
 
-						final I3Channel service = ServiceType.I3CHANNEL
-								.getService();
+						Log.error(packet.toMudMode());
+
+						final I3Channel service = ServiceType.I3CHANNEL.getService();
 
 						if (service != null) {
 							service.sendChannelListen(channel, false);
@@ -97,40 +91,36 @@ public enum I3ErrorCodes {
 	NOT_IMP("not-imp") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
 				Log.error("Not Implemented::" + errorMsg);
 			else
-				Log.error("Not Implemented");
+				Log.error("Not implemented!");
+
+			Log.error(packet.toMudMode());
 		}
 	},
 	UNK_CHANNEL("unk-channel") {
 		@Override
 		public void handler(final Packet packet) {
 			if (packet.size() > errorPayload.size() - 1) {
-				final LPCArray data = packet.getLPCArray(errorPayload
-						.get("ERR_PACKET"));
+				final LPCArray data = packet.getLPCArray(errorPayload.get("ERR_PACKET"));
 
-				if (data != null
-						&& data.getLPCString(Payload.TYPE).toString()
-								.equals("channel-listen")) {
-					final LPCString channel = data
-							.getLPCString(I3Channel.chanListenPayload
-									.get("CHAN_CHANNAME"));
+				if (data != null && data.getLPCString(Payload.TYPE).equals("channel-listen")) {
+					final LPCString channel = data.getLPCString(I3Channel.chanListenPayload.get("CHAN_CHANNAME"));
 
 					if (channel != null) {
-						final LPCString errorMsg = packet
-								.getLPCString(errorPayload.get("ERR_MESSAGE"));
+						final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 						if (errorMsg != null)
-							Log.error("Unknown Channel::" + errorMsg);
+							Log.error("Unknown channel::" + errorMsg);
 						else
-							Log.error("Unknown Channel");
+							Log.error("Unknown channel!");
 
-						final I3Channel service = ServiceType.I3CHANNEL
-								.getService();
+						Log.error(packet.toMudMode());
+
+						final I3Channel service = ServiceType.I3CHANNEL.getService();
 
 						if (service != null) {
 							service.sendChannelListen(channel, false);
@@ -145,58 +135,60 @@ public enum I3ErrorCodes {
 	UNK_DST("unk-dst") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 			if (errorMsg != null)
-				Log.error("Unknown Destination::" + errorMsg);
+				Log.error("Unknown destination::" + errorMsg);
 			else
-				Log.error("Unknown Destination");
+				Log.error("Unknown destination!");
+
+			Log.error(packet.toMudMode());
 		}
 	},
 	UNK_SRC("unk-src") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Source::" + errorMsg);
+				Log.error("Unknown source::" + errorMsg);
 			else
-				Log.error("Unknown Source");
+				Log.error("Unknown source!");
+
+			Log.error(packet.toMudMode());
 		}
 	},
 	UNK_TYPE("unk-type") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Packet Type::" + errorMsg);
+				Log.error("Unknown packet type::" + errorMsg);
 			else
-				Log.error("Unknown Packet Type");
+				Log.error("Unknown packet type!");
+
+			Log.error(packet.toMudMode());
 		}
 	},
 	UNK_USER("unk-user") {
 		@Override
 		public void handler(final Packet packet) {
-			final LPCString errorMsg = packet.getLPCString(errorPayload
-					.get("ERR_MESSAGE"));
+			final LPCString errorMsg = packet.getLPCString(errorPayload.get("ERR_MESSAGE"));
 
 			if (errorMsg != null)
-				Log.error("Unknown Target User::" + errorMsg);
+				Log.error("Unknown target user::" + errorMsg);
 			else
-				Log.error("Unknown Target User");
+				Log.error("Unknown target user!");
+
+			Log.error(packet.toMudMode());
 		}
 	};
 
-	private static final Map<String, I3ErrorCodes> nameToErrorCode = new HashMap<String, I3ErrorCodes>(
-			values().length);
+	private static Map<String, I3ErrorCodes> nameToErrorCode = new HashMap<String, I3ErrorCodes>(values().length);
 
 	private String errorCodeName = null;
 
-	public static final Payload errorPayload = new Payload(Arrays.asList(
-			"ERR_CODE", "ERR_MESSAGE", "ERR_PACKET"));
+	public static final Payload errorPayload = new Payload(Arrays.asList("ERR_CODE", "ERR_MESSAGE", "ERR_PACKET"));
 
 	private I3ErrorCodes(final String errorCodeName) {
 		this.errorCodeName = errorCodeName;

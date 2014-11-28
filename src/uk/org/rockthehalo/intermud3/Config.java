@@ -6,26 +6,28 @@ import java.io.InputStream;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class Config {
-	private final JavaPlugin plugin;
+	private static final String defConfigFilename = "config.yml";
+
 	private final String resourceFileName;
+	private final File configFile;
 
 	private FileConfiguration config = null;
-	private File configFile = null;
 
-	public Config(final JavaPlugin plugin, final String fileName) {
-		this.plugin = plugin;
-		this.resourceFileName = fileName;
-		this.configFile = new File(plugin.getDataFolder(), fileName);
+	public Config() {
+		this.resourceFileName = defConfigFilename;
+		this.configFile = new File(Intermud3.plugin.getDataFolder(), defConfigFilename);
 	}
 
-	public Config(final JavaPlugin plugin, final String fileName,
-			final String resourceFileName) {
-		this.plugin = plugin;
+	public Config(final String fileName) {
+		this.resourceFileName = fileName;
+		this.configFile = new File(Intermud3.plugin.getDataFolder(), fileName);
+	}
+
+	public Config(final String fileName, final String resourceFileName) {
 		this.resourceFileName = resourceFileName;
-		this.configFile = new File(plugin.getDataFolder(), fileName);
+		this.configFile = new File(Intermud3.plugin.getDataFolder(), fileName);
 	}
 
 	public void clearConfig() {
@@ -45,7 +47,7 @@ public class Config {
 	}
 
 	public InputStream getResource() {
-		return this.plugin.getResource(this.resourceFileName);
+		return Intermud3.plugin.getResource(this.resourceFileName);
 	}
 
 	public void reloadConfig() {
@@ -55,8 +57,7 @@ public class Config {
 		final InputStream defConfigStream = getResource();
 
 		if (defConfigStream != null) {
-			YamlConfiguration defConfig = YamlConfiguration
-					.loadConfiguration(defConfigStream);
+			YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
 			this.config.setDefaults(defConfig);
 		}
 	}
@@ -64,7 +65,6 @@ public class Config {
 	public void remove() {
 		// Remove references.
 		this.config = null;
-		this.configFile = null;
 	}
 
 	public void saveConfig() {
@@ -72,7 +72,7 @@ public class Config {
 			return;
 
 		try {
-			getConfig().save(this.configFile);
+			this.config.save(this.configFile);
 		} catch (IOException ioE) {
 			Log.error("Could not save config to " + this.configFile, ioE);
 		}
@@ -80,6 +80,6 @@ public class Config {
 
 	public void saveDefaultConfig() {
 		if (!this.configFile.exists())
-			this.plugin.saveResource(this.resourceFileName, false);
+			Intermud3.plugin.saveResource(this.resourceFileName, false);
 	}
 }

@@ -20,10 +20,8 @@ public class I3Error extends ServiceTemplate {
 	 */
 	@Override
 	public void replyHandler(final Packet packet) {
-		final String errorCode = packet.getLPCString(
-				I3ErrorCodes.errorPayload.get("ERR_CODE")).toString();
-		final I3ErrorCodes i3ErrorCode = I3ErrorCodes
-				.getNamedErrorCode(errorCode);
+		final String errorCode = packet.getLPCString(I3ErrorCodes.errorPayload.get("ERR_CODE")).toString();
+		final I3ErrorCodes i3ErrorCode = I3ErrorCodes.getNamedErrorCode(errorCode);
 
 		if (i3ErrorCode != null) {
 			i3ErrorCode.handler(packet);
@@ -31,12 +29,10 @@ public class I3Error extends ServiceTemplate {
 			return;
 		}
 
-		final LPCString errorMsg = packet
-				.getLPCString(I3ErrorCodes.errorPayload.get("ERR_MESSAGE"));
+		final LPCString errorMsg = packet.getLPCString(I3ErrorCodes.errorPayload.get("ERR_MESSAGE"));
 		final LPCString originator = packet.getLPCString(Payload.O_MUD);
 
-		Log.error("Unhandled Error: " + originator + "/" + errorCode + "/"
-				+ errorMsg);
+		Log.error("Unhandled Error: " + originator + "/" + errorCode + "/" + errorMsg);
 	}
 
 	/*
@@ -82,7 +78,6 @@ public class I3Error extends ServiceTemplate {
 			for (final Object obj : packet.subList(5, packet.size()))
 				payload.add(obj);
 
-		Intermud3.network.sendToUser(PacketType.ERROR, oUser, tMud, tUser,
-				payload);
+		Intermud3.network.sendToUser(PacketType.ERROR, oUser, tMud, tUser, payload);
 	}
 }

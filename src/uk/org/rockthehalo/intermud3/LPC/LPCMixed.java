@@ -29,13 +29,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).add(o);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) add(o)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) add(o)");
 		case STRING:
 			return ((LPCString) this.lpcData).add(o);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) add(o)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) add(o)");
 		}
 	}
 
@@ -84,13 +82,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).get(index);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) get(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) get(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).get(index);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) get(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) get(index)");
 		}
 	}
 
@@ -104,13 +100,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCArray(index);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) getLPCArray(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) getLPCArray(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCArray(index);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) getLPCArray(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) getLPCArray(index)");
 		}
 	}
 
@@ -152,8 +146,7 @@ public class LPCMixed extends LPCVar {
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCInt(index);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) getLPCInt(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) getLPCInt(index)");
 		}
 	}
 
@@ -167,13 +160,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCMapping(index);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) getLPCMapping(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) getLPCMapping(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCMapping(index);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) getLPCMapping(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) getLPCMapping(index)");
 		}
 	}
 
@@ -187,13 +178,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).getLPCString(index);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) getLPCString(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) getLPCString(index)");
 		case STRING:
 			return ((LPCString) this.lpcData).getLPCString(index);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) getLPCString(index)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) getLPCString(index)");
 		}
 	}
 
@@ -230,8 +219,7 @@ public class LPCMixed extends LPCVar {
 	}
 
 	@Override
-	public Object set(final Object index, final Object element)
-			throws I3Exception {
+	public Object set(final Object index, final Object element) throws I3Exception {
 		switch (LPCVar.getType(this.lpcData)) {
 		case ARRAY:
 			return ((LPCArray) this.lpcData).set(index, element);
@@ -240,13 +228,11 @@ public class LPCMixed extends LPCVar {
 		case MAPPING:
 			return ((LPCMapping) this.lpcData).set(index, element);
 		case MIXED:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (LPCMixed) set(index, element)");
+			throw new I3Exception("Invalid operation for LPCMixed: (LPCMixed) set(index, element)");
 		case STRING:
 			return ((LPCString) this.lpcData).set(index, element);
 		default:
-			throw new I3Exception(
-					"Invalid operation for LPCMixed: (Unknown) set(index, element)");
+			throw new I3Exception("Invalid operation for LPCMixed: (Unknown) set(index, element)");
 		}
 	}
 
@@ -294,8 +280,7 @@ public class LPCMixed extends LPCVar {
 
 			break;
 		default:
-			throw new I3Exception(
-					"Invalid data for LPCMixed: setLPCData(Object) '" + o + "'");
+			throw new I3Exception("Invalid data for LPCMixed: setLPCData(Object) '" + o + "'");
 		}
 	}
 

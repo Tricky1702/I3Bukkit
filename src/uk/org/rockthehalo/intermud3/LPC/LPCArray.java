@@ -115,8 +115,7 @@ public class LPCArray extends LPCVar implements List<Object> {
 		if (o == null)
 			return false;
 
-		if (Utils.isLPCArray(o)
-				&& Utils.toMudMode(o).equals(Utils.toMudMode(this)))
+		if (Utils.isLPCArray(o) && Utils.toMudMode(o).equals(Utils.toMudMode(this)))
 			return true;
 
 		return false;
@@ -404,8 +403,7 @@ public class LPCArray extends LPCVar implements List<Object> {
 	}
 
 	@Override
-	public Object set(final Object index, final Object element)
-			throws I3Exception {
+	public Object set(final Object index, final Object element) throws I3Exception {
 		if (index == null)
 			return null;
 
@@ -414,14 +412,10 @@ public class LPCArray extends LPCVar implements List<Object> {
 		if (Number.class.isInstance(index))
 			i = ((Number) index).intValue();
 		else
-			throw new I3Exception(
-					"Invalid index type for set(index, element) in LPCArray: '"
-							+ index + "'");
+			throw new I3Exception("Invalid index type for set(index, element) in LPCArray: '" + index + "'");
 
 		if (i < 0 || i >= size())
-			throw new I3Exception(
-					"Index out of range for set(index, element) in LPCArray: "
-							+ index);
+			throw new I3Exception("Index out of range for set(index, element) in LPCArray: " + index);
 
 		return set(i, element);
 	}
@@ -459,8 +453,7 @@ public class LPCArray extends LPCVar implements List<Object> {
 			clear();
 			add(o);
 		} else {
-			throw new I3Exception(
-					"Invalid data for LPCArray: setLPCData(Object) '" + o + "'");
+			throw new I3Exception("Invalid data for LPCArray: setLPCData(Object) '" + o + "'");
 		}
 	}
 

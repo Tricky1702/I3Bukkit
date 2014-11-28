@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import uk.org.rockthehalo.intermud3.Intermud3;
 import uk.org.rockthehalo.intermud3.Log;
+import uk.org.rockthehalo.intermud3.Network;
 import uk.org.rockthehalo.intermud3.Packet;
 import uk.org.rockthehalo.intermud3.PacketTypes.PacketType;
 import uk.org.rockthehalo.intermud3.Payload;
@@ -17,41 +18,41 @@ import uk.org.rockthehalo.intermud3.LPC.LPCArray;
 import uk.org.rockthehalo.intermud3.LPC.LPCInt;
 
 public class I3Ping extends ServiceTemplate {
-	private final int hBeatDelay = 60;
-	private final int baseDelay = 3;
-	private final int delay = 12;
-	private final Map<Integer, String> pinglist = new HashMap<Integer, String>(
-			128);
+	private final long baseDelay = 3L;
+	private final long delay = 12L;
+	private final long hBeatDelay = 60L;
+	private final Map<Long, String> pinglist = new HashMap<Long, String>(128);
 
-	private int hBeat;
+	private long hBeat;
 
 	public I3Ping() {
+		this.hBeat = 3L;
 	}
 
 	public void create() {
 		ServiceType.I3PING.setVisibleOnRouter(true);
-		this.hBeat = 3;
+		this.hBeat = 3L;
 		Intermud3.callout.addHeartBeat(this, this.hBeatDelay);
 	}
 
 	public void debugInfo() {
-		Log.debug("I3Ping: " + (this.hBeat - 1) + " minutes to go.");
+		Log.debug("I3Ping: " + (this.hBeat - 1L) + " minutes to go.");
 	}
 
 	public void heartBeat() {
 		this.hBeat--;
 
-		if (this.hBeat == 1) {
+		if (this.hBeat == 1L) {
 			testConnection();
 
 			return;
 		}
 
-		if (!Intermud3.network.isRouterConnected() || this.hBeat <= 0) {
+		if (!Intermud3.network.isRouterConnected() || this.hBeat <= 0L) {
 			Log.warn("I3Ping: Not connected to the router. Re-connecting.");
-			this.hBeat = 3;
+			this.hBeat = 3L;
 			Intermud3.network.setRouterConnected(false);
-			Intermud3.network.setReconnectWait(Intermud3.network.minRetryTime);
+			Intermud3.network.setReconnectWait(Network.MIN_RETRY_TIME);
 			Intermud3.network.reconnect();
 		}
 	}
@@ -72,14 +73,13 @@ public class I3Ping extends ServiceTemplate {
 		final List<String> list = new ArrayList<String>();
 
 		if (packet.size() > Payload.HEADERSIZE)
-			for (final Object obj : packet.subList(Payload.HEADERSIZE,
-					packet.size()))
+			for (final Object obj : packet.subList(Payload.HEADERSIZE, packet.size()))
 				list.add(Utils.toMudMode(obj));
 
 		final String extra = StringUtils.join(list, ", ");
 
-		Log.debug("Ping reply from '" + packet.getLPCString(Payload.O_MUD)
-				+ "'" + (list.isEmpty() ? "" : " - Extra info: " + extra));
+		Log.debug("Ping reply from '" + packet.getLPCString(Payload.O_MUD) + "'"
+				+ (list.isEmpty() ? "" : " - Extra info: " + extra));
 
 		this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 		Intermud3.network.setRouterConnected(true);
@@ -98,42 +98,48 @@ public class I3Ping extends ServiceTemplate {
 	public void reqHandler(final Packet packet) {
 		String reply = "ping-reply";
 
-		if (packet.getLPCString(Payload.TYPE).toString().equals("ping"))
+		if (packet.getLPCString(Payload.TYPE).equals("ping"))
 			reply = "pong";
 
 		final Packet extra = new Packet();
 
 		if (packet.size() > Payload.HEADERSIZE)
-			for (final Object obj : packet.subList(Payload.HEADERSIZE,
-					packet.size()))
+			for (final Object obj : packet.subList(Payload.HEADERSIZE, packet.size()))
 				extra.add(obj);
 
-		final String oMudName = Utils.stripColor(packet.getLPCString(
-				Payload.O_MUD).toString());
+		final String oMudName = Utils.stripColor(packet.getLPCString(Payload.O_MUD).toString());
 
-		if (!oMudName.equals(Utils.getServerName())) {
+		if (!oMudName.equalsIgnoreCase(Utils.getServerName())) {
 			this.hBeat = Utils.rnd(this.delay) + this.baseDelay;
 			Intermud3.network.setRouterConnected(true);
 		}
 
-		Intermud3.network.sendToMud(PacketType.getNamedType(reply), null,
-				oMudName, extra);
+		final List<String> list = new ArrayList<String>();
+
+		if (extra.size() > 0)
+			for (final Object obj : extra)
+				list.add(Utils.toMudMode(obj));
+
+		final String extraInfo = StringUtils.join(list, ", ");
+
+		Log.debug("Ping request from '" + packet.getLPCString(Payload.O_MUD) + "'"
+				+ (list.isEmpty() ? "" : " - Extra info: " + extraInfo));
+		send(reply, oMudName, extra);
 	}
 
 	public void send(final String type, final String tmud, final Packet packet) {
-		Intermud3.network.sendToMud(PacketType.getNamedType(type), null, tmud,
-				packet);
+		Intermud3.network.sendToMud(PacketType.getNamedType(type), null, tmud, packet);
 	}
 
 	private void testConnection() {
 		final long tm = System.currentTimeMillis();
-		final long hash = Utils.rnd(19720231L)
-				+ ((tm & 0x7fffffffL) ^ 0x25a5a5a5L);
+		final long hash = Utils.rnd(19720231L) + ((tm & 0x7fffffffL) ^ 0x25a5a5a5L);
 		final Packet packet = new Packet();
+		final String serverName = Utils.getServerName();
 
 		packet.add(new LPCInt(hash & 0x7fffffffL));
-		Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"), null,
-				Utils.getServerName(), packet);
+		send("ping-req", serverName, packet);
+		Log.debug("Ping request to '" + serverName + "' - Extra info: " + packet.get(0));
 
 		final I3Mudlist i3Mudlist = ServiceType.I3MUDLIST.getService();
 
@@ -143,41 +149,31 @@ public class I3Ping extends ServiceTemplate {
 			if (!mudlist.isEmpty()) {
 				this.pinglist.clear();
 
-				int i = 0;
+				long i = 0L;
 
 				for (final String mud : mudlist.keySet()) {
-					if (Utils.stripColor(mud).equals(Utils.getServerName()))
+					if (Utils.stripColor(mud).equalsIgnoreCase(serverName))
 						continue;
 
 					final LPCArray info = mudlist.get(mud);
 
-					if (info.getLPCInt(I3Mudlist.STATE).toNum() != -1)
+					if (info.getLPCInt(I3Mudlist.STATE).toNum() != -1L)
 						continue;
 
-					if ((info.getLPCMapping(I3Mudlist.SERVICES).containsKey(
-							"ping") && info.getLPCMapping(I3Mudlist.SERVICES)
-							.getLPCInt("ping").toNum() == 1)
-							|| info.getLPCString(I3Mudlist.MUDLIB)
-									.toLowerCase().startsWith("dead souls"))
+					final LPCInt pingService = info.getLPCMapping(I3Mudlist.SERVICES).getLPCInt("ping");
+
+					if ((pingService != null && pingService.toNum() == 1L)
+							|| info.getLPCString(I3Mudlist.MUDLIB).toLowerCase().startsWith("dead souls"))
 						this.pinglist.put(i++, mud);
 				}
 
-				if (i != 0) {
-					i = Utils.rnd(i);
+				if (i != 0L) {
+					final String pingmud = this.pinglist.get(Utils.rnd(i));
 
-					final String pingmud = this.pinglist.get(i);
-
-					Intermud3.network.sendToMud(
-							PacketType.getNamedType("ping-req"), null, pingmud,
-							packet);
+					send("ping-req", pingmud, packet);
+					Log.debug("Ping request to '" + pingmud + "' - Extra info: " + packet.get(0));
 				}
 			}
 		}
-		// Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"),
-		// null,
-		// "Rock the Halo", packet);
-		// Intermud3.network.sendToMud(PacketType.getNamedType("ping-req"),
-		// null,
-		// "Dead Souls Dev", packet);
 	}
 }

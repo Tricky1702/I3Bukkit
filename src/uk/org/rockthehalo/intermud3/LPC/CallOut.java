@@ -19,22 +19,19 @@ import uk.org.rockthehalo.intermud3.Utils;
 import uk.org.rockthehalo.intermud3.services.ServiceType;
 
 public class CallOut extends BukkitRunnable {
-	private final Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>(
-			32);
-	private final Vector<Map<String, Object>> heartBeats = new Vector<Map<String, Object>>(
-			16);
+	private final BukkitTask bukkitTask;
+	private final Vector<Map<String, Object>> callOuts = new Vector<Map<String, Object>>(32);
+	private final Vector<Map<String, Object>> heartBeats = new Vector<Map<String, Object>>(16);
 
-	private BukkitTask bukkitTask = null;
-	private long id = 0;
+	private long id = 0L;
 
 	public CallOut() {
-		this.bukkitTask = runTaskTimer(Intermud3.instance, 2, 2);
+		this.bukkitTask = runTaskTimer(Intermud3.plugin, 2L, 2L);
 	}
 
 	public void debugInfo() {
 		if (!this.callOuts.isEmpty()) {
-			final List<String> list = new ArrayList<String>(
-					this.callOuts.size());
+			final List<String> list = new ArrayList<String>(this.callOuts.size());
 
 			for (final Map<String, Object> callout : this.callOuts) {
 				final LPCArray data = new LPCArray();
@@ -53,8 +50,7 @@ public class CallOut extends BukkitRunnable {
 		}
 
 		if (!this.heartBeats.isEmpty()) {
-			final List<String> list = new ArrayList<String>(
-					this.heartBeats.size());
+			final List<String> list = new ArrayList<String>(this.heartBeats.size());
 
 			for (final Map<String, Object> heartbeat : this.heartBeats) {
 				final LPCArray data = new LPCArray();
@@ -80,8 +76,7 @@ public class CallOut extends BukkitRunnable {
 	 *            the delay in seconds to wait
 	 * @return the callout ID
 	 */
-	public long addCallOut(final Object owner, final String func,
-			final long delay) {
+	public long addCallOut(final Object owner, final String func, final long delay) {
 		return addCallOut(owner, func, delay, null);
 	}
 
@@ -96,13 +91,11 @@ public class CallOut extends BukkitRunnable {
 	 *            the arguments to pass to the method
 	 * @return the callout ID
 	 */
-	public long addCallOut(final Object owner, final String func,
-			final long delay, final Object[] args) {
+	public long addCallOut(final Object owner, final String func, final long delay, final Object[] args) {
 		if (owner == null || func == null || func.isEmpty() || delay <= 0)
 			return -1;
 
-		final Map<String, Object> data = Collections
-				.synchronizedMap(new HashMap<String, Object>(6));
+		final Map<String, Object> data = Collections.synchronizedMap(new HashMap<String, Object>(6));
 		final long id = this.id++;
 
 		data.put("id", id);
@@ -133,8 +126,7 @@ public class CallOut extends BukkitRunnable {
 			if (owner == heartbeat.get("owner"))
 				return;
 
-		final Map<String, Object> data = Collections
-				.synchronizedMap(new HashMap<String, Object>(4));
+		final Map<String, Object> data = Collections.synchronizedMap(new HashMap<String, Object>(4));
 
 		data.put("id", this.id++);
 		data.put("owner", owner);
@@ -151,9 +143,6 @@ public class CallOut extends BukkitRunnable {
 		// Clear out all lists.
 		removeAllCallOuts();
 		removeAllHeartBeats();
-
-		// Remove references.
-		this.bukkitTask = null;
 	}
 
 	/**
@@ -198,8 +187,7 @@ public class CallOut extends BukkitRunnable {
 		if (owner == null || this.callOuts.isEmpty())
 			return;
 
-		final Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>(
-				this.callOuts.size());
+		final Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>(this.callOuts.size());
 
 		for (final Map<String, Object> callout : this.callOuts)
 			if (owner == callout.get("owner"))
@@ -231,8 +219,7 @@ public class CallOut extends BukkitRunnable {
 	@Override
 	public void run() {
 		if (!this.callOuts.isEmpty()) {
-			final Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>(
-					this.callOuts.size());
+			final Vector<Map<String, Object>> callouts = new Vector<Map<String, Object>>(this.callOuts.size());
 
 			for (final Map<String, Object> callout : this.callOuts) {
 				final long currentDelay = (long) callout.get("currentDelay") + 1;
@@ -249,13 +236,21 @@ public class CallOut extends BukkitRunnable {
 
 			for (final Map<String, Object> callout : callouts) {
 				final Object owner = callout.get("owner");
+				Method[] methods = {};
 				Method method = null;
 
 				try {
-					method = owner.getClass().getMethod(
-							(String) callout.get("func"));
-				} catch (NoSuchMethodException e) {
-				} catch (SecurityException e) {
+					methods = owner.getClass().getMethods();
+				} catch (SecurityException sE) {
+					Log.error("Callout.run::Security exception in callout section getting methods of " + owner, sE);
+				}
+
+				for (Method m : methods) {
+					if (m.getName().equals(callout.get("func"))) {
+						method = m;
+
+						break;
+					}
 				}
 
 				if (method != null) {
@@ -280,8 +275,7 @@ public class CallOut extends BukkitRunnable {
 		}
 
 		if (!this.heartBeats.isEmpty()) {
-			final Vector<Map<String, Object>> heartbeats = new Vector<Map<String, Object>>(
-					this.heartBeats.size());
+			final Vector<Map<String, Object>> heartbeats = new Vector<Map<String, Object>>(this.heartBeats.size());
 
 			for (final Map<String, Object> heartbeat : this.heartBeats) {
 				long currentDelay = (long) heartbeat.get("currentDelay") + 1;
@@ -299,20 +293,32 @@ public class CallOut extends BukkitRunnable {
 
 			for (final Map<String, Object> heartbeat : heartbeats) {
 				final Object owner = heartbeat.get("owner");
+				Method[] methods = {};
 				Method method = null;
 
 				try {
-					method = owner.getClass().getMethod("heartBeat");
-				} catch (NoSuchMethodException e) {
-				} catch (SecurityException e) {
+					methods = owner.getClass().getMethods();
+				} catch (SecurityException sE) {
+					Log.error("Callout.run::Security exception in heartbeat section getting methods of " + owner, sE);
+				}
+
+				for (Method m : methods) {
+					if (m.getName().equals("heartBeat")) {
+						method = m;
+
+						break;
+					}
 				}
 
 				if (method != null) {
 					try {
 						method.invoke(owner);
 					} catch (IllegalAccessException e) {
+						Log.error("", e);
 					} catch (IllegalArgumentException e) {
+						Log.error("", e);
 					} catch (InvocationTargetException e) {
+						Log.error("", e);
 					}
 				}
 			}

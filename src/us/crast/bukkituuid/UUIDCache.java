@@ -32,8 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * 
  */
 public class UUIDCache implements Listener {
-	private static final UUID ZERO_UUID = UUID
-			.fromString("00000000-0000-0000-0000-000000000000");
+	private static final UUID ZERO_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 	private Map<String, UUID> cache = new ConcurrentHashMap<String, UUID>();
 	private JavaPlugin plugin;
 
@@ -108,13 +107,12 @@ public class UUIDCache implements Listener {
 	}
 
 	private void asyncFetch(final ArrayList<String> names) {
-		plugin.getServer().getScheduler()
-				.runTaskAsynchronously(plugin, new Runnable() {
-					@Override
-					public void run() {
-						syncFetch(names);
-					}
-				});
+		plugin.getServer().getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+			@Override
+			public void run() {
+				syncFetch(names);
+			}
+		});
 	}
 
 	private void syncFetch(final ArrayList<String> names) {

@@ -46,19 +46,16 @@ public abstract class LPCVar implements Cloneable {
 
 	public abstract LPCInt getLPCInt(final Object index) throws I3Exception;
 
-	public abstract LPCMapping getLPCMapping(final Object index)
-			throws I3Exception;
+	public abstract LPCMapping getLPCMapping(final Object index) throws I3Exception;
 
-	public abstract LPCString getLPCString(final Object index)
-			throws I3Exception;
+	public abstract LPCString getLPCString(final Object index) throws I3Exception;
 
 	@Override
 	public abstract int hashCode();
 
 	public abstract boolean isEmpty();
 
-	public abstract Object set(final Object index, final Object element)
-			throws I3Exception;
+	public abstract Object set(final Object index, final Object element) throws I3Exception;
 
 	public abstract void setLPCData(final LPCArray o) throws I3Exception;
 

@@ -37,8 +37,7 @@ public class LPCString extends LPCVar {
 
 		if (String.class.isInstance(o) && this.lpcData.contains((String) o))
 			return true;
-		else if (Utils.isLPCString(o)
-				&& this.lpcData.contains(((LPCString) o).getLPCData()))
+		else if (Utils.isLPCString(o) && this.lpcData.contains(((LPCString) o).getLPCData()))
 			return true;
 
 		return false;
@@ -51,8 +50,7 @@ public class LPCString extends LPCVar {
 
 		if (String.class.isInstance(o) && ((String) o).equals(this.lpcData))
 			return true;
-		else if (Utils.isLPCString(o)
-				&& ((LPCString) o).getLPCData().equals(this.lpcData))
+		else if (Utils.isLPCString(o) && ((LPCString) o).getLPCData().equals(this.lpcData))
 			return true;
 
 		return false;
@@ -62,11 +60,9 @@ public class LPCString extends LPCVar {
 		if (o == null)
 			return false;
 
-		if (String.class.isInstance(o)
-				&& ((String) o).equalsIgnoreCase(this.lpcData))
+		if (String.class.isInstance(o) && ((String) o).equalsIgnoreCase(this.lpcData))
 			return true;
-		else if (Utils.isLPCString(o)
-				&& ((LPCString) o).getLPCData().equalsIgnoreCase(this.lpcData))
+		else if (Utils.isLPCString(o) && ((LPCString) o).getLPCData().equalsIgnoreCase(this.lpcData))
 			return true;
 
 		return false;
@@ -92,8 +88,7 @@ public class LPCString extends LPCVar {
 
 	@Override
 	public LPCArray getLPCArray(final Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCString: getLPCArray(index)");
+		throw new I3Exception("Invalid operation for LPCString: getLPCArray(index)");
 	}
 
 	@Override
@@ -120,8 +115,7 @@ public class LPCString extends LPCVar {
 
 	@Override
 	public LPCMapping getLPCMapping(final Object index) throws I3Exception {
-		throw new I3Exception(
-				"Invalid operation for LPCString: getLPCMapping(index)");
+		throw new I3Exception("Invalid operation for LPCString: getLPCMapping(index)");
 	}
 
 	@Override
@@ -149,8 +143,7 @@ public class LPCString extends LPCVar {
 	}
 
 	@Override
-	public Object set(final Object index, final Object element)
-			throws I3Exception {
+	public Object set(final Object index, final Object element) throws I3Exception {
 		if (index == null || element == null)
 			return null;
 
@@ -159,14 +152,10 @@ public class LPCString extends LPCVar {
 		if (Number.class.isInstance(index))
 			i = ((Number) index).intValue();
 		else
-			throw new I3Exception(
-					"Invalid index type for set(index, element) in LPCString: '"
-							+ index + "'");
+			throw new I3Exception("Invalid index type for set(index, element) in LPCString: '" + index + "'");
 
 		if (i < 0 || i >= size())
-			throw new I3Exception(
-					"Index out of range for set(index, element) in LPCString: "
-							+ index);
+			throw new I3Exception("Index out of range for set(index, element) in LPCString: " + index);
 
 		final char[] chars = this.lpcData.toCharArray();
 		final char oldChar = chars[i];
@@ -202,9 +191,7 @@ public class LPCString extends LPCVar {
 		if (Utils.isLPCVar(o))
 			this.lpcData = new String(Utils.toMudMode(o));
 		else
-			throw new I3Exception(
-					"Invalid data for LPCString: setLPCData(Object) '" + o
-							+ "'");
+			throw new I3Exception("Invalid data for LPCString: setLPCData(Object) '" + o + "'");
 	}
 
 	@Override

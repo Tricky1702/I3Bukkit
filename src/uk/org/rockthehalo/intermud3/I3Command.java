@@ -39,8 +39,7 @@ public class I3Command implements CommandExecutor {
 	 * @return true on success
 	 */
 	@Override
-	public boolean onCommand(final CommandSender sender, final Command command,
-			final String label, final String[] args) {
+	public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
 		if (!checkPerm(sender, "use"))
 			return false;
 
@@ -49,15 +48,12 @@ public class I3Command implements CommandExecutor {
 
 		if (label.equalsIgnoreCase("intermud3") || label.equalsIgnoreCase("i3")) {
 			if (args.length < 1)
-				return !checkPerm(sender, "help")
-						|| usage("intermud3", sender, command);
+				return !checkPerm(sender, "help") || usage("intermud3", sender, command);
 
 			playerCommand = true;
-		} else if (label.equalsIgnoreCase("i3admin")
-				|| label.equalsIgnoreCase("i3a")) {
+		} else if (label.equalsIgnoreCase("i3admin") || label.equalsIgnoreCase("i3a")) {
 			if (args.length < 1)
-				return !checkPerm(sender, "help")
-						|| usage("i3admin", sender, command);
+				return !checkPerm(sender, "help") || usage("i3admin", sender, command);
 
 			adminCommand = true;
 		}
@@ -72,11 +68,9 @@ public class I3Command implements CommandExecutor {
 		}
 
 		if (playerCommand)
-			return processI3SubCommand(sender, command, "intermud3", subcmd,
-					subcmdargs);
+			return processI3SubCommand(sender, command, "intermud3", subcmd, subcmdargs);
 		else if (adminCommand)
-			return processI3AdminSubCommand(sender, command, "i3admin", subcmd,
-					subcmdargs);
+			return processI3AdminSubCommand(sender, command, "i3admin", subcmd, subcmdargs);
 		else
 			return false;
 	}
@@ -94,8 +88,7 @@ public class I3Command implements CommandExecutor {
 	 *            Passed Intermud3 command arguments
 	 * @return true on success
 	 */
-	private boolean processI3SubCommand(final CommandSender sender,
-			final Command command, final String label, final String subcmd,
+	private boolean processI3SubCommand(final CommandSender sender, final Command command, final String label, final String subcmd,
 			final String[] args) {
 		final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 		final I3UCache i3UCache = ServiceType.I3UCACHE.getService();
@@ -121,25 +114,21 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(label, sender, command, subcmd);
 
-			final String plrName = Utils
-					.stripColor(((Player) sender).getName());
+			final String plrName = Utils.stripColor(((Player) sender).getName());
 			String chan = args[0];
 
 			if (chan.equals(".") && this.lastChannel != null)
 				chan = this.lastChannel;
 
-			if (i3Channel.getAliases().containsKey(chan)
-					&& !i3Channel.getAliases().containsValue(chan))
-				chan = i3Channel.getAliases().get(chan);
+			if (i3UCache.getAliases(plrName).containsKey(chan) && !i3UCache.getAliases(plrName).containsValue(chan))
+				chan = i3UCache.getAliases(plrName).get(chan);
 
-			final List<Object> user = i3UCache.getLocalUser(plrName);
+			final Map<String, Object> user = i3UCache.getLocalUser(plrName);
 			@SuppressWarnings("unchecked")
-			final List<String> tunein = (List<String>) user
-					.get(I3UCache.TUNEIN);
+			final List<String> tunein = (List<String>) user.get("TUNEIN");
 
 			if (!tunein.contains(chan)) {
-				sender.sendMessage("Not listening to I3 channel "
-						+ ChatColor.GREEN + chan);
+				sender.sendMessage("Not listening to I3 channel " + ChatColor.GREEN + chan);
 
 				return true;
 			}
@@ -162,25 +151,21 @@ public class I3Command implements CommandExecutor {
 			if (args.length < 2)
 				return usage(label, sender, command, subcmd);
 
-			final String plrName = Utils
-					.stripColor(((Player) sender).getName());
+			final String plrName = Utils.stripColor(((Player) sender).getName());
 			String chan = args[0];
 
 			if (chan.equals(".") && this.lastChannel != null)
 				chan = this.lastChannel;
 
-			if (i3Channel.getAliases().containsKey(chan)
-					&& !i3Channel.getAliases().containsValue(chan))
-				chan = i3Channel.getAliases().get(chan);
+			if (i3UCache.getAliases(plrName).containsKey(chan) && !i3UCache.getAliases(plrName).containsValue(chan))
+				chan = i3UCache.getAliases(plrName).get(chan);
 
-			final List<Object> user = i3UCache.getLocalUser(plrName);
+			final Map<String, Object> user = i3UCache.getLocalUser(plrName);
 			@SuppressWarnings("unchecked")
-			final List<String> tunein = (List<String>) user
-					.get(I3UCache.TUNEIN);
+			final List<String> tunein = (List<String>) user.get("TUNEIN");
 
 			if (!tunein.contains(chan)) {
-				sender.sendMessage("Not listening to I3 channel "
-						+ ChatColor.GREEN + chan);
+				sender.sendMessage("Not listening to I3 channel " + ChatColor.GREEN + chan);
 
 				return true;
 			}
@@ -198,15 +183,13 @@ public class I3Command implements CommandExecutor {
 				final String input = args[0];
 
 				if (!i3Channel.getChanList().containsKey(input)) {
-					sender.sendMessage("I3 channel " + ChatColor.GREEN + input
-							+ ChatColor.RESET + " not available.");
+					sender.sendMessage("I3 channel " + ChatColor.GREEN + input + ChatColor.RESET + " not available.");
 
 					return true;
 				}
 
-				i3UCache.tuneIn((Player) sender, input);
-				sender.sendMessage("Tuned into I3 channel " + ChatColor.GREEN
-						+ input);
+				i3UCache.tuneIn(((Player) sender).getName(), input);
+				sender.sendMessage("Tuned into I3 channel " + ChatColor.GREEN + input);
 			} else if (subcmd.equals("tuneout")) {
 				if (args.length < 1)
 					return usage(label, sender, command, "tune");
@@ -214,15 +197,13 @@ public class I3Command implements CommandExecutor {
 				final String input = args[0];
 
 				if (!i3Channel.getListening().contains(input)) {
-					sender.sendMessage("Not listening to I3 channel "
-							+ ChatColor.GREEN + input);
+					sender.sendMessage("Not listening to I3 channel " + ChatColor.GREEN + input);
 
 					return true;
 				}
 
-				i3UCache.tuneOut((Player) sender, input);
-				sender.sendMessage("Tuned out of I3 channel " + ChatColor.GREEN
-						+ input);
+				i3UCache.tuneOut(((Player) sender).getName(), input);
+				sender.sendMessage("Tuned out of I3 channel " + ChatColor.GREEN + input);
 			} else
 				return usage(label, sender, command, "tune");
 		} else if (subcmd.equals("alias")) {
@@ -233,31 +214,27 @@ public class I3Command implements CommandExecutor {
 			final String chan = args[1];
 
 			if (i3Channel.getChanList().containsKey(alias)) {
-				sender.sendMessage(ChatColor.RED
-						+ "Can not set alias name to an existing I3 channel.");
+				sender.sendMessage(ChatColor.RED + "Can not set alias name to an existing I3 channel.");
 
 				return true;
 			}
 
-			i3UCache.setAlias((Player) sender, alias, chan);
-			sender.sendMessage("Alias set: " + ChatColor.GREEN + alias
-					+ ChatColor.RESET + " -> " + ChatColor.GREEN + chan);
+			i3UCache.setAlias(((Player) sender).getName(), alias, chan);
+			sender.sendMessage("Alias set: " + ChatColor.GREEN + alias + ChatColor.RESET + " -> " + ChatColor.GREEN + chan);
 		} else if (subcmd.equals("unalias")) {
 			if (args.length < 1)
 				return usage(label, sender, command, subcmd);
 
 			final String alias = args[0];
-			final Map<String, String> aliases = i3UCache.getAliases(Utils
-					.stripColor(((Player) sender).getName()));
+			final Map<String, String> aliases = i3UCache.getAliases(Utils.stripColor(((Player) sender).getName()));
 
 			if (aliases == null || !aliases.containsKey(alias)) {
-				sender.sendMessage("Alias " + ChatColor.GREEN + alias
-						+ ChatColor.RESET + " does not exist.");
+				sender.sendMessage("Alias " + ChatColor.GREEN + alias + ChatColor.RESET + " does not exist.");
 
 				return true;
 			}
 
-			i3UCache.setAlias((Player) sender, alias, null);
+			i3UCache.setAlias(((Player) sender).getName(), alias, null);
 			sender.sendMessage("Alias unset: " + ChatColor.GREEN + alias);
 		} else if (subcmd.equals("list")) {
 			i3Channel.showChannelsListening(sender);
@@ -266,8 +243,7 @@ public class I3Command implements CommandExecutor {
 		} else if (subcmd.equals("aliases")) {
 			i3Channel.showChannelAliases(sender);
 		} else {
-			sender.sendMessage(ChatColor.RED + "Unknown I3 command. (" + subcmd
-					+ ")");
+			sender.sendMessage(ChatColor.RED + "Unknown I3 command. (" + subcmd + ")");
 
 			return false;
 		}
@@ -288,9 +264,8 @@ public class I3Command implements CommandExecutor {
 	 *            Passed Intermud3 admin command arguments
 	 * @return true on success
 	 */
-	private boolean processI3AdminSubCommand(final CommandSender sender,
-			final Command command, final String label, final String subcmd,
-			final String[] args) {
+	private boolean processI3AdminSubCommand(final CommandSender sender, final Command command, final String label,
+			final String subcmd, final String[] args) {
 		String input = null;
 
 		Log.debug("args: " + StringUtils.join(args, ","));
@@ -358,8 +333,7 @@ public class I3Command implements CommandExecutor {
 			final I3Channel i3Channel = ServiceType.I3CHANNEL.getService();
 
 			if (i3Channel == null)
-				sender.sendMessage(ChatColor.RED
-						+ "I3 channel service not available.");
+				sender.sendMessage(ChatColor.RED + "I3 channel service not available.");
 			else {
 				if (args.length > 0)
 					input = args[0].toLowerCase();
@@ -374,105 +348,87 @@ public class I3Command implements CommandExecutor {
 							return false;
 
 						if (args.length < 2)
-							return usage(label, sender, command, subcmd
-									+ " tune");
+							return usage(label, sender, command, subcmd + " tune");
 
 						input = args[1];
 
 						if (!i3Channel.getChanList().containsKey(input)) {
-							sender.sendMessage("I3 channel " + ChatColor.GREEN
-									+ input + ChatColor.RESET
-									+ " not available.");
+							sender.sendMessage("I3 channel " + ChatColor.GREEN + input + ChatColor.RESET + " not available.");
 
 							return true;
 						}
 
 						i3Channel.tuneIn(input);
-						sender.sendMessage("Tuned into I3 channel "
-								+ ChatColor.GREEN + input);
+						sender.sendMessage("Tuned into I3 channel " + ChatColor.GREEN + input);
 					} else if (input.equals("tuneout")) {
 						if (!checkPerm(sender, "admin.channels.tune"))
 							return false;
 
 						if (args.length < 2)
-							return usage(label, sender, command, subcmd
-									+ " tune");
+							return usage(label, sender, command, subcmd + " tune");
 
 						input = args[1];
 
 						if (!i3Channel.getListening().contains(input)) {
-							sender.sendMessage("Not listening to I3 channel "
-									+ ChatColor.GREEN + input);
+							sender.sendMessage("Not listening to I3 channel " + ChatColor.GREEN + input);
 
 							return true;
 						}
 
 						i3Channel.tuneOut(input);
-						sender.sendMessage("Tuned out of I3 channel "
-								+ ChatColor.GREEN + input);
+						sender.sendMessage("Tuned out of I3 channel " + ChatColor.GREEN + input);
 					} else if (input.equals("alias")) {
 						if (!checkPerm(sender, "admin.channels.alias"))
 							return false;
 
 						if (args.length < 3)
-							return usage(label, sender, command, subcmd
-									+ " alias");
+							return usage(label, sender, command, subcmd + " alias");
 
 						final String alias = args[1];
 						final String chan = args[2];
 
 						if (i3Channel.getChanList().containsKey(alias)) {
-							sender.sendMessage(ChatColor.RED
-									+ "Can not set alias name to an existing I3 channel.");
+							sender.sendMessage(ChatColor.RED + "Can not set alias name to an existing I3 channel.");
 
 							return true;
 						}
 
 						i3Channel.setAlias(alias, chan);
-						sender.sendMessage("Alias set: " + ChatColor.GREEN
-								+ alias + ChatColor.RESET + " -> "
-								+ ChatColor.GREEN + chan);
+						sender.sendMessage("Alias set: " + ChatColor.GREEN + alias + ChatColor.RESET + " -> " + ChatColor.GREEN
+								+ chan);
 					} else if (input.equals("unalias")) {
 						if (!checkPerm(sender, "admin.channels.alias"))
 							return false;
 
 						if (args.length < 2)
-							return usage(label, sender, command, subcmd
-									+ " unalias");
+							return usage(label, sender, command, subcmd + " unalias");
 
 						final String alias = args[1];
 
 						if (!i3Channel.getAliases().containsKey(alias)) {
-							sender.sendMessage("Alias " + ChatColor.GREEN
-									+ alias + ChatColor.RESET
-									+ " does not exist.");
+							sender.sendMessage("Alias " + ChatColor.GREEN + alias + ChatColor.RESET + " does not exist.");
 
 							return true;
 						}
 
 						i3Channel.setAlias(alias, null);
-						sender.sendMessage("Alias unset: " + ChatColor.GREEN
-								+ alias);
+						sender.sendMessage("Alias unset: " + ChatColor.GREEN + alias);
 					}
 				}
 			}
 		} else if (subcmd.equals("debug")) {
 			if (Utils.isPlayer(sender)) {
-				sender.sendMessage(ChatColor.RED
-						+ "Can only get debug info from the console."
-						+ ChatColor.RESET);
+				sender.sendMessage(ChatColor.RED + "Can only get debug info from the console." + ChatColor.RESET);
 
 				return true;
 			}
 
 			if (args.length > 0
-					&& (args[0].equalsIgnoreCase("on")
-							|| args[0].equalsIgnoreCase("off") || args[0]
-								.equalsIgnoreCase("switch"))) {
+					&& (args[0].equalsIgnoreCase("on") || args[0].equalsIgnoreCase("off") || args[0].equalsIgnoreCase("switch"))) {
 				if (!checkPerm(sender, "admin.debug"))
 					return false;
 
-				final boolean oldDebug = Intermud3.instance.getDebugFlag();
+				final boolean oldDebug = Log.getDebugFlag();
 				boolean debug;
 
 				if (args[0].equalsIgnoreCase("on"))
@@ -487,14 +443,13 @@ public class I3Command implements CommandExecutor {
 				else
 					Log.info("Switching debug messages on.");
 
-				Intermud3.instance.setDebugFlag(debug);
+				Log.setDebugFlag(debug);
 			} else {
 				Intermud3.callout.debugInfo();
 				ServiceManager.debugInfo();
 			}
 		} else {
-			sender.sendMessage(ChatColor.RED + "Unknown I3 admin command. ("
-					+ subcmd + ")");
+			sender.sendMessage(ChatColor.RED + "Unknown I3 admin command. (" + subcmd + ")");
 
 			return false;
 		}
@@ -511,8 +466,7 @@ public class I3Command implements CommandExecutor {
 		final boolean ok = sender.hasPermission("intermud3." + subnode);
 
 		if (!ok)
-			sender.sendMessage(ChatColor.RED
-					+ "You do not have permission to do that");
+			sender.sendMessage(ChatColor.RED + "You do not have permission to do that");
 
 		return ok;
 	}
@@ -523,10 +477,8 @@ public class I3Command implements CommandExecutor {
 	 * @param command
 	 * @return
 	 */
-	private boolean usage(final String cmd, final CommandSender sender,
-			final Command command) {
-		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /"
-				+ cmd + " " + ChatColor.RED + "====]");
+	private boolean usage(final String cmd, final CommandSender sender, final Command command) {
+		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /" + cmd + " " + ChatColor.RED + "====]");
 
 		for (final String line : command.getUsage().split("\\n"))
 			sender.sendMessage(formatLine(cmd, line));
@@ -541,10 +493,8 @@ public class I3Command implements CommandExecutor {
 	 * @param subcmd
 	 * @return
 	 */
-	private boolean usage(final String cmd, final CommandSender sender,
-			final Command command, final String subcmd) {
-		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /"
-				+ cmd + " " + subcmd + " " + ChatColor.RED + "====]");
+	private boolean usage(final String cmd, final CommandSender sender, final Command command, final String subcmd) {
+		sender.sendMessage(ChatColor.RED + "[====" + ChatColor.GREEN + " /" + cmd + " " + subcmd + " " + ChatColor.RED + "====]");
 
 		for (final String line : command.getUsage().split("\\n"))
 			if (line.startsWith("/<command> " + subcmd))
@@ -564,12 +514,9 @@ public class I3Command implements CommandExecutor {
 		final String desc = line.substring(i + 3);
 
 		usage = usage.replace("<command>", cmd);
-		usage = usage.replaceAll("\\[[^]:]+\\]", ChatColor.AQUA + "$0"
-				+ ChatColor.GREEN);
-		usage = usage.replaceAll("\\[[^]]+:\\]", ChatColor.AQUA + "$0"
-				+ ChatColor.LIGHT_PURPLE);
-		usage = usage.replaceAll("<[^>]+>", ChatColor.LIGHT_PURPLE + "$0"
-				+ ChatColor.GREEN);
+		usage = usage.replaceAll("\\[[^]:]+\\]", ChatColor.AQUA + "$0" + ChatColor.GREEN);
+		usage = usage.replaceAll("\\[[^]]+:\\]", ChatColor.AQUA + "$0" + ChatColor.LIGHT_PURPLE);
+		usage = usage.replaceAll("<[^>]+>", ChatColor.LIGHT_PURPLE + "$0" + ChatColor.GREEN);
 
 		return ChatColor.GREEN + usage + " - " + ChatColor.WHITE + desc;
 	}
